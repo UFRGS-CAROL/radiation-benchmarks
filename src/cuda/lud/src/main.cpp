@@ -117,24 +117,27 @@ int main(int argc, char* argv[]) {
 	//================== Init test environment
 
 	auto matrixSize = parameters.size * parameters.size;
-	std::vector<float> INPUT(matrixSize);
+	std::vector<float> input_host_array(matrixSize);
 
-	std::vector<float> GOLD(matrixSize);
+	std::vector<float> gold_array(matrixSize);
 
 	if (parameters.generate) {
-		generateInputMatrix(INPUT, parameters.size);
-		write_to_file(parameters.input, INPUT);
+		generateInputMatrix(input_host_array, parameters.size);
+		write_to_file(parameters.input, input_host_array);
 	} else {
-		auto read_input = read_from_file(parameters.input, INPUT);
+		auto read_input = read_from_file(parameters.input, input_host_array);
 		if (read_input) {
 			throw_line("Error reading " + parameters.input);
 		}
-		auto read_gold = read_from_file(parameters.gold, GOLD);
+		auto read_gold = read_from_file(parameters.gold, gold_array);
 		if (read_gold) {
 			throw_line("Error reading " + parameters.gold);
 		}
+		if(parameters.debug){
+			gold_array[35] = -2;
+		}
 	}
-	std::vector<float> SAVE_INPUT = INPUT;
+	std::vector<float> SAVE_INPUT = input_host_array;
 	//====================================
 
 	double total_kernel_time = 0;
@@ -142,8 +145,8 @@ int main(int argc, char* argv[]) {
 	double max_kernel_time = -999999;
 
 	//================== Init DEVICE memory
-	rad::DeviceVector<float> d_INPUT = INPUT;
-	rad::DeviceVector<float> d_OUTPUT = INPUT;
+	rad::DeviceVector<float> input_device_array = input_host_array;
+	rad::DeviceVector<float> output_device_array = input_host_array;
 	//====================================
 
 	for (size_t loop2 = 0; loop2 < parameters.iterations; loop2++) { //================== Global test loop
@@ -152,7 +155,7 @@ int main(int argc, char* argv[]) {
 		if (!parameters.generate)
 			log.start_iteration();
 		//================== Device computation, HMxM
-		lud_cuda(d_INPUT.data(), parameters.size);
+		lud_cuda(input_device_array.data(), parameters.size);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		//====================================
@@ -169,24 +172,22 @@ int main(int argc, char* argv[]) {
 
 		// Timer...
 		auto cuda_copy_time = rad::mysecond();
-		d_INPUT.to_vector(INPUT);
+		input_device_array.to_vector(input_host_array);
 		cuda_copy_time = rad::mysecond() - cuda_copy_time;
 
 		auto gold_check_time = rad::mysecond();
 		if (parameters.generate) {
-			write_to_file(parameters.gold, INPUT);
+			write_to_file(parameters.gold, input_host_array);
 		} else {
-			if (badass_memcmp(GOLD.data(), INPUT.data(), matrixSize)) {
-				char error_detail[150];
+			if (badass_memcmp(gold_array.data(), input_host_array.data(), matrixSize)) {
 				int host_errors = 0;
-
 				std::cout << "!";
 
 #pragma omp parallel for
 				for (size_t i = 0; i < parameters.size; i++) {
 					for (size_t j = 0; j < parameters.size; j++) {
-						auto g = GOLD[i + parameters.size * j];
-						auto f = INPUT[i + parameters.size * j];
+						auto g = gold_array[i + parameters.size * j];
+						auto f = input_host_array[i + parameters.size * j];
 						if (g != f) {
 
 							std::stringstream error_detail;
@@ -219,12 +220,12 @@ int main(int argc, char* argv[]) {
 				if (host_errors != 0) {
 
 					//================== Reload DEVICE memory
-					d_INPUT.resize(0);
-					d_OUTPUT.resize(0);
-					d_OUTPUT = SAVE_INPUT;
+					input_device_array.resize(0);
+					output_device_array.resize(0);
+					output_device_array = SAVE_INPUT;
 				}
 			}
-			d_INPUT = d_OUTPUT;
+			input_device_array = output_device_array;
 		}
 		gold_check_time = rad::mysecond() - gold_check_time;
 
