@@ -47,7 +47,7 @@ void generateInputMatrix(std::vector<T>& array, size_t size) {
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	//ORIGINAL:
+	//ORIGINAL: check on rodinia benchmark suite
 	std::uniform_real_distribution<T> dis(1.0f, 32768.0f);
 
 #pragma omp parallel for
@@ -85,18 +85,23 @@ bool write_to_file(std::string& path, std::vector<real_t>& array) {
 	return true;
 }
 
-bool badass_memcmp(float *gold, float *found, unsigned long n) {
-	float result = 0.0;
-	int i;
-	unsigned long chunk = ceil(float(n) / float(omp_get_max_threads()));
-	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-	double time = rad::mysecond();
+template<typename real_t> inline
+bool badass_memcmp(std::vector<real_t>& gold_vector,
+		std::vector<real_t>& found_vector) {
+	uint32_t i;
+	uint32_t n = gold_vector.size();
+	uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
+
+	real_t result = 0.0;
+	real_t *gold = gold_vector.data();
+	real_t *found = found_vector.data();
+
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
 	for (i = 0; i < n; i++)
 		result = result + (gold[i] - found[i]);
 
-	//  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
-	if (fabs(result) > 0.0000001)
+	real_t threshold = 0.0000001;
+	if (fabs(result) > threshold)
 		return true;
 	return false;
 }
@@ -179,8 +184,7 @@ int main(int argc, char* argv[]) {
 		if (parameters.generate) {
 			write_to_file(parameters.gold, input_host_array);
 		} else {
-//			if (badass_memcmp(gold_array.data(), input_host_array.data(),
-//					matrixSize)) {
+			if (badass_memcmp(gold_array, input_host_array)) {
 				int host_errors = 0;
 				std::cout << "!";
 
@@ -222,7 +226,7 @@ int main(int argc, char* argv[]) {
 					output_device_array.resize(0);
 					output_device_array = SAVE_INPUT;
 				}
-//			}
+			}
 			input_device_array = output_device_array;
 		}
 		gold_check_time = rad::mysecond() - gold_check_time;
@@ -240,8 +244,7 @@ int main(int argc, char* argv[]) {
 			auto wasted_time = cuda_copy_time + gold_check_time;
 			auto overall_time = wasted_time + kernel_time;
 			std::cout << "\nIteration " << loop2 << " overall time: "
-					<< overall_time << " wasted time: "
-					<< wasted_time << " ("
+					<< overall_time << " wasted time: " << wasted_time << " ("
 					<< (wasted_time / overall_time) * 100.0 << "%)" << std::endl
 					<< std::endl;
 
