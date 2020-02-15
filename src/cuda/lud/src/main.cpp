@@ -42,7 +42,7 @@
 extern void lud_cuda(float *m, int matrix_dim);
 
 template<typename T>
-void generateInputMatrix(std::vector<T>& array, size_t MatrixDim) {
+void generateInputMatrix(std::vector<T>& array, size_t size) {
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -54,29 +54,29 @@ void generateInputMatrix(std::vector<T>& array, size_t MatrixDim) {
 
 	size_t i, j, k;
 
-#pragma omp parallel for default(none) private(i,j) shared(L,U,MatrixDim)
-	for (i = 0; i < MatrixDim; i++) {
-		for (j = 0; j < MatrixDim; j++) {
+#pragma omp parallel for default(none) private(i,j) shared(L,U,size)
+	for (i = 0; i < size; i++) {
+		for (j = 0; j < size; j++) {
 			if (i == j) {
-				L[i * MatrixDim + j] = 1.0;
-				U[i * MatrixDim + j] = GET_RAND_FP;
+				L[i * size + j] = 1.0;
+				U[i * size + j] = GET_RAND_FP;
 			} else if (i < j) {
-				L[i * MatrixDim + j] = 0;
-				U[i * MatrixDim + j] = GET_RAND_FP;
+				L[i * size + j] = 0;
+				U[i * size + j] = GET_RAND_FP;
 			} else { // i > j
-				L[i * MatrixDim + j] = GET_RAND_FP;
-				U[i * MatrixDim + j] = 0;
+				L[i * size + j] = GET_RAND_FP;
+				U[i * size + j] = 0;
 			}
 		}
 	}
 
-#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,MatrixDim)
-	for (i = 0; i < MatrixDim; i++) {
-		for (j = 0; j < MatrixDim; j++) {
+#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,size)
+	for (i = 0; i < size; i++) {
+		for (j = 0; j < size; j++) {
 			T sum = 0;
-			for (k = 0; k < MatrixDim; k++)
-				sum += L[i * MatrixDim + k] * U[k * MatrixDim + j];
-			array[i * MatrixDim + j] = sum;
+			for (k = 0; k < size; k++)
+				sum += L[i * size + k] * U[k * size + j];
+			array[i * size + j] = sum;
 		}
 	}
 
@@ -148,11 +148,11 @@ int main(int argc, char* argv[]) {
 		write_to_file(parameters.input, INPUT);
 	} else {
 		auto read_input = read_from_file(parameters.input, INPUT);
-		if (read_input == false) {
+		if (read_input) {
 			throw_line("Error reading " + parameters.input);
 		}
 		auto read_gold = read_from_file(parameters.gold, GOLD);
-		if (read_gold == false) {
+		if (read_gold) {
 			throw_line("Error reading " + parameters.gold);
 		}
 	}
