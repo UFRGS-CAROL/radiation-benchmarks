@@ -142,23 +142,26 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 //}
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
+	auto badass_time = rad::mysecond();
 	uint32_t n = gold_vector.size();
-	uint32_t numthreads = omp_get_max_threads() * 2;
+	uint32_t numthreads = omp_get_max_threads();
 	uint32_t chunk = ceil(float(n) / float(numthreads));
 	static std::vector<uint32_t> reduction_array(numthreads);
 
 	int *gold = gold_vector.data();
 	int *found = found_vector.data();
 
-#pragma omp parallel default(shared) num_threads(numthreads)
+#pragma omp parallel default(shared)
 	{
 		uint32_t tid = omp_get_thread_num();
 		uint32_t i = tid * chunk;
 		reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
 				found + i);
 	}
-
-	return (std::accumulate(reduction_array.begin(), reduction_array.end(), 0));;
+	auto result = std::accumulate(reduction_array.begin(), reduction_array.end(), 0);
+	badass_time = rad::mysecond() - badass_time;
+	std::cout << "BADASS TIME " << badass_time << std::endl;
+	return (result != 0);
 }
 
 void usage(int argc, char **argv) {
