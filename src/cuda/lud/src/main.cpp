@@ -241,10 +241,11 @@ int main(int argc, char* argv[]) {
 			std::cout << ".\nSIZE:" << parameters.size << " OUTPUT/S: "
 					<< outputpersec;
 			auto wasted_time = cuda_copy_time + gold_check_time;
+			auto overall_time = wasted_time + kernel_time;
 			std::cout << "\nIteration " << loop2 << " overall time: "
-					<< wasted_time + kernel_time << " wasted time: "
+					<< overall_time << " wasted time: "
 					<< wasted_time << " ("
-					<< (kernel_time / wasted_time) * 100.0 << "%)" << std::endl
+					<< (wasted_time /kernel_time) * 100.0 << "%)" << std::endl
 					<< std::endl;
 
 		}
