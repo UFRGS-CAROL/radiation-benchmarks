@@ -128,42 +128,17 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 	printf("ok in %f\n", rad::mysecond() - time);
 }
 
-//int badass_memcmp(std::vector<int>&  gold, std::vector<int>& found) {
-//	int result = 0;
-//	unsigned long chunk = ceil(double(gold.size()) / double(omp_get_max_threads()));
-//	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-//	double time = rad::mysecond();
-//#pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
-//	for (size_t i = 0; i < gold.size(); i++)
-//		result = result + (gold[i] - found[i]);
-//
-////	printf("comparing took %lf seconds, diff %d\n", rad::mysecond() - time, result);
-//	return result;
-//}
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
-	/*int result = 0;
-	 uint32_t n = gold_vector.size();
-	 uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
-
-	 int *gold = gold_vector.data();
-	 int *found = found_vector.data();
-
-	 #pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
-	 for (size_t i = 0; i < n; i++)
-	 result = result + (gold[i] ^ found[i]);
-
-	 return result != 0;
-	 */
 	uint32_t n = gold_vector.size();
-	uint32_t numthreads = omp_get_max_threads();
+	uint32_t numthreads = omp_get_max_threads() * 2;
 	uint32_t chunk = ceil(float(n) / float(numthreads));
-	static std::vector<uint32_t> reduction_array(numthreads);
+	std::vector<uint32_t> reduction_array(numthreads);
 
 	int *gold = gold_vector.data();
 	int *found = found_vector.data();
 
-#pragma omp parallel default(shared)
+#pragma omp parallel default(shared) num_threads(numthreads)
 	{
 		uint32_t tid = omp_get_thread_num();
 		uint32_t i = tid * chunk;
