@@ -37,7 +37,7 @@
 
 #include "utils.h"
 
-#define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
+//#define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
 
 extern void lud_cuda(float *m, int matrix_dim);
 
@@ -47,38 +47,43 @@ void generateInputMatrix(std::vector<T>& array, size_t size) {
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	//ORIGINAL:
-	std::uniform_real_distribution<T> dis(1.0f, 2.0f);
+	std::uniform_real_distribution<T> dis(1.0f, 32768.0f);
 
-	std::vector<T> L(array.size());
-	std::vector<T> U(array.size());
-
-	size_t i, j, k;
-
-#pragma omp parallel for default(none) private(i,j) shared(L,U,size)
-	for (i = 0; i < size; i++) {
-		for (j = 0; j < size; j++) {
-			if (i == j) {
-				L[i * size + j] = 1.0;
-				U[i * size + j] = GET_RAND_FP;
-			} else if (i < j) {
-				L[i * size + j] = 0;
-				U[i * size + j] = GET_RAND_FP;
-			} else { // i > j
-				L[i * size + j] = GET_RAND_FP;
-				U[i * size + j] = 0;
-			}
-		}
+#pragma omp parallel for
+	for(size_t i = 0; i < array.size(); i++){
+		array[i] = dis(gen);
 	}
 
-#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,size)
-	for (i = 0; i < size; i++) {
-		for (j = 0; j < size; j++) {
-			T sum = 0;
-			for (k = 0; k < size; k++)
-				sum += L[i * size + k] * U[k * size + j];
-			array[i * size + j] = sum;
-		}
-	}
+//	std::vector<T> L(array.size());
+//	std::vector<T> U(array.size());
+
+//	size_t i, j, k;
+//
+//#pragma omp parallel for default(none) private(i,j) shared(L,U,size)
+//	for (i = 0; i < size; i++) {
+//		for (j = 0; j < size; j++) {
+//			if (i == j) {
+//				L[i * size + j] = 1.0;
+//				U[i * size + j] = GET_RAND_FP;
+//			} else if (i < j) {
+//				L[i * size + j] = 0;
+//				U[i * size + j] = GET_RAND_FP;
+//			} else { // i > j
+//				L[i * size + j] = GET_RAND_FP;
+//				U[i * size + j] = 0;
+//			}
+//		}
+//	}
+//
+//#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,size)
+//	for (i = 0; i < size; i++) {
+//		for (j = 0; j < size; j++) {
+//			T sum = 0;
+//			for (k = 0; k < size; k++)
+//				sum += L[i * size + k] * U[k * size + j];
+//			array[i * size + j] = sum;
+//		}
+//	}
 
 }
 
