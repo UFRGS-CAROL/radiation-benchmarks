@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <random>
 #include <omp.h>
+#include <algorithm>
 
 #include "generic_log.h" //from ../common/include
 #include "device_vector.h"
@@ -54,37 +55,9 @@ void generateInputMatrix(std::vector<T>& array, size_t size) {
 		array[i] = dis(gen);
 	}
 
-//	std::vector<T> L(array.size());
-//	std::vector<T> U(array.size());
-
-//	size_t i, j, k;
-//
-//#pragma omp parallel for default(none) private(i,j) shared(L,U,size)
-//	for (i = 0; i < size; i++) {
-//		for (j = 0; j < size; j++) {
-//			if (i == j) {
-//				L[i * size + j] = 1.0;
-//				U[i * size + j] = GET_RAND_FP;
-//			} else if (i < j) {
-//				L[i * size + j] = 0;
-//				U[i * size + j] = GET_RAND_FP;
-//			} else { // i > j
-//				L[i * size + j] = GET_RAND_FP;
-//				U[i * size + j] = 0;
-//			}
-//		}
-//	}
-//
-//#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,size)
-//	for (i = 0; i < size; i++) {
-//		for (j = 0; j < size; j++) {
-//			T sum = 0;
-//			for (k = 0; k < size; k++)
-//				sum += L[i * size + k] * U[k * size + j];
-//			array[i * size + j] = sum;
-//		}
-//	}
-
+	// only checking if OMP keep everything ok
+	auto zeros = std::count(array.begin(), array.end(), T(0.0));
+	std::cout << "ZEROS in the input: " << zeros << std::endl;
 }
 
 template<typename real_t>
