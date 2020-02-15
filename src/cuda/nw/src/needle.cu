@@ -303,12 +303,12 @@ void runTest(int argc, char** argv) {
 			cmp_time = rad::mysecond() - cmp_time;
 
 			if (is_equal) {
-				for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
-					for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
+#pragma omp parallel for default(shared)
+				for (int i = 0; (i < n); i++) {
+					for (int j = 0; (j < n); j++) {
 						auto gold_ij = gold_itemsets[i * n + j];
 						auto output_ij = output_itemsets[i * n + j];
 						if (output_ij != gold_ij) {
-							ea++;
 
 							//p: [%d, %d], r: %i, e: %i, error: %d"
 							std::string error_detail = "";
@@ -316,14 +316,18 @@ void runTest(int argc, char** argv) {
 									+ std::to_string(j) + "],";
 							error_detail += " r: " + std::to_string(output_ij)
 									+ ",";
-							error_detail += " e: " + std::to_string(gold_ij)
+							error_detail += " e: " + std::to_string(gold_ij);
 //									+ ",";
 //							error_detail += " error: " + std::to_string(ea);
+#pragma omp critical
+							{
+								ea++;
 
 #ifdef LOGS
-							log_error_detail(CONST_CAST(error_detail.c_str()));
-							host_errors++;
+								log_error_detail(CONST_CAST(error_detail.c_str()));
+								host_errors++;
 #endif
+							}
 
 						}
 					}
