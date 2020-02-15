@@ -350,7 +350,7 @@ void runTest(int argc, char** argv) {
 				std::cout << " ACC time: " << total_time << "s.";
 				std::cout << " iteration time: " << iteration_time << "s.";
 				std::cout << " wasted time: " << wasted_time << "s. ("
-						<< wasted_time / iteration_time << "%)";
+						<< (wasted_time / iteration_time) * 100 << "%)";
 				std::cout << " total errors: " << t_ea << std::endl;
 			} else {
 				std::cout << "." << std::flush;
