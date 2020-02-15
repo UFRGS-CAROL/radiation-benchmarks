@@ -187,8 +187,8 @@ int main(int argc, char* argv[]) {
 #pragma omp parallel for
 				for (size_t i = 0; i < parameters.size; i++) {
 					for (size_t j = 0; j < parameters.size; j++) {
-						auto g = gold_array[i + parameters.size * j];
-						auto f = input_host_array[i + parameters.size * j];
+						auto g = gold_array[i * parameters.size + j];
+						auto f = input_host_array[i * parameters.size + j];
 						if (g != f) {
 
 							std::stringstream error_detail;
