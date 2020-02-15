@@ -129,17 +129,37 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 }
 
 
-int badass_memcmp(std::vector<int>&  gold, std::vector<int>& found) {
-	int result = 0;
-	unsigned long chunk = ceil(double(gold.size()) / double(omp_get_max_threads()));
-	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-	double time = rad::mysecond();
-#pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
-	for (size_t i = 0; i < gold.size(); i++)
+//int badass_memcmp(std::vector<int>&  gold, std::vector<int>& found) {
+//	int result = 0;
+//	unsigned long chunk = ceil(double(gold.size()) / double(omp_get_max_threads()));
+//	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+//	double time = rad::mysecond();
+//#pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
+//	for (size_t i = 0; i < gold.size(); i++)
+//		result = result + (gold[i] - found[i]);
+//
+////	printf("comparing took %lf seconds, diff %d\n", rad::mysecond() - time, result);
+//	return result;
+//}
+template<typename real_t> inline
+bool badass_memcmp(std::vector<real_t>& gold_vector,
+		std::vector<real_t>& found_vector) {
+	uint32_t i;
+	uint32_t n = gold_vector.size();
+	uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
+
+	real_t result = 0.0;
+	real_t *gold = gold_vector.data();
+	real_t *found = found_vector.data();
+
+#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
+	for (i = 0; i < n; i++)
 		result = result + (gold[i] - found[i]);
 
-//	printf("comparing took %lf seconds, diff %d\n", rad::mysecond() - time, result);
-	return result;
+	real_t threshold = 0.0000001;
+	if (fabs(result) > threshold)
+		return true;
+	return false;
 }
 
 void usage(int argc, char **argv) {
@@ -207,7 +227,7 @@ void runTest(int argc, char** argv) {
 	//====================================
 	KErrorsType ea = 0; //wrong integers in the current loop
 	KErrorsType t_ea = 0; //total number of wrong integers
-	KErrorsType old_ea = 0;
+//	KErrorsType old_ea = 0;
 
 	double total_time = 0.0;
 
@@ -327,20 +347,18 @@ void runTest(int argc, char** argv) {
 			output_itemsets = output_itemsets_cuda.to_vector();
 */
 			ea = 0;
+			uint32_t host_errors =0;
 
 			auto mem_cpy_cmp_time = rad::mysecond();
 			matrix_cuda.to_vector(output_itemsets);
-			KErrorsType kerrors = badass_memcmp(gold_itemsets, output_itemsets);
-			mem_cpy_cmp_time = rad::mysecond() - mem_cpy_cmp_time;
-			if (kerrors > 0) {
+			if (badass_memcmp(gold_itemsets, output_itemsets)) {
 				//file = fopen(file_name, "a");
 				//std::cout <<  << kerrors << "\n";
-#ifdef LOGS
-//				sprintf(error_info, "Error detected! kerrors = %d" ,kerrors);
-				std::string error_info = "Error detected! kerrors = " + std::to_string(kerrors);
-				log_error_detail(CONST_CAST(error_info.c_str()));
-				int host_errors =0;
-#endif
+//#ifdef LOGS
+////				sprintf(error_info, "Error detected! kerrors = %d" ,kerrors);
+//				std::string error_info = "Error detected! kerrors = " + std::to_string(kerrors);
+//				log_error_detail(CONST_CAST(error_info.c_str()));
+//#endif
 
 //				rad::checkFrameworkErrors(
 //						cudaMemcpy(output_itemsets, matrix_cuda,
@@ -369,28 +387,25 @@ void runTest(int argc, char** argv) {
 						}
 					}
 				}
-				t_ea += kerrors;
+				t_ea += host_errors;
 
 #ifdef LOGS
-				log_error_count(kerrors);
+				log_error_count(host_errors);
 #endif
 			}
+			mem_cpy_cmp_time = rad::mysecond() - mem_cpy_cmp_time;
 
-			if (kerrors > 0 || (loop2 % 10 == 0)) {
-				std::cout << "test number: " << loop2;
+
+			if (host_errors > 0 || (loop2 % 10 == 0)) {
+				std::cout << "iteration: " << loop2;
+				std::cout << " kernel time: " << timeG;
 				std::cout << " total time: " << total_time;
-				std::cout << " errors: " << kerrors;
+				std::cout << " errors: " << host_errors;
 				std::cout << " matrix cuda set: " << mem_cpy_time;
 				std::cout << " time cmp and cpy: " << mem_cpy_cmp_time;
 				std::cout << " total errors: " << t_ea << std::endl;
-				if ((kerrors != 0) && (kerrors == old_ea)) {
-					old_ea = 0;
-					return;
-				}
-
-				old_ea = kerrors;
 			} else {
-				std::cout << ".";
+				std::cout << "." << std::flush;
 			}
 		} else {
 			output_itemsets = matrix_cuda.to_vector();
