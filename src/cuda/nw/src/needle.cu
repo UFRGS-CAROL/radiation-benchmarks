@@ -154,7 +154,7 @@ bool inline badass_memcmp(std::vector<int>& gold_vector,
 void usage(int argc, char **argv) {
 	fprintf(stderr,
 			"Usage: %s <max_rows/max_cols> <penalty> <input_array> <gold_array> <iterations> "
-					"<to generate gold 0 or 1>\n", argv[0]);
+					"<to generate gold 0 or 1> <streams>\n", argv[0]);
 	fprintf(stderr, "\t<dimension>  - x and y dimensions\n");
 	fprintf(stderr, "\t<penalty> - penalty(positive integer)\n");
 	exit(1);
@@ -164,11 +164,12 @@ void runTest(int argc, char** argv) {
 	int max_rows, max_cols, penalty;
 	int iterations = 1;
 	bool generate = false;
+	int streams = 1;
 	std::string array_path, gold_path;
 
 	// the lengths of the two sequences should be able to divided by 16.
 	// And at current stage  max_rows needs to equal max_cols
-	if (argc == 7) {
+	if (argc == 8) {
 		max_rows = atoi(argv[1]);
 		max_cols = atoi(argv[1]);
 		penalty = atoi(argv[2]);
@@ -176,6 +177,7 @@ void runTest(int argc, char** argv) {
 		gold_path = std::string(argv[4]);
 		iterations = atoi(argv[5]);
 		generate = atoi(argv[6]);
+		streams = atoi(argv[7]);
 		if (generate)
 			iterations = 1;
 	} else {
@@ -206,7 +208,9 @@ void runTest(int argc, char** argv) {
 	std::string test_info = "";
 	test_info += "max_rows:" + std::to_string(max_rows) + " ";
 	test_info += "max_cols:" + std::to_string(max_cols) + " ";
-	test_info += "penalty:" + std::to_string(penalty);
+	test_info += "penalty:" + std::to_string(penalty) + " ";
+	test_info += "streams:" + std::to_string(streams);
+
 	start_log_file(CONST_CAST("cudaNW"), CONST_CAST(test_info.c_str()));
 #endif
 	//====================================
@@ -222,13 +226,12 @@ void runTest(int argc, char** argv) {
 
 	std::vector<int> referrence(size);
 	std::vector<int> input_itemsets(size);
-	std::vector<int> output_itemsets(size);
+	std::vector<std::vector<int>> output_itemsets(streams,
+			std::vector<int>(size));
 	std::vector<int> gold_itemsets(size);
 
 	rad::DeviceVector<int> referrence_cuda = referrence;
-	rad::DeviceVector<int> matrix_cuda = input_itemsets;
-	rad::DeviceVector<int> output_itemsets_cuda = output_itemsets;
-	rad::DeviceVector<int> gold_itemsets_cuda = gold_itemsets;
+	std::vector<rad::DeviceVector<int>> matrix_cuda(streams, input_itemsets);
 
 	std::cout << "Starting Needleman-Wunsch" << std::endl;
 
@@ -254,7 +257,8 @@ void runTest(int argc, char** argv) {
 
 	for (int loop2 = 0; loop2 < iterations; loop2++) {
 		auto mem_cpy_time = rad::mysecond();
-		matrix_cuda = save_input_itemsets_cuda;
+		for (auto& dev_vet_stream : matrix_cuda)
+			dev_vet_stream = save_input_itemsets_cuda;
 		mem_cpy_time = rad::mysecond() - mem_cpy_time;
 
 		dim3 dimGrid;
@@ -265,22 +269,28 @@ void runTest(int argc, char** argv) {
 #ifdef LOGS
 		start_iteration();
 #endif
-		//printf("Processing top-left matrix\n");
-		//process top-left matrix
-		for (int i = 1; i <= block_width; i++) {
-			dimGrid.x = i;
-			dimGrid.y = 1;
-			needle_cuda_shared_1<<<dimGrid, dimBlock>>>(referrence_cuda.data(),
-					matrix_cuda.data(), max_cols, penalty, i, block_width);
+		//processing for each stream
+		for (auto& dev_vet_stream : matrix_cuda) {
+			//printf("Processing top-left matrix\n");
+			//process top-left matrix
+			for (int i = 1; i <= block_width; i++) {
+				dimGrid.x = i;
+				dimGrid.y = 1;
+				needle_cuda_shared_1<<<dimGrid, dimBlock>>>(
+						referrence_cuda.data(), dev_vet_stream.data(), max_cols,
+						penalty, i, block_width);
+			}
+			//printf("Processing bottom-right matrix\n");
+			//process bottom-right matrix
+			for (int i = block_width - 1; i >= 1; i--) {
+				dimGrid.x = i;
+				dimGrid.y = 1;
+				needle_cuda_shared_2<<<dimGrid, dimBlock>>>(
+						referrence_cuda.data(), dev_vet_stream.data(), max_cols,
+						penalty, i, block_width);
+			}
 		}
-		//printf("Processing bottom-right matrix\n");
-		//process bottom-right matrix
-		for (int i = block_width - 1; i >= 1; i--) {
-			dimGrid.x = i;
-			dimGrid.y = 1;
-			needle_cuda_shared_2<<<dimGrid, dimBlock>>>(referrence_cuda.data(),
-					matrix_cuda.data(), max_cols, penalty, i, block_width);
-		}
+
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -295,36 +305,45 @@ void runTest(int argc, char** argv) {
 			uint32_t host_errors = 0;
 
 			auto copy_time = rad::mysecond();
-			matrix_cuda.to_vector(output_itemsets);
+			for (auto stream_i = 0; stream_i < streams; stream_i++) {
+				matrix_cuda[stream_i].to_vector(output_itemsets[stream_i]);
+
+			}
 			copy_time = rad::mysecond() - copy_time;
 
 			auto cmp_time = rad::mysecond();
-			auto is_equal = badass_memcmp(gold_itemsets, output_itemsets);
+			auto is_equal = false;
+			for (auto& host_vet_stream : output_itemsets)
+				is_equal |= badass_memcmp(gold_itemsets, host_vet_stream);
 			cmp_time = rad::mysecond() - cmp_time;
 
 			if (is_equal) {
-				for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
-					for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
-						auto gold_ij = gold_itemsets[i * n + j];
-						auto output_ij = output_itemsets[i * n + j];
-						if (output_ij != gold_ij) {
-							ea++;
+				for (auto stream_i = 0; stream_i < streams; stream_i++) {
 
-							//p: [%d, %d], r: %i, e: %i, error: %d"
-							std::string error_detail = "";
-							error_detail += " p: [" + std::to_string(i) + ", "
-									+ std::to_string(j) + "],";
-							error_detail += " r: " + std::to_string(output_ij)
-									+ ",";
-							error_detail += " e: " + std::to_string(gold_ij)
-									+ ",";
-							error_detail += " error: " + std::to_string(ea);
+					for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
+						for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
+							auto gold_ij = gold_itemsets[i * n + j];
+							auto output_ij = output_itemsets[stream_i][i * n + j];
+							if (output_ij != gold_ij) {
+								ea++;
+
+								//p: [%d, %d], r: %i, e: %i, error: %d"
+								std::string error_detail = "";
+								error_detail += " p: [" + std::to_string(i)
+										+ ", " + std::to_string(j) + "],";
+								error_detail += " r: "
+										+ std::to_string(output_ij) + ",";
+								error_detail += " e: "
+										+ std::to_string(gold_ij);
+//									+ ",";
+//							error_detail += " error: " + std::to_string(ea);
 
 #ifdef LOGS
-							log_error_detail(CONST_CAST(error_detail.c_str()));
-							host_errors++;
+								log_error_detail(CONST_CAST(error_detail.c_str()));
+								host_errors++;
 #endif
 
+							}
 						}
 					}
 				}
@@ -354,8 +373,8 @@ void runTest(int argc, char** argv) {
 				std::cout << "." << std::flush;
 			}
 		} else {
-			output_itemsets = matrix_cuda.to_vector();
-			WriteGoldToFile(output_itemsets, gold_path, max_rows);
+			output_itemsets[0] = matrix_cuda[0].to_vector();
+			WriteGoldToFile(output_itemsets[0], gold_path, max_rows);
 		}
 
 	}
