@@ -141,25 +141,21 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 ////	printf("comparing took %lf seconds, diff %d\n", rad::mysecond() - time, result);
 //	return result;
 //}
-template<typename real_t> inline
-bool badass_memcmp(std::vector<real_t>& gold_vector,
-		std::vector<real_t>& found_vector) {
+bool inline badass_memcmp(std::vector<int>& gold_vector,
+		std::vector<int>& found_vector) {
 	uint32_t i;
 	uint32_t n = gold_vector.size();
 	uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
 
-	real_t result = 0.0;
-	real_t *gold = gold_vector.data();
-	real_t *found = found_vector.data();
+	int result = 0;
+	int *gold = gold_vector.data();
+	int *found = found_vector.data();
 
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
 	for (i = 0; i < n; i++)
-		result = result + (gold[i] - found[i]);
+		result = result + (gold[i] ^ found[i]);
 
-	real_t threshold = 0.0000001;
-	if (fabs(result) > threshold)
-		return true;
-	return false;
+	return (result != 0);
 }
 
 void usage(int argc, char **argv) {
