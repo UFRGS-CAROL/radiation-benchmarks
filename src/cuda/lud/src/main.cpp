@@ -142,7 +142,6 @@ int main(int argc, char* argv[]) {
 			gold_array[35] = -2;
 		}
 	}
-	std::vector<float> SAVE_INPUT = input_host_array;
 	//====================================
 
 	double total_kernel_time = 0;
@@ -151,10 +150,15 @@ int main(int argc, char* argv[]) {
 
 	//================== Init DEVICE memory
 	rad::DeviceVector<float> input_device_array = input_host_array;
-	rad::DeviceVector<float> output_device_array = input_host_array;
+	const std::vector<float> save_input_host_array = input_host_array;
+	rad::DeviceVector<float> save_input_device_array = save_input_host_array;
 	//====================================
 
 	for (size_t loop2 = 0; loop2 < parameters.iterations; loop2++) { //================== Global test loop
+		auto array_set_time = rad::mysecond();
+		input_device_array = save_input_device_array;
+		array_set_time = rad::mysecond() - array_set_time;
+
 		auto kernel_time = rad::mysecond();
 
 		if (!parameters.generate)
@@ -213,8 +217,6 @@ int main(int argc, char* argv[]) {
 					}
 				}
 
-				// printf("numErrors:%d", host_errors);
-
 				log.update_errors();
 
 				//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
@@ -223,11 +225,10 @@ int main(int argc, char* argv[]) {
 
 					//================== Reload DEVICE memory
 					input_device_array.resize(0);
-					output_device_array.resize(0);
-					output_device_array = SAVE_INPUT;
+					save_input_device_array.resize(0);
+					save_input_device_array = save_input_host_array;
 				}
 			}
-			input_device_array = output_device_array;
 		}
 		gold_check_time = rad::mysecond() - gold_check_time;
 
@@ -237,6 +238,7 @@ int main(int argc, char* argv[]) {
 			std::cout << "Device kernel time for iteration " << loop2 << " - "
 					<< kernel_time;
 			std::cout << "\nCopy time: " << cuda_copy_time;
+			std::cout << "\nArray set time: " << array_set_time;
 			std::cout << ".\nGold check time " << gold_check_time;
 			double outputpersec = (double) matrixSize / kernel_time;
 			std::cout << ".\nSIZE:" << parameters.size << " OUTPUT/S: "
