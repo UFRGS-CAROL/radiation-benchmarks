@@ -91,8 +91,7 @@ bool write_to_file(std::string& path, std::vector<T>& array) {
 
 void GenerateInputFile(std::vector<int>& input_itemsets,
 		std::string filenameinput) {
-	std::cout
-			<< "Generating a random array  with size == "
+	std::cout << "Generating a random array  with size == "
 			<< input_itemsets.size() << std::endl;
 	for (auto& i : input_itemsets) {
 		i = rand() % MAX_VALUE_NW; //24 is from blosum size
@@ -127,7 +126,6 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 	std::cout << "read...";
 	printf("ok in %f\n", rad::mysecond() - time);
 }
-
 
 //int badass_memcmp(std::vector<int>&  gold, std::vector<int>& found) {
 //	int result = 0;
@@ -166,8 +164,6 @@ void usage(int argc, char **argv) {
 	fprintf(stderr, "\t<penalty> - penalty(positive integer)\n");
 	exit(1);
 }
-
-
 
 void runTest(int argc, char** argv) {
 	int max_rows, max_cols, penalty;
@@ -318,36 +314,37 @@ void runTest(int argc, char** argv) {
 
 		//std::cout << "Done in " << timeG << "s.\n";
 		if (generate == false) {
-/*			kerrors = 0;
-			// Check errors on GPU...
-			//std::cout << "Sending gold matrix to GPU...";
-			timeG = rad::mysecond();
-//			referrence_cuda = gold_itemsets;
-			// Using referrence just to avoid reallocation for gold
-			rad::checkFrameworkErrors(
-					cudaMemcpyToSymbol(gpukerrors, &zero, sizeof(KErrorsType)));
-			timeG = rad::mysecond() - timeG;
-			//std::cout << "Done in " << timeG << "s.\nRunning GoldChk...";
-			timeG = rad::mysecond();
+			/*			kerrors = 0;
+			 // Check errors on GPU...
+			 //std::cout << "Sending gold matrix to GPU...";
+			 timeG = rad::mysecond();
+			 //			referrence_cuda = gold_itemsets;
+			 // Using referrence just to avoid reallocation for gold
+			 rad::checkFrameworkErrors(
+			 cudaMemcpyToSymbol(gpukerrors, &zero, sizeof(KErrorsType)));
+			 timeG = rad::mysecond() - timeG;
+			 //std::cout << "Done in " << timeG << "s.\nRunning GoldChk...";
+			 timeG = rad::mysecond();
 
-			GoldChkKernel<<<gchk_dimGrid, gchk_dimBlock>>>(
-					gold_itemsets_cuda.data(), output_itemsets_cuda.data(), n);
+			 GoldChkKernel<<<gchk_dimGrid, gchk_dimBlock>>>(
+			 gold_itemsets_cuda.data(), output_itemsets_cuda.data(), n);
 
-			timeG = rad::mysecond() - timeG;
-			rad::checkFrameworkErrors(cudaDeviceSynchronize());
-			rad::checkFrameworkErrors((cudaPeekAtLastError()));
-			rad::checkFrameworkErrors(
-					cudaMemcpyFromSymbol(&kerrors, gpukerrors,
-							sizeof(KErrorsType)));
-			std::cout << "Done in " << timeG << "s.";
-			output_itemsets = output_itemsets_cuda.to_vector();
-*/
+			 timeG = rad::mysecond() - timeG;
+			 rad::checkFrameworkErrors(cudaDeviceSynchronize());
+			 rad::checkFrameworkErrors((cudaPeekAtLastError()));
+			 rad::checkFrameworkErrors(
+			 cudaMemcpyFromSymbol(&kerrors, gpukerrors,
+			 sizeof(KErrorsType)));
+			 std::cout << "Done in " << timeG << "s.";
+			 output_itemsets = output_itemsets_cuda.to_vector();
+			 */
 			ea = 0;
-			uint32_t host_errors =0;
+			uint32_t host_errors = 0;
 
 			auto mem_cpy_cmp_time = rad::mysecond();
 			matrix_cuda.to_vector(output_itemsets);
-			if (badass_memcmp(gold_itemsets, output_itemsets)) {
+//			if (badass_memcmp(gold_itemsets, output_itemsets)) {
+			if (gold_itemsets != output_itemsets) {
 				//file = fopen(file_name, "a");
 				//std::cout <<  << kerrors << "\n";
 //#ifdef LOGS
@@ -366,9 +363,14 @@ void runTest(int argc, char** argv) {
 							ea++;
 //							char error_detail[200];
 							std::string error_detail = "";
-							error_detail += " p: [" + std::to_string(i) + ", " + std::to_string(j) + "],";
-							error_detail += " r: " + std::to_string(output_itemsets[i + n * j]) + ",";
-							error_detail += " e: " + std::to_string(gold_itemsets[i + n * j]) + ",";
+							error_detail += " p: [" + std::to_string(i) + ", "
+									+ std::to_string(j) + "],";
+							error_detail += " r: "
+									+ std::to_string(output_itemsets[i + n * j])
+									+ ",";
+							error_detail += " e: "
+									+ std::to_string(gold_itemsets[i + n * j])
+									+ ",";
 							error_detail += " error: " + std::to_string(ea);
 
 //							sprintf(error_detail,
@@ -390,7 +392,6 @@ void runTest(int argc, char** argv) {
 #endif
 			}
 			mem_cpy_cmp_time = rad::mysecond() - mem_cpy_cmp_time;
-
 
 			if (host_errors > 0 || (loop2 % 10 == 0)) {
 				std::cout << "iteration: " << loop2;
