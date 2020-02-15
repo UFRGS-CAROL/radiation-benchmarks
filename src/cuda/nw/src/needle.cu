@@ -142,26 +142,36 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 //}
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
-	auto badass_time = rad::mysecond();
+	int result = 0;
 	uint32_t n = gold_vector.size();
-	uint32_t numthreads = omp_get_max_threads();
-	uint32_t chunk = ceil(float(n) / float(numthreads));
-	static std::vector<uint32_t> reduction_array(numthreads);
+	uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
 
 	int *gold = gold_vector.data();
 	int *found = found_vector.data();
 
-#pragma omp parallel default(shared)
-	{
-		uint32_t tid = omp_get_thread_num();
-		uint32_t i = tid * chunk;
-		reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
-				found + i);
-	}
-	auto result = std::accumulate(reduction_array.begin(), reduction_array.end(), 0);
-	badass_time = rad::mysecond() - badass_time;
-	std::cout << "BADASS TIME " << badass_time << std::endl;
-	return (result != 0);
+#pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
+	for (size_t i = 0; i < n; i++)
+		result = result + (gold[i] ^ found[i]);
+
+	return result != 0;
+	/*	uint32_t n = gold_vector.size();
+	 uint32_t numthreads = omp_get_max_threads();
+	 uint32_t chunk = ceil(float(n) / float(numthreads));
+	 static std::vector<uint32_t> reduction_array(numthreads);
+
+	 int *gold = gold_vector.data();
+	 int *found = found_vector.data();
+
+	 #pragma omp parallel default(shared)
+	 {
+	 uint32_t tid = omp_get_thread_num();
+	 uint32_t i = tid * chunk;
+	 reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
+	 found + i);
+	 }
+	 auto result = std::accumulate(reduction_array.begin(), reduction_array.end(), 0);
+	 return (result != 0);
+	 */
 }
 
 void usage(int argc, char **argv) {
@@ -354,7 +364,12 @@ void runTest(int argc, char** argv) {
 			copy_time = rad::mysecond() - copy_time;
 
 			auto cmp_time = rad::mysecond();
-			if (badass_memcmp(gold_itemsets, output_itemsets)) {
+			auto is_equal = badass_memcmp(gold_itemsets, output_itemsets);
+			cmp_time = rad::mysecond() - cmp_time;
+			std::cout << "BADASS TIME " << cmp_time << " is equal " << is_equal
+					<< std::endl;
+
+			if (is_equal) {
 //#ifdef LOGS
 ////				sprintf(error_info, "Error detected! kerrors = %d" ,kerrors);
 //				std::string error_info = "Error detected! kerrors = " + std::to_string(kerrors);
@@ -399,7 +414,6 @@ void runTest(int argc, char** argv) {
 				log_error_count(host_errors);
 #endif
 			}
-			cmp_time = rad::mysecond() - cmp_time;
 
 			if (host_errors > 0 || (loop2 % 10 == 0)) {
 				std::cout << "iteration: " << loop2;
