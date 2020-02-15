@@ -37,6 +37,8 @@
 
 #include "utils.h"
 
+#define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
+
 extern void lud_cuda(float *m, int matrix_dim);
 
 template<typename T>
@@ -44,7 +46,7 @@ void generateInputMatrix(std::vector<T>& array, size_t MatrixDim) {
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	//ORIGINAL: #define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
+	//ORIGINAL:
 	std::uniform_real_distribution<T> dis(1.0f, 2.0f);
 
 	std::vector<T> L(array.size());
@@ -52,17 +54,17 @@ void generateInputMatrix(std::vector<T>& array, size_t MatrixDim) {
 
 	size_t i, j, k;
 
-#pragma omp parallel for default(none) private(i,j) shared(L,U,MatrixDim, dis, gen)
+#pragma omp parallel for default(none) private(i,j) shared(L,U,MatrixDim)
 	for (i = 0; i < MatrixDim; i++) {
 		for (j = 0; j < MatrixDim; j++) {
 			if (i == j) {
 				L[i * MatrixDim + j] = 1.0;
-				U[i * MatrixDim + j] = dis(gen);
+				U[i * MatrixDim + j] = GET_RAND_FP;
 			} else if (i < j) {
 				L[i * MatrixDim + j] = 0;
-				U[i * MatrixDim + j] = dis(gen);
+				U[i * MatrixDim + j] = GET_RAND_FP;
 			} else { // i > j
-				L[i * MatrixDim + j] = dis(gen);
+				L[i * MatrixDim + j] = GET_RAND_FP;
 				U[i * MatrixDim + j] = 0;
 			}
 		}
