@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
 		if (read_gold) {
 			throw_line("Error reading " + parameters.gold);
 		}
-		if(parameters.debug){
+		if (parameters.debug) {
 			gold_array[35] = -2;
 		}
 	}
@@ -179,7 +179,8 @@ int main(int argc, char* argv[]) {
 		if (parameters.generate) {
 			write_to_file(parameters.gold, input_host_array);
 		} else {
-			if (badass_memcmp(gold_array.data(), input_host_array.data(), matrixSize)) {
+			if (badass_memcmp(gold_array.data(), input_host_array.data(),
+					matrixSize)) {
 				int host_errors = 0;
 				std::cout << "!";
 
@@ -239,9 +240,12 @@ int main(int argc, char* argv[]) {
 			double outputpersec = (double) matrixSize / kernel_time;
 			std::cout << ".\nSIZE:" << parameters.size << " OUTPUT/S: "
 					<< outputpersec;
-			std::cout << "\nIteration " << loop2 << " time: "
-					<< kernel_time + cuda_copy_time + gold_check_time
-					<< std::endl << std::endl;
+			auto wasted_time = cuda_copy_time + gold_check_time
+			std::cout << "\nIteration " << loop2 << " overall time: "
+					<< wasted_time + kernel_time << " wasted time: "
+					<< wasted_time << " ("
+					<< (kernel_time / wasted_time) * 100.0 << "%)" << std::endl
+					<< std::endl;
 
 		}
 		//================== Console hearthbeat
