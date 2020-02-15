@@ -15,7 +15,7 @@
 #define RANGE_INT_VAL 100
 
 static inline void __throw_line(std::string err, std::string line, std::string file) {
-	throw std::runtime_error("ERROR at " + file + ":" + line);
+	throw std::runtime_error(err + " at " + file + ":" + line);
 
 }
 

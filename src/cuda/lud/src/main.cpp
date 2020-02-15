@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <random>
 #include <omp.h>
 
 #include "generic_log.h" //from ../common/include
@@ -39,8 +40,43 @@
 extern void lud_cuda(float *m, int matrix_dim);
 
 template<typename T>
-void generateInputMatrix(std::vector<T>& array) {
-	//TODO PLACE GENERATE INPUT FROM RODINIA
+void generateInputMatrix(std::vector<T>& array, size_t MatrixDim) {
+
+	std::random_device rd; //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	//ORIGINAL: #define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
+	std::uniform_real_distribution<T> dis(1.0f, 2.0f);
+
+	std::vector<T> L(array.size());
+	std::vector<T> U(array.size());
+
+	size_t i, j, k;
+
+#pragma omp parallel for default(none) private(i,j) shared(L,U,MatrixDim, dis, gen)
+	for (i = 0; i < MatrixDim; i++) {
+		for (j = 0; j < MatrixDim; j++) {
+			if (i == j) {
+				L[i * MatrixDim + j] = 1.0;
+				U[i * MatrixDim + j] = dis(gen);
+			} else if (i < j) {
+				L[i * MatrixDim + j] = 0;
+				U[i * MatrixDim + j] = dis(gen);
+			} else { // i > j
+				L[i * MatrixDim + j] = dis(gen);
+				U[i * MatrixDim + j] = 0;
+			}
+		}
+	}
+
+#pragma omp parallel for default(none) private(i,j,k) shared(L,U,array,MatrixDim)
+	for (i = 0; i < MatrixDim; i++) {
+		for (j = 0; j < MatrixDim; j++) {
+			T sum = 0;
+			for (k = 0; k < MatrixDim; k++)
+				sum += L[i * MatrixDim + k] * U[k * MatrixDim + j];
+			array[i * MatrixDim + j] = sum;
+		}
+	}
 
 }
 
@@ -94,8 +130,7 @@ int main(int argc, char* argv[]) {
 	//Log creation
 	rad::Log log(test_name, test_info);
 
-
-	if(parameters.verbose){
+	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
 		std::cout << test_info << std::endl;
 	}
@@ -107,7 +142,8 @@ int main(int argc, char* argv[]) {
 	std::vector<float> GOLD(matrixSize);
 
 	if (parameters.generate) {
-		generateInputMatrix(INPUT);
+		generateInputMatrix(INPUT, parameters.size);
+		write_to_file(parameters.input, INPUT);
 	} else {
 		auto read_input = read_from_file(parameters.input, INPUT);
 		if (read_input == false) {
@@ -174,9 +210,11 @@ int main(int argc, char* argv[]) {
 						if (g != f) {
 
 							std::stringstream error_detail;
-							error_detail << std::scientific << std::setprecision(16);
+							error_detail << std::scientific
+									<< std::setprecision(16);
 							// "p: [%d, %d], r: %1.16e, e: %1.16e"
-							error_detail << "p: [" << i << ", " << j << "], r: " << f << ", e: " << g;
+							error_detail << "p: [" << i << ", " << j << "], r: "
+									<< f << ", e: " << g;
 
 							if (parameters.verbose && (host_errors < 10))
 								std::cout << error_detail.str() << std::endl;
@@ -234,8 +272,8 @@ int main(int argc, char* argv[]) {
 	auto averageKernelTime = total_kernel_time / parameters.iterations;
 	std::cout << "\n-- END --\n";
 	std::cout << "Total kernel time: " << total_kernel_time << std::endl;
-	std::cout << "Iterations: " << parameters.iterations << " Average kernel time: "
-			<< averageKernelTime << "s";
+	std::cout << "Iterations: " << parameters.iterations
+			<< " Average kernel time: " << averageKernelTime << "s";
 	std::cout << "(best: " << min_kernel_time << "s ; worst: "
 			<< max_kernel_time << "s)" << std::endl;
 
