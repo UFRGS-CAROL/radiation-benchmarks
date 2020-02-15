@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
 			double outputpersec = (double) matrixSize / kernel_time;
 			std::cout << ".\nSIZE:" << parameters.size << " OUTPUT/S: "
 					<< outputpersec;
-			auto wasted_time = cuda_copy_time + gold_check_time
+			auto wasted_time = cuda_copy_time + gold_check_time;
 			std::cout << "\nIteration " << loop2 << " overall time: "
 					<< wasted_time + kernel_time << " wasted time: "
 					<< wasted_time << " ("
