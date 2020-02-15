@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) {
 			}
 			d_INPUT = d_OUTPUT;
 		}
-		gold_check_time = gold_check_time - rad::mysecond();
+		gold_check_time = rad::mysecond() - gold_check_time;
 
 		//====================================
 
