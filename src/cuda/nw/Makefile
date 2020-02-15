@@ -10,6 +10,7 @@ ITERATIONS=10
 INPUT=./input_$(SIZE)
 GOLD=./gold_$(SIZE)
 PENALTY=10
+STREAMS=1
 
 # This is what I use, uncomment if you know your arch and want to specify
 ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -92,7 +93,7 @@ clean:
 	rm -rf $(OBJS) $(TARGET)
 
 generate:
-	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 1
+	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 1 $(STREAMS)
 
 test:
-	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 0
+	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 0 $(STREAMS)
