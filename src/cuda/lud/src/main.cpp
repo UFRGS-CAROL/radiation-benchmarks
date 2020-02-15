@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
 			std::cout << "\nIteration " << loop2 << " overall time: "
 					<< overall_time << " wasted time: "
 					<< wasted_time << " ("
-					<< (wasted_time /kernel_time) * 100.0 << "%)" << std::endl
+					<< (wasted_time / overall_time) * 100.0 << "%)" << std::endl
 					<< std::endl;
 
 		}
