@@ -51,7 +51,7 @@ void generateInputMatrix(std::vector<T>& array, size_t size) {
 	std::uniform_real_distribution<T> dis(1.0f, 32768.0f);
 
 #pragma omp parallel for
-	for(size_t i = 0; i < array.size(); i++){
+	for (size_t i = 0; i < array.size(); i++) {
 		array[i] = dis(gen);
 	}
 
@@ -237,13 +237,14 @@ int main(int argc, char* argv[]) {
 		if (parameters.verbose) {
 			std::cout << "Device kernel time for iteration " << loop2 << " - "
 					<< kernel_time;
+			std::cout << "\nCopy time: " << cuda_copy_time;
 			std::cout << ".\nGold check time " << gold_check_time;
 			double outputpersec = (double) matrixSize / kernel_time;
 			std::cout << ".\nSIZE:" << parameters.size << " OUTPUT/S: "
 					<< outputpersec;
 			std::cout << "\nIteration " << loop2 << " time: "
-					<< rad::mysecond() - total_kernel_time << std::endl;
-			;
+					<< kernel_time + cuda_copy_time + gold_check_time
+					<< std::endl;
 
 		}
 
