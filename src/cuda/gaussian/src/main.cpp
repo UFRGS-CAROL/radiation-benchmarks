@@ -6,15 +6,6 @@
 
 #include "utils.h"
 
-extern void InitProblemOnce(char *filename);
-extern void InitPerRun();
-extern void ForwardSub();
-extern void BackSub();
-
-extern void PrintMat(float *ary, int nrow, int ncolumn);
-extern void PrintAry(float *ary, int ary_size);
-
-
 // create both matrix and right hand side, Ke Wang 2013/08/12 11:51:06
 void create_matrix(float *m, int size) {
 	int i, j;

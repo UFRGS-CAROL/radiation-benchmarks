@@ -22,14 +22,13 @@
 
 
 
-
-__global__ void Fan1(float *m, float *a, int Size, int t);
-__global__ void Fan2(float *m, float *a, float *b, int Size, int j1, int t);
-void PrintDeviceProperties();
-void checkCUDAError(const char *msg, cudaError_t err);
-void InitMat(float *ary, int nrow, int ncol);
-void InitAry(float *ary, int ary_size);
-void BackSub();
+void checkCUDAError(const char *msg, cudaError_t err) {
+//	cudaError_t err = cudaGetLastError();
+	if (cudaSuccess != err) {
+		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString(err));
+		exit (EXIT_FAILURE);
+	}
+}
 
 
 
@@ -307,11 +306,3 @@ void PrintAry(float *ary, int ary_size) {
 	}
 	printf("\n\n");
 }
-void checkCUDAError(const char *msg, cudaError_t err) {
-//	cudaError_t err = cudaGetLastError();
-	if (cudaSuccess != err) {
-		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString(err));
-		exit (EXIT_FAILURE);
-	}
-}
-
