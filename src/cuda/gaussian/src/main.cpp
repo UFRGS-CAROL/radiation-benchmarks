@@ -40,23 +40,18 @@ int main(int argc, char *argv[]) {
 
 	int Size = 1024;
 	int matrix_size = Size * Size;
-	std::vector<float> a(matrix_size), b(matrix_size), finalVec(Size), m(matrix_size);
-	FILE *fp;
+	std::vector<float> a(matrix_size);
+	std::vector<float> b(matrix_size, 1.0f);
+	std::vector<float> m(matrix_size, 0.0f);
+	std::vector<float> finalVec(Size);
+
 	float totalKernelTime = 0;
 
 	printf("WG size of kernel 1 = %d, WG size of kernel 2= %d X %d\n",
 	MAXBLOCKSIZE, BLOCK_SIZE_XY, BLOCK_SIZE_XY);
 	int verbose = 1;
-	char flag;
 
 	create_matrix(a);
-	for (int j = 0; j < Size; j++)
-		b[j] = 1.0;
-
-	//InitProblemOnce(filename);
-	for(auto& mi : m){
-		mi = 0.0;
-	}
 	//begin timing
 	auto time_start = rad::mysecond();
 

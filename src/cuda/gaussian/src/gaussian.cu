@@ -141,10 +141,10 @@ void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
 	rad::DeviceVector<real_t> a_cuda(a);
 	rad::DeviceVector<real_t> b_cuda(b);
 
-	int block_size, grid_size;
+//	int block_size, grid_size;
 
-	block_size = MAXBLOCKSIZE;
-	grid_size = (size / block_size) + (!(size % block_size) ? 0 : 1);
+	size_t block_size = MAXBLOCKSIZE;
+	size_t grid_size = (size / block_size) + (!(size % block_size) ? 0 : 1);
 	//printf("1d grid size: %d\n",grid_size);
 
 	dim3 dimBlock(block_size);
@@ -164,7 +164,7 @@ void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
 	for (t = 0; t < (size - 1); t++) {
 		Fan1<<<dimGrid, dimBlock>>>(m_cuda.data(), a_cuda.data(), size, t);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(), b_cuda,
+		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(), b_cuda.data(),
 				size, size - t, t);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
