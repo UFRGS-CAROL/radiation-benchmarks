@@ -15,11 +15,8 @@
 #elif defined(RD_WG_SIZE)
 #define MAXBLOCKSIZE RD_WG_SIZE
 #else
-#if __CUDA_ARCH__ <= 250
-#define MAXBLOCKSIZE 512
-#else
-#define MAXBLOCKSIZE 1024
-#endif
+
+#define MAXBLOCKSIZE 1024 //512
 #endif
 
 //2D defines. Go from specific to general
