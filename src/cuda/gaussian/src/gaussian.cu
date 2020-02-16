@@ -12,25 +12,13 @@
  ** Modified by Chris Gregg for CUDA, 07/20/2009
  **-----------------------------------------------------------
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include "cuda.h"
-#include <string.h>
 
+#include <vector>
+#include <cuda.h>
+
+#include "device_vector.h"
+#include "cuda_utils.h"
 #include "utils.h"
-
-
-
-void checkCUDAError(const char *msg, cudaError_t err) {
-//	cudaError_t err = cudaGetLastError();
-	if (cudaSuccess != err) {
-		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString(err));
-		exit (EXIT_FAILURE);
-	}
-}
-
-
 
 /*------------------------------------------------------
  ** PrintDeviceProperties
@@ -79,48 +67,15 @@ void PrintDeviceProperties() {
 	}
 }
 
-/*------------------------------------------------------
- ** InitProblemOnce -- Initialize all of matrices and
- ** vectors by opening a data file specified by the user.
- **
- ** We used dynamic array *a, *b, and *m to allocate
- ** the memory storages.
- **------------------------------------------------------
- */
-void InitProblemOnce(char *filename, FILE* fp, float* m, float* a, float* b, unsigned Size) {
-	//char *filename = argv[1];
-
-	//printf("Enter the data file name: ");
-	//scanf("%s", filename);
-	//printf("The file name is: %s\n", filename);
-
-	fp = fopen(filename, "r");
-
-	fscanf(fp, "%d", &Size);
-
-	a = (float *) malloc(Size * Size * sizeof(float));
-
-	InitMat(a, Size, Size, fp, Size);
-	//printf("The input matrix a is:\n");
-	//PrintMat(a, Size, Size);
-	b = (float *) malloc(Size * sizeof(float));
-
-	InitAry(b, Size, fp);
-	//printf("The input array b is:\n");
-	//PrintAry(b, Size);
-
-	m = (float *) malloc(Size * Size * sizeof(float));
-}
 
 /*------------------------------------------------------
  ** InitPerRun() -- Initialize the contents of the
  ** multipier matrix **m
  **------------------------------------------------------
  */
-void InitPerRun(float* m, unsigned Size) {
-	int i;
-	for (i = 0; i < Size * Size; i++)
-		*(m + i) = 0.0;
+void InitPerRun(std::vector<float>& m) {
+	for (auto& mi : m)
+		mi = 0.0;
 }
 
 /*-------------------------------------------------------
@@ -174,26 +129,22 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
  ** elimination.
  **------------------------------------------------------
  */
-void ForwardSub(float* m, float* a, float* b, unsigned Size, float totalKernelTime) {
+template<typename real_t>
+void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
+		std::vector<real_t>& b, size_t size, float& totalKernelTime) {
 	int t;
-	float *m_cuda, *a_cuda, *b_cuda;
+	size_t matrix_size = size * size;
 
 	// allocate memory on GPU
-	cudaMalloc((void **) &m_cuda, Size * Size * sizeof(float));
-
-	cudaMalloc((void **) &a_cuda, Size * Size * sizeof(float));
-
-	cudaMalloc((void **) &b_cuda, Size * sizeof(float));
-
 	// copy memory to GPU
-	cudaMemcpy(m_cuda, m, Size * Size * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(a_cuda, a, Size * Size * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(b_cuda, b, Size * sizeof(float), cudaMemcpyHostToDevice);
+	rad::DeviceVector<real_t> m_cuda(m);
+	rad::DeviceVector<real_t> a_cuda(a);
+	rad::DeviceVector<real_t> b_cuda(b);
 
 	int block_size, grid_size;
 
 	block_size = MAXBLOCKSIZE;
-	grid_size = (Size / block_size) + (!(Size % block_size) ? 0 : 1);
+	grid_size = (size / block_size) + (!(size % block_size) ? 0 : 1);
 	//printf("1d grid size: %d\n",grid_size);
 
 	dim3 dimBlock(block_size);
@@ -202,107 +153,55 @@ void ForwardSub(float* m, float* a, float* b, unsigned Size, float totalKernelTi
 
 	int blockSize2d, gridSize2d;
 	blockSize2d = BLOCK_SIZE_XY;
-	gridSize2d = (Size / blockSize2d) + (!(Size % blockSize2d ? 0 : 1));
+	gridSize2d = (size / blockSize2d) + (!(size % blockSize2d ? 0 : 1));
 
 	dim3 dimBlockXY(blockSize2d, blockSize2d);
 	dim3 dimGridXY(gridSize2d, gridSize2d);
 
 	// begin timing kernels
-	struct timeval time_start;
-	gettimeofday(&time_start, NULL);
-	for (t = 0; t < (Size - 1); t++) {
-		Fan1<<<dimGrid, dimBlock>>>(m_cuda, a_cuda, Size, t);
-		checkCUDAError("Fan1", cudaDeviceSynchronize());
-		checkCUDAError("Fan1", cudaPeekAtLastError());
-		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda, a_cuda, b_cuda, Size, Size - t,
-				t);
-		checkCUDAError("Fan2", cudaDeviceSynchronize());
-		checkCUDAError("Fan2", cudaPeekAtLastError());
+	auto time_start = rad::mysecond();
 
+	for (t = 0; t < (size - 1); t++) {
+		Fan1<<<dimGrid, dimBlock>>>(m_cuda.data(), a_cuda.data(), size, t);
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(), b_cuda,
+				size, size - t, t);
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
 	}
-	// end timing kernels
-	struct timeval time_end;
-	gettimeofday(&time_end, NULL);
-	totalKernelTime = (time_end.tv_sec * 1000000 + time_end.tv_usec)
-			- (time_start.tv_sec * 1000000 + time_start.tv_usec);
 
+	auto time_end = rad::mysecond();
+	totalKernelTime = time_end - time_start;
 	// copy memory back to CPU
-	cudaMemcpy(m, m_cuda, Size * Size * sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(a, a_cuda, Size * Size * sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(b, b_cuda, Size * sizeof(float), cudaMemcpyDeviceToHost);
-	cudaFree(m_cuda);
-	cudaFree(a_cuda);
-	cudaFree(b_cuda);
+	m_cuda.to_vector(m);
+	a_cuda.to_vector(a);
+	b_cuda.to_vector(b);
 }
+
+void ForwardSub(std::vector<float>& m, std::vector<float>& a,
+		std::vector<float>& b, size_t size, float& totalKernelTime) {
+	ForwardSub(m, a, b, size, totalKernelTime);
+}
+
 
 /*------------------------------------------------------
  ** BackSub() -- Backward substitution
  **------------------------------------------------------
  */
 
-void BackSub(float* finalVec, float* a, float* b, unsigned Size) {
-	// create a new vector to hold the final answer
-	finalVec = (float *) malloc(Size * sizeof(float));
+void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
+		std::vector<float>& b, unsigned Size) {
 	// solve "bottom up"
 	int i, j;
 	for (i = 0; i < Size; i++) {
 		finalVec[Size - i - 1] = b[Size - i - 1];
 		for (j = 0; j < i; j++) {
-			finalVec[Size - i - 1] -= *(a + Size * (Size - i - 1)
+			finalVec[Size - i - 1] -= *(a.data() + Size * (Size - i - 1)
 					+ (Size - j - 1)) * finalVec[Size - j - 1];
 		}
 		finalVec[Size - i - 1] = finalVec[Size - i - 1]
-				/ *(a + Size * (Size - i - 1) + (Size - i - 1));
+				/ *(a.data() + Size * (Size - i - 1) + (Size - i - 1));
 	}
 }
 
-void InitMat(float *ary, int nrow, int ncol, FILE* fp, unsigned Size) {
-	int i, j;
-
-	for (i = 0; i < nrow; i++) {
-		for (j = 0; j < ncol; j++) {
-			fscanf(fp, "%f", ary + Size * i + j);
-		}
-	}
-}
-
-/*------------------------------------------------------
- ** PrintMat() -- Print the contents of the matrix
- **------------------------------------------------------
- */
-void PrintMat(float *ary, int nrow, int ncol, unsigned Size) {
-	int i, j;
-
-	for (i = 0; i < nrow; i++) {
-		for (j = 0; j < ncol; j++) {
-			printf("%8.2f ", *(ary + Size * i + j));
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
-/*------------------------------------------------------
- ** InitAry() -- Initialize the array (vector) by reading
- ** data from the data file
- **------------------------------------------------------
- */
-void InitAry(float *ary, int ary_size, FILE* fp) {
-	int i;
-
-	for (i = 0; i < ary_size; i++) {
-		fscanf(fp, "%f", &ary[i]);
-	}
-}
-
-/*------------------------------------------------------
- ** PrintAry() -- Print the contents of the array (vector)
- **------------------------------------------------------
- */
-void PrintAry(float *ary, int ary_size) {
-	int i;
-	for (i = 0; i < ary_size; i++) {
-		printf("%.2f ", ary[i]);
-	}
-	printf("\n\n");
-}

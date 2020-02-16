@@ -29,21 +29,9 @@
 #define BLOCK_SIZE_XY 4
 #endif
 
-void InitProblemOnce(char *filename, FILE* fp, float* m, float* a, float* b,
-		unsigned Size);
 
-void InitPerRun(float* m, unsigned Size);
-void ForwardSub(float* m, float* a, float* b, unsigned Size,
-		float totalKernelTime);
-
-void BackSub(float* finalVec, float* a, float* b, unsigned Size);
-void PrintMat(float *ary, int nrow, int ncol, unsigned Size);
-void PrintAry(float *ary, int ary_size);
-void PrintDeviceProperties();
-
-void InitMat(float *ary, int nrow, int ncol, FILE* fp, unsigned Size);
-
-void InitAry(float *ary, int ary_size, FILE* fp);
-void BackSub(float* finalVec, float* a, float* b, unsigned Size);
-
+void ForwardSub(std::vector<float>& m, std::vector<float>& a,
+		std::vector<float>& b, size_t size, float& totalKernelTime);
+void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
+		std::vector<float>& b, unsigned Size);
 #endif /* UTILS_H_ */
