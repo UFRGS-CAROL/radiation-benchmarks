@@ -34,7 +34,6 @@
 
 static inline void __throw_line(std::string err, std::string line, std::string file) {
 	throw std::runtime_error(err + " at " + file + ":" + line);
-
 }
 
 #define throw_line(err) __throw_line(std::string(err), std::to_string(__LINE__), std::string(__FILE__));

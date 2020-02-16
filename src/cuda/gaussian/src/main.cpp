@@ -55,23 +55,31 @@ int main(int argc, char *argv[]) {
 
 	create_matrix(a, parameters.size);
 	//begin timing
-	auto time_start = rad::mysecond();
+	auto kernel_time = rad::mysecond();
 
 	std::cout << "Starting forward Sub\n";
 	// run kernels
 	ForwardSub(m_cuda, a_cuda, b_cuda, parameters.size);
 	//end timing
 
-	auto kernel_time = rad::mysecond() - time_start;
+	kernel_time = rad::mysecond() - kernel_time;
+
+	auto copy_time = rad::mysecond();
 	// copy memory back to CPU
 	m_cuda.to_vector(m);
 	a_cuda.to_vector(a);
 	b_cuda.to_vector(b);
 
+	copy_time = rad::mysecond - copy_time;
+
 	std::cout << "End forward Sub\n";
 
 	std::cout << "Starting Back Sub\n";
+	auto host_part = rad::mysecond();
+
 	BackSub(finalVec, a, b, parameters.size);
+
+	host_part = rad::mysecond() - host_part;
 	if (parameters.verbose) {
 		printf("The final solution is: \n");
 		for (auto i : finalVec)
@@ -79,10 +87,10 @@ int main(int argc, char *argv[]) {
 		std::cout << std::endl;
 	}
 
-	auto time_end = rad::mysecond();
+	auto overall_time = kernel_time + host_part + copy_time;
 
-	std::cout << "Time total (including memory transfers) "
-			<< (time_end - time_start) << "s\n";
-
+	std::cout << "Time total " << overall_time << "s\n";
+	std::cout << "Host part " << host_part << "s\n";
 	std::cout << "Time for CUDA kernels: " << kernel_time << "s\n";
+	std::cout << "Time for copy " << copy_time << "s\n";
 }
