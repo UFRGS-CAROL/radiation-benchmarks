@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 	a_cuda.to_vector(a);
 	b_cuda.to_vector(b);
 
-	copy_time = rad::mysecond - copy_time;
+	copy_time = rad::mysecond() - copy_time;
 
 	std::cout << "End forward Sub\n";
 
