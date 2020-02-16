@@ -26,7 +26,7 @@
 __global__ void Fan1(float *m, float *a, int Size, int t);
 __global__ void Fan2(float *m, float *a, float *b, int Size, int j1, int t);
 void PrintDeviceProperties();
-void checkCUDAError(const char *msg);
+void checkCUDAError(const char *msg, cudaError_t err);
 void InitMat(float *ary, int nrow, int ncol);
 void InitAry(float *ary, int ary_size);
 
@@ -211,11 +211,13 @@ void ForwardSub() {
 	gettimeofday(&time_start, NULL);
 	for (t = 0; t < (Size - 1); t++) {
 		Fan1<<<dimGrid, dimBlock>>>(m_cuda, a_cuda, Size, t);
-		cudaThreadSynchronize();
+		checkCUDAError("Fan1", cudaDeviceSynchronize());
+		checkCUDAError("Fan1", cudaPeekAtLastError());
 		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda, a_cuda, b_cuda, Size, Size - t,
 				t);
-		cudaThreadSynchronize();
-		checkCUDAError("Fan2");
+		checkCUDAError("Fan2", cudaDeviceSynchronize());
+		checkCUDAError("Fan2", cudaPeekAtLastError());
+
 	}
 	// end timing kernels
 	struct timeval time_end;
@@ -303,8 +305,8 @@ void PrintAry(float *ary, int ary_size) {
 	}
 	printf("\n\n");
 }
-void checkCUDAError(const char *msg) {
-	cudaError_t err = cudaGetLastError();
+void checkCUDAError(const char *msg, cudaError_t err) {
+//	cudaError_t err = cudaGetLastError();
 	if (cudaSuccess != err) {
 		fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString(err));
 		exit (EXIT_FAILURE);
