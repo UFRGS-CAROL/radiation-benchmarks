@@ -30,6 +30,13 @@ void create_matrix(float *m, int size) {
 }
 
 int main(int argc, char *argv[]) {
+
+	int Size;
+	float *a, *b, *finalVec;
+	float *m;
+	FILE *fp;
+	unsigned int totalKernelTime = 0;
+
 	printf("WG size of kernel 1 = %d, WG size of kernel 2= %d X %d\n",
 			MAXBLOCKSIZE, BLOCK_SIZE_XY, BLOCK_SIZE_XY);
 	int verbose = 1;
@@ -92,7 +99,7 @@ int main(int argc, char *argv[]) {
 			case 'f': // platform
 				i++;
 				printf("Read file from %s \n", argv[i]);
-				InitProblemOnce(argv[i]);
+				InitProblemOnce(argv[i], fp, m, a, b, Size);
 				break;
 			case 'q': // quiet
 				verbose = 0;
@@ -102,13 +109,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	//InitProblemOnce(filename);
-	InitPerRun();
+	InitPerRun(m, Size);
 	//begin timing
 	struct timeval time_start;
 	gettimeofday(&time_start, NULL);
 
 	// run kernels
-	ForwardSub();
+	ForwardSub(m, a, b, Size, totalKernelTime);
 
 	//end timing
 	struct timeval time_end;
@@ -118,15 +125,15 @@ int main(int argc, char *argv[]) {
 
 	if (verbose) {
 		printf("Matrix m is: \n");
-		PrintMat(m, Size, Size);
+		PrintMat(m, Size, Size, Size);
 
 		printf("Matrix a is: \n");
-		PrintMat(a, Size, Size);
+		PrintMat(a, Size, Size, Size);
 
 		printf("Array b is: \n");
 		PrintAry(b, Size);
 	}
-	BackSub();
+	BackSub(finalVec, a, b, Size);
 	if (verbose) {
 		printf("The final solution is: \n");
 		PrintAry(finalVec, Size);

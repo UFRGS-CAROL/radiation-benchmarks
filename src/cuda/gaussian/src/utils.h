@@ -29,23 +29,21 @@
 #define BLOCK_SIZE_XY 4
 #endif
 
-void InitProblemOnce(char *filename);
-void InitPerRun();
-void ForwardSub();
-void BackSub();
-void PrintMat(float *ary, int nrow, int ncolumn);
+void InitProblemOnce(char *filename, FILE* fp, float* m, float* a, float* b,
+		unsigned Size);
+
+void InitPerRun(float* m, unsigned Size);
+void ForwardSub(float* m, float* a, float* b, unsigned Size,
+		float totalKernelTime);
+
+void BackSub(float* finalVec, float* a, float* b, unsigned Size);
+void PrintMat(float *ary, int nrow, int ncol, unsigned Size);
 void PrintAry(float *ary, int ary_size);
 void PrintDeviceProperties();
-void InitMat(float *ary, int nrow, int ncol);
-void InitAry(float *ary, int ary_size);
-void BackSub();
 
+void InitMat(float *ary, int nrow, int ncol, FILE* fp, unsigned Size);
 
-static int Size;
-static float *a, *b, *finalVec;
-static float *m;
-
-static FILE *fp;
-static unsigned int totalKernelTime = 0;
+void InitAry(float *ary, int ary_size, FILE* fp);
+void BackSub(float* finalVec, float* a, float* b, unsigned Size);
 
 #endif /* UTILS_H_ */

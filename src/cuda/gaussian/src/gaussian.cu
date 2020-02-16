@@ -87,7 +87,7 @@ void PrintDeviceProperties() {
  ** the memory storages.
  **------------------------------------------------------
  */
-void InitProblemOnce(char *filename) {
+void InitProblemOnce(char *filename, FILE* fp, float* m, float* a, float* b, unsigned Size) {
 	//char *filename = argv[1];
 
 	//printf("Enter the data file name: ");
@@ -100,12 +100,12 @@ void InitProblemOnce(char *filename) {
 
 	a = (float *) malloc(Size * Size * sizeof(float));
 
-	InitMat(a, Size, Size);
+	InitMat(a, Size, Size, fp, Size);
 	//printf("The input matrix a is:\n");
 	//PrintMat(a, Size, Size);
 	b = (float *) malloc(Size * sizeof(float));
 
-	InitAry(b, Size);
+	InitAry(b, Size, fp);
 	//printf("The input array b is:\n");
 	//PrintAry(b, Size);
 
@@ -117,7 +117,7 @@ void InitProblemOnce(char *filename) {
  ** multipier matrix **m
  **------------------------------------------------------
  */
-void InitPerRun() {
+void InitPerRun(float* m, unsigned Size) {
 	int i;
 	for (i = 0; i < Size * Size; i++)
 		*(m + i) = 0.0;
@@ -174,7 +174,7 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
  ** elimination.
  **------------------------------------------------------
  */
-void ForwardSub() {
+void ForwardSub(float* m, float* a, float* b, unsigned Size, float totalKernelTime) {
 	int t;
 	float *m_cuda, *a_cuda, *b_cuda;
 
@@ -240,7 +240,7 @@ void ForwardSub() {
  **------------------------------------------------------
  */
 
-void BackSub() {
+void BackSub(float* finalVec, float* a, float* b, unsigned Size) {
 	// create a new vector to hold the final answer
 	finalVec = (float *) malloc(Size * sizeof(float));
 	// solve "bottom up"
@@ -256,7 +256,7 @@ void BackSub() {
 	}
 }
 
-void InitMat(float *ary, int nrow, int ncol) {
+void InitMat(float *ary, int nrow, int ncol, FILE* fp, unsigned Size) {
 	int i, j;
 
 	for (i = 0; i < nrow; i++) {
@@ -270,7 +270,7 @@ void InitMat(float *ary, int nrow, int ncol) {
  ** PrintMat() -- Print the contents of the matrix
  **------------------------------------------------------
  */
-void PrintMat(float *ary, int nrow, int ncol) {
+void PrintMat(float *ary, int nrow, int ncol, unsigned Size) {
 	int i, j;
 
 	for (i = 0; i < nrow; i++) {
@@ -287,7 +287,7 @@ void PrintMat(float *ary, int nrow, int ncol) {
  ** data from the data file
  **------------------------------------------------------
  */
-void InitAry(float *ary, int ary_size) {
+void InitAry(float *ary, int ary_size, FILE* fp) {
 	int i;
 
 	for (i = 0; i < ary_size; i++) {
