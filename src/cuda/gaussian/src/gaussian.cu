@@ -29,6 +29,8 @@ void PrintDeviceProperties();
 void checkCUDAError(const char *msg, cudaError_t err);
 void InitMat(float *ary, int nrow, int ncol);
 void InitAry(float *ary, int ary_size);
+void BackSub();
+
 
 
 /*------------------------------------------------------
