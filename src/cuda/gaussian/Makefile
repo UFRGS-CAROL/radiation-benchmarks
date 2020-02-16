@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
-EXEC=cudaLUD
+EXEC=cudaGaussian
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
