@@ -13,10 +13,9 @@
 #include "utils.h"
 
 template<typename real_t>
-void create_matrix(std::vector<real_t>& m) {
+void create_matrix(std::vector<real_t>& m, size_t size) {
 	int i, j;
 	real_t lamda = -0.01;
-	auto size = m.size();
 	std::vector<real_t> coe(2 * size - 1);
 	real_t coe_i = 0.0;
 
@@ -38,8 +37,8 @@ void create_matrix(std::vector<real_t>& m) {
 
 int main(int argc, char *argv[]) {
 
-	int Size = 1024;
-	int matrix_size = Size * Size;
+	size_t Size = 1024;
+	size_t matrix_size = Size * Size;
 	std::vector<float> a(matrix_size);
 	std::vector<float> b(matrix_size, 1.0f);
 	std::vector<float> m(matrix_size, 0.0f);
@@ -51,15 +50,16 @@ int main(int argc, char *argv[]) {
 	MAXBLOCKSIZE, BLOCK_SIZE_XY, BLOCK_SIZE_XY);
 	int verbose = 1;
 
-	create_matrix(a);
+	create_matrix(a, Size);
 	//begin timing
 	auto time_start = rad::mysecond();
 
+	std::cout << "Starting forward Sub\n";
 	// run kernels
 	ForwardSub(m, a, b, Size, totalKernelTime);
-
 	//end timing
 
+	std::cout << "End forward Sub\n";
 
 	if (verbose) {
 //		printf("Matrix m is: \n");
@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
 //		printf("Array b is: \n");
 //		PrintAry(b, Size);
 	}
+
+	std::cout << "Starting Back Sub\n";
 	BackSub(finalVec, a, b, Size);
 	if (verbose) {
 		printf("The final solution is: \n");
