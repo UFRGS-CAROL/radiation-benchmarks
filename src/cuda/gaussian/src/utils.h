@@ -15,7 +15,11 @@
 #elif defined(RD_WG_SIZE)
 #define MAXBLOCKSIZE RD_WG_SIZE
 #else
+#if __CUDA_ARCH__ <= 250
 #define MAXBLOCKSIZE 512
+#else
+#define MAXBLOCKSIZE 1024
+#endif
 #endif
 
 //2D defines. Go from specific to general
@@ -29,9 +33,20 @@
 #define BLOCK_SIZE_XY 4
 #endif
 
+#include "device_vector.h"
 
-void ForwardSub(std::vector<float>& m, std::vector<float>& a,
-		std::vector<float>& b, size_t size, float& totalKernelTime);
+static inline void __throw_line(std::string err, std::string line, std::string file) {
+	throw std::runtime_error(err + " at " + file + ":" + line);
+
+}
+
+#define throw_line(err) __throw_line(std::string(err), std::to_string(__LINE__), std::string(__FILE__));
+
+
+void ForwardSub(rad::DeviceVector<float>& m_cuda,
+		rad::DeviceVector<float>& a_cuda, rad::DeviceVector<float>& b_cuda,
+		size_t size);
+
 void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
 		std::vector<float>& b, unsigned Size);
 #endif /* UTILS_H_ */

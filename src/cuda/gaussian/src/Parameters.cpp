@@ -71,7 +71,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
-	os << "Testing Gaussian elimination on " << p.device << std::endl;
+	os << "Testing Gaussian on " << p.device << std::endl;
 	os << "Matrix size: " << p.size << "x" << p.size << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;

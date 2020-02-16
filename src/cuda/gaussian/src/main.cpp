@@ -1,8 +1,8 @@
-
 #include <vector>
 #include <iostream>
 
 #include "cuda_utils.h"
+#include "Parameters.h"
 
 // create both matrix and right hand side, Ke Wang 2013/08/12 11:51:06
 /**
@@ -37,53 +37,52 @@ void create_matrix(std::vector<real_t>& m, size_t size) {
 
 int main(int argc, char *argv[]) {
 
-	size_t Size = 1024;
-	size_t matrix_size = Size * Size;
+	Parameters parameters(argc, argv);
+
+	size_t matrix_size = parameters.size * parameters.size;
 	std::vector<float> a(matrix_size);
 	std::vector<float> b(matrix_size, 1.0f);
 	std::vector<float> m(matrix_size, 0.0f);
-	std::vector<float> finalVec(Size);
+	std::vector<float> finalVec(parameters.size);
 
-	float totalKernelTime = 0;
+	rad::DeviceVector<float> m_cuda = m;
+	rad::DeviceVector<float> a_cuda = a;
+	rad::DeviceVector<float> b_cuda = b;
 
-	printf("WG size of kernel 1 = %d, WG size of kernel 2= %d X %d\n",
-	MAXBLOCKSIZE, BLOCK_SIZE_XY, BLOCK_SIZE_XY);
-	int verbose = 1;
+	std::cout << "WG size of kernel 1 = " << MAXBLOCKSIZE
+			<< ", WG size of kernel 2= " << BLOCK_SIZE_XY << " X "
+			<< BLOCK_SIZE_XY << std::endl;
 
-	create_matrix(a, Size);
+	create_matrix(a, parameters.size);
 	//begin timing
 	auto time_start = rad::mysecond();
 
 	std::cout << "Starting forward Sub\n";
 	// run kernels
-	ForwardSub(m, a, b, Size, totalKernelTime);
+	ForwardSub(m_cuda, a_cuda, b_cuda, parameters.size);
 	//end timing
+
+	auto kernel_time = rad::mysecond() - time_start;
+	// copy memory back to CPU
+	m_cuda.to_vector(m);
+	a_cuda.to_vector(a);
+	b_cuda.to_vector(b);
 
 	std::cout << "End forward Sub\n";
 
-	if (verbose) {
-//		printf("Matrix m is: \n");
-//		PrintMat(m, Size, Size, Size);
-//
-//		printf("Matrix a is: \n");
-//		PrintMat(a, Size, Size, Size);
-//
-//		printf("Array b is: \n");
-//		PrintAry(b, Size);
-	}
-
 	std::cout << "Starting Back Sub\n";
-	BackSub(finalVec, a, b, Size);
-	if (verbose) {
+	BackSub(finalVec, a, b, parameters.size);
+	if (parameters.verbose) {
 		printf("The final solution is: \n");
-//		PrintAry(finalVec, Size);
-		for(auto i : finalVec)
+		for (auto i : finalVec)
 			std::cout << i << " ";
 		std::cout << std::endl;
 	}
 
 	auto time_end = rad::mysecond();
 
-	std::cout << "Time total (including memory transfers) " << (time_end - time_start) << "s\n";
-	std::cout << "Time for CUDA kernels: " << totalKernelTime << "s\n";
+	std::cout << "Time total (including memory transfers) "
+			<< (time_end - time_start) << "s\n";
+
+	std::cout << "Time for CUDA kernels: " << kernel_time << "s\n";
 }
