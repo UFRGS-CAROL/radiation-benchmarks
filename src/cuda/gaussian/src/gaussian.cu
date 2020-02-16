@@ -130,10 +130,9 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
  **------------------------------------------------------
  */
 template<typename real_t>
-void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
+void ForwardSubTemplate(std::vector<real_t>& m, std::vector<real_t>& a,
 		std::vector<real_t>& b, size_t size, float& totalKernelTime) {
-	int t;
-	size_t matrix_size = size * size;
+//	size_t matrix_size = size * size;
 
 	// allocate memory on GPU
 	// copy memory to GPU
@@ -161,7 +160,7 @@ void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
 	// begin timing kernels
 	auto time_start = rad::mysecond();
 
-	for (t = 0; t < (size - 1); t++) {
+	for (size_t t = 0; t < (size - 1); t++) {
 		Fan1<<<dimGrid, dimBlock>>>(m_cuda.data(), a_cuda.data(), size, t);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(), b_cuda.data(),
@@ -181,7 +180,7 @@ void ForwardSub(std::vector<real_t>& m, std::vector<real_t>& a,
 
 void ForwardSub(std::vector<float>& m, std::vector<float>& a,
 		std::vector<float>& b, size_t size, float& totalKernelTime) {
-	ForwardSub(m, a, b, size, totalKernelTime);
+	ForwardSubTemplate(m, a, b, size, totalKernelTime);
 }
 
 
