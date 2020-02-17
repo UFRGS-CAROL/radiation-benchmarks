@@ -101,7 +101,6 @@ void ForwardSubTemplate(rad::DeviceVector<real_t>& m_cuda,
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		;
 	}
-
 }
 
 void ForwardSub(rad::DeviceVector<float>& m_cuda,
