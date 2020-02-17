@@ -86,7 +86,7 @@ size_t check_and_log(std::vector<real_t>& final_vector,
 			}
 		}
 	}
-//	log.update_errors();
+	log.update_errors();
 	return error_count;
 }
 
