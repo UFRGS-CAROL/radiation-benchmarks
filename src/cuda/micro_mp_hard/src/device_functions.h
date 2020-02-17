@@ -12,7 +12,7 @@
 
 __device__ unsigned long long errors = 0;
 
-template<const uint32 THRESHOLD_UINT32, const uint32 COUNT>
+template<const uint32 THRESHOLD_UINT32>
 __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 
 #if BUILDRELATIVEERROR == 0

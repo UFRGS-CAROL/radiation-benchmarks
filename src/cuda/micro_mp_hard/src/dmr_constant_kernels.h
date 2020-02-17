@@ -18,6 +18,7 @@ __global__ void compare(real_t* lhs, real_t* rhs) {
 	check_bit_error<0>(lhs[tid], rhs[tid]);
 }
 
+
 template<const uint32 THRESHOLD, const uint32 COUNT, typename real_t,
 		typename half_t>
 __global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
@@ -32,19 +33,20 @@ __global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
 			input_constant_add[threadIdx.x]);
 	const register half_t this_thread_input_half_t = half_t(
 			this_thread_input_real_t);
-//#pragma unroll COUNT
+
+#pragma unroll 256
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -73,19 +75,19 @@ __global__ void microbenchmark_kernel_mul(real_t* output_real_t_1,
 	register real_t acc_real_t = this_thread_input_real_t;
 	register half_t acc_half_t = this_thread_input_half_t;
 
-//#pragma unroll COUNT
+#pragma unroll 256
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -114,7 +116,7 @@ __global__ void microbenchmark_kernel_fma(real_t* output_real_t_1,
 	const register half_t this_thread_input_half_t = half_t(
 			this_thread_input_real_t);
 
-//#pragma unroll COUNT
+#pragma unroll 256
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = fma_dmr(this_thread_input_real_t, this_thread_input_real_t,
 				acc_real_t);
@@ -122,13 +124,13 @@ __global__ void microbenchmark_kernel_fma(real_t* output_real_t_1,
 				acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
