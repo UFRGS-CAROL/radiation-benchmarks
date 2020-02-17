@@ -41,8 +41,9 @@ int main(int argc, char *argv[]) {
 
 	size_t matrix_size = parameters.size * parameters.size;
 	std::vector<float> a(matrix_size);
-	std::vector<float> b(matrix_size, 1.0f);
 	std::vector<float> m(matrix_size, 0.0f);
+
+	std::vector<float> b(parameters.size, 1.0f);
 	std::vector<float> finalVec(parameters.size);
 
 	rad::DeviceVector<float> m_cuda = m;
