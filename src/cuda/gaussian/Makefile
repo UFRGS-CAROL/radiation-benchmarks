@@ -4,7 +4,7 @@ EXEC=cudaGaussian
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-SIZE=8192
+SIZE=1024
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -65,8 +65,8 @@ clean:
 	
 
 generate:
-	./cudaLUD --size $(SIZE) --generate --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --verbose --generate
 
 test:
-	./cudaLUD --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --verbose --iterations 10
 	

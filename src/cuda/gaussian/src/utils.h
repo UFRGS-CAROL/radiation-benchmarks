@@ -30,6 +30,10 @@
 #define BLOCK_SIZE_XY 4
 #endif
 
+//it is the decimal places for
+//logging errors, 20 is from old benchmarks
+#define ERROR_LOG_PRECISION 20
+
 #include "device_vector.h"
 
 static inline void __throw_line(std::string err, std::string line, std::string file) {
