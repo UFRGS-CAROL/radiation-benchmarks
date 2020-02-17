@@ -44,5 +44,5 @@ void ForwardSub(rad::DeviceVector<float>& m_cuda,
 		size_t size);
 
 void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
-		std::vector<float>& b, unsigned Size);
+		std::vector<float>& b, size_t size);
 #endif /* UTILS_H_ */

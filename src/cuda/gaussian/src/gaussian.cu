@@ -116,17 +116,16 @@ void ForwardSub(rad::DeviceVector<float>& m_cuda,
  */
 
 void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
-		std::vector<float>& b, unsigned Size) {
+		std::vector<float>& b, size_t size) {
 	// solve "bottom up"
-	int i, j;
-	for (i = 0; i < Size; i++) {
-		finalVec[Size - i - 1] = b[Size - i - 1];
-		for (j = 0; j < i; j++) {
-			finalVec[Size - i - 1] -= *(a.data() + Size * (Size - i - 1)
-					+ (Size - j - 1)) * finalVec[Size - j - 1];
+	for (size_t i = 0; i < size; i++) {
+		finalVec[size - i - 1] = b[size - i - 1];
+		for (size_t j = 0; j < i; j++) {
+			finalVec[size - i - 1] -= *(a.data() + size * (size - i - 1)
+					+ (size - j - 1)) * finalVec[size - j - 1];
 		}
-		finalVec[Size - i - 1] = finalVec[Size - i - 1]
-				/ *(a.data() + Size * (Size - i - 1) + (Size - i - 1));
+		finalVec[size - i - 1] = finalVec[size - i - 1]
+				/ *(a.data() + size * (size - i - 1) + (size - i - 1));
 	}
 }
 

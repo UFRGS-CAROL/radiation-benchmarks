@@ -14,21 +14,20 @@
 
 template<typename real_t>
 void create_matrix(std::vector<real_t>& m, size_t size) {
-	int i, j;
 	real_t lamda = -0.01;
 	std::vector<real_t> coe(2 * size - 1);
 	real_t coe_i = 0.0;
 
-	for (i = 0; i < size; i++) {
-		coe_i = 10 * exp(lamda * i);
-		j = size - 1 + i;
+	for (size_t i = 0; i < size; i++) {
+		coe_i = 10 * std::exp(lamda * i);
+		auto j = size - 1 + i;
 		coe[j] = coe_i;
 		j = size - 1 - i;
 		coe[j] = coe_i;
 	}
 
-	for (i = 0; i < size; i++) {
-		for (j = 0; j < size; j++) {
+	for (size_t i = 0; i < size; i++) {
+		for (size_t j = 0; j < size; j++) {
 			m[i * size + j] = coe[size - 1 - i + j];
 		}
 	}
