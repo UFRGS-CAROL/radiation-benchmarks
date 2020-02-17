@@ -46,15 +46,16 @@ int main(int argc, char *argv[]) {
 	std::vector<float> b(parameters.size, 1.0f);
 	std::vector<float> finalVec(parameters.size);
 
-	rad::DeviceVector<float> m_cuda = m;
-	rad::DeviceVector<float> a_cuda = a;
-	rad::DeviceVector<float> b_cuda = b;
-
 	std::cout << "WG size of kernel 1 = " << MAXBLOCKSIZE
 			<< ", WG size of kernel 2= " << BLOCK_SIZE_XY << " X "
 			<< BLOCK_SIZE_XY << std::endl;
 
 	create_matrix(a, parameters.size);
+
+	rad::DeviceVector<float> m_cuda = m;
+	rad::DeviceVector<float> a_cuda = a;
+	rad::DeviceVector<float> b_cuda = b;
+
 	//begin timing
 	auto kernel_time = rad::mysecond();
 
