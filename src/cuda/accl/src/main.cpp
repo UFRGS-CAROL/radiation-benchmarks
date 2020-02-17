@@ -182,14 +182,14 @@ void savePGM(image<rgb> *im, const char *name) {
 	file.write((char *) imPtr(im, 0, 0), width * height * sizeof(rgb));
 }
 
-	/*
-	 * imageUcharToInt: convert image from uchar to integer
-	 * Parameters:
-	 * - input: image<uchar>
-	 *          image in uchar to convert to integer values
-	 * Return:
-	 * - image<int>: image with integer values
-	 */
+/*
+ * imageUcharToInt: convert image from uchar to integer
+ * Parameters:
+ * - input: image<uchar>
+ *          image in uchar to convert to integer values
+ * Return:
+ * - image<int>: image with integer values
+ */
 image<int> *imageUcharToInt(image<uchar> *input) {
 	int width = input->width();
 	int height = input->height();
@@ -197,7 +197,7 @@ image<int> *imageUcharToInt(image<uchar> *input) {
 
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			imRef(output, x, y)= imRef(input, x, y);
+			imRef(output, x, y) = imRef(input, x, y);
 		}
 	}
 	return output;
@@ -367,7 +367,7 @@ int main(int argc, char** argv) {
 		log_error_count(kernel_errors);
 
 		printf(".");
-		fflush(stdout);
+		fflush (stdout);
 	}
 
 	end_log_file();

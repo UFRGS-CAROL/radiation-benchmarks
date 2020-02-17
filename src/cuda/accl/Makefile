@@ -1,49 +1,72 @@
-CPP = g++
+CXX=g++
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
+EXEC=cudaACCL
+LOGS=1
+BUILDPROFILER=0
+ITERATIONS=10
+SIZE=8192
 
-NVCC = /usr/local/cuda/bin/nvcc
-
-SOURCEDIR = .
-
-
-CPP_SOURCES = $(SOURCEDIR)/accl_main.cpp
-CU_SOURCES = $(SOURCEDIR)/accl.cu
-
-LOGHELPER_DIR = ../../include
-
-CFLAGS =
-
-NVCCFLAGS = 
-
-ARCH = -gencode arch=compute_35,code=sm_35 -gencode arch=compute_70,code=sm_70
-
-EXE = $(SOURCEDIR)/accl
-
-DEVICE_OBJS = $(SOURCEDIR)/accl_cu.o
-
-LINK_OBJS = $(SOURCEDIR)/accl_cu_dlink.o
-
-all: accl accl_generate
-
-accl: accl_cu_dlink.o $(CPP_SOURCES)
-	$(CPP) -o $(EXE) $(logs) $(DEVICE_OBJS) $(LINK_OBJS) $(CPP_SOURCES) -I$(LOGHELPER_DIR) -L$(LOGHELPER_DIR) -lLogHelper -L/usr/local/cuda/lib64 -lcudart -lcudadevrt -lpthread -fopenmp
-
-accl_generate: accl_cu_dlink.o accl_generate.cpp
-	$(CPP) -o accl_generate $(DEVICE_OBJS) $(LINK_OBJS) accl_generate.cpp -I$(LOGHELPER_DIR) -L$(LOGHELPER_DIR) -lLogHelper -L/usr/local/cuda/lib64 -lcudart -lcudadevrt -lpthread -fopenmp
-
-accl_cu_dlink.o: accl_cu.o
-	$(NVCC) $(NVCCFLAGS) $(ARCH) -Xcompiler '-fPIC' -dlink $(DEVICE_OBJS) -o $(LINK_OBJS) -lcudadevrt
-
-accl_cu.o: $(CU_SOURCES)
-	$(NVCC) $(NVCCFLAGS) $(ARCH) -Xcompiler '-fPIC' -dc -m64 $(CU_SOURCES) -I$(LOGHELPER_DIR) -o $(DEVICE_OBJS)
+VPATH=./src/
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 
 
-generate:
-	./accl_generate 
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -dc
 
-test:
-	./(EXE)
+
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+
+OBJDIR=./obj/
+OBJ=  accl.o  main.o Parameters.o
+
+ifeq ($(DEBUG), 1) 
+CXXFLAGS+=-O0 -g
+NVCCFLAGS+= -g -G
+endif
+
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS
+NVCCFLAGS+= -DLOGS
+LDFLAGS+= -L../../include  -lLogHelper
+endif
+
+ifeq ($(BUILDPROFILER), 1)
+CXXFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+endif
+
+
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
+
+
+all: mkdir $(EXEC)
+
+
+$(EXEC): $(OBJS)  
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+	
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+
+mkdir:
+	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(DEVICE_OBJS)
-	rm -f $(LINK_OBJS)
-	rm -f $(EXE) accl_generate
+	rm -f $(OBJDIR)* $(EXEC)
+	
+
+generate:
+	./cudaLUD --size $(SIZE) --generate --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+
+test:
+	./cudaLUD --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	
