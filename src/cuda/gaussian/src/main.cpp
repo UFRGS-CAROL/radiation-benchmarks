@@ -37,6 +37,7 @@ void create_matrix(std::vector<real_t>& m, size_t size) {
 int main(int argc, char *argv[]) {
 
 	Parameters parameters(argc, argv);
+	std::cout << parameters << std::endl;
 
 	size_t matrix_size = parameters.size * parameters.size;
 	std::vector<float> a(matrix_size);
