@@ -122,11 +122,11 @@ void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
 	for (size_t i = 0; i < size; i++) {
 		finalVec[size - i - 1] = b[size - i - 1];
 		for (size_t j = 0; j < i; j++) {
-			finalVec[size - i - 1] -= *(a.data() + size * (size - i - 1)
-					+ (size - j - 1)) * finalVec[size - j - 1];
+			finalVec[size - i - 1] -= a[size * (size - i - 1)
+					+ (size - j - 1)] * finalVec[size - j - 1];
 		}
 		finalVec[size - i - 1] = finalVec[size - i - 1]
-				/ *(a.data() + size * (size - i - 1) + (size - i - 1));
+				/ a[size * (size - i - 1) + (size - i - 1)];
 	}
 }
 
