@@ -80,7 +80,7 @@ size_t check_and_log(std::vector<real_t>& final_vector,
 			{
 				log.log_error_detail(error_detail.str());
 				error_count++;
-				if(verbose){
+				if (verbose) {
 					std::cout << error_detail.str() << std::endl;
 				}
 			}
@@ -127,8 +127,11 @@ int main(int argc, char *argv[]) {
 	} else {
 		read_from_file(parameters.input, a_host);
 		read_from_file(parameters.gold, gold_final_vector);
-		if(parameters.debug){
-			gold_final_vector[44] = -12;
+		if (parameters.debug) {
+			for (int i = 0; i < 10; i++) {
+				gold_final_vector[i] = gold_final_vector[i] - 12;
+				gold_final_vector[gold_final_vector.size() - i - 1] = gold_final_vector[i]  -12;
+			}
 		}
 	}
 
@@ -162,11 +165,13 @@ int main(int argc, char *argv[]) {
 		host_time = rad::mysecond() - host_time;
 
 		auto check_time = rad::mysecond();
-		auto errors = check_and_log(final_vector, gold_final_vector, log, parameters.verbose);
+		auto errors = check_and_log(final_vector, gold_final_vector, log,
+				parameters.verbose);
 		check_time = rad::mysecond() - check_time;
 
 		if (parameters.verbose) {
-			auto wasted_time = host_time + copy_time + mem_set_time + check_time;
+			auto wasted_time = host_time + copy_time + mem_set_time
+					+ check_time;
 			auto overall_time = kernel_time + wasted_time;
 
 			std::cout << "Overall time: " << overall_time << "s. ";
@@ -175,8 +180,8 @@ int main(int argc, char *argv[]) {
 			std::cout << "Time for copy: " << copy_time << "s. ";
 			std::cout << "Check time: " << check_time << "s. ";
 			std::cout << "Time for memset: " << mem_set_time << "s.\n";
-			std::cout << "Iteration " << iteration << " - Errors " << errors << " - Wasted time: "
-					<< wasted_time << "s. ("
+			std::cout << "Iteration " << iteration << " - Errors " << errors
+					<< " - Wasted time: " << wasted_time << "s. ("
 					<< int(ceil((wasted_time / overall_time) * 100.0f)) << "%)"
 					<< std::endl;
 		}
