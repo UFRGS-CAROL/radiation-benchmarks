@@ -201,11 +201,13 @@ void setup_execute(Parameters& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_
 
 	mult_env.a_dev = a_vector_host;
 	mult_env.b_dev = b_vector_host;
+	mult_env.c_half_t_dev.resize(b_vector_host.size());
 
 	std::cout << "Starting the setup process...\n";
 	std::cout << std::setprecision(5) << std::fixed;
 	for (int it = 0; it < log_obj.iterations; it++) {
 		mult_env.c_dev = c_vector_host;
+
 		auto computation_time = rad::mysecond();
 
 		log_obj.start_iteration();
@@ -223,7 +225,7 @@ void setup_execute(Parameters& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_
 
 		double copy_time = rad::mysecond();
 		c_vector_host_half_t = mult_env.memcpy_half_t_mem();
-		d_vector_host = mult_env.c_dev.to_vector();
+		mult_env.c_dev.to_vector(d_vector_host);
 		copy_time = rad::mysecond() - copy_time;
 
 		if (!log_obj.generate) {
