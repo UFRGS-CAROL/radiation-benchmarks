@@ -75,7 +75,7 @@ CFLAGS+= -DOMP -fopenmp
 endif
 
 
-OBJ= main.o setup_gemm.o Log.o common.o
+OBJ= main.o setup_gemm.o Parameters.o common.o
 #setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)

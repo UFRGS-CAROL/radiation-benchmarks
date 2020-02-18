@@ -5,29 +5,29 @@
  *      Author: carol
  */
 
-#ifndef LOG_H_
-#define LOG_H_
+#ifndef PARAMETERS_H_
+#define PARAMETERS_H_
 #include <sys/time.h>
 #include <string>
 #include <iostream>
+#include <memory>
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
+#include "include/generic_log.h"
 
-struct Log {
+struct Parameters {
 
-	Log(int argc, char** argv);
+	Parameters(int argc, char** argv);
 
-	friend std::ostream& operator<<(std::ostream& os, const Log& log_obj);
+	friend std::ostream& operator<<(std::ostream& os,
+			const Parameters& log_obj);
 
-	virtual ~Log();
+	virtual ~Parameters() = default;
 
 	void end_iteration();
 
 	void start_iteration();
 
-	void update_timestamp();
+//	void update_timestamp();
 	void log_error(std::string error_detail);
 	void log_info(std::string info_detail);
 	void update_error_count(long error_count);
@@ -52,16 +52,7 @@ struct Log {
 	uint32_t check_block;
 
 private:
-
-	void del_arg(int argc, char **argv, int index);
-
-	int find_int_arg(int argc, char **argv, std::string arg, int def);
-
-	std::string find_char_arg(int argc, char **argv, std::string arg,
-			std::string def);
-
-	bool find_arg(int argc, char* argv[], std::string arg);
-	float find_float_arg(int argc, char **argv, std::string arg, float def);
+	std::shared_ptr<rad::Log> log;
 };
 
-#endif /* LOG_H_ */
+#endif /* PARAMETERS_H_ */

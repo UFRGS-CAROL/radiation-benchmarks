@@ -210,7 +210,7 @@ void debug_mxm(std::vector<t>& a, std::vector<t>& b, std::vector<t> c,
 template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
-		Log& log, const uint32_t threshold, const bool dmr) {
+		Parameters& log, const uint32_t threshold, const bool dmr) {
 	uint32_t host_errors = 0;
 	uint32_t memory_errors = 0;
 

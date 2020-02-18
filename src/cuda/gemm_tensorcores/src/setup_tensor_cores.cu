@@ -92,7 +92,7 @@ struct DMRTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
 };
 
 template<typename half_t, typename real_t>
-void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
+void setup_execute(Parameters& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
 		const uint32_t threshold = 0) {
 	double elapsed_time = 0;
 
@@ -209,7 +209,7 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
 /**
  * Setup for Tensor (GEMM)
  */
-void setup_gemm_tensor_cores_unhardened(Log& log) {
+void setup_gemm_tensor_cores_unhardened(Parameters& log) {
 //	if (log.precision == "half") {
 //		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
 //				log.size_matrices);
@@ -222,7 +222,7 @@ void setup_gemm_tensor_cores_unhardened(Log& log) {
 //		setup_execute(log, gemm_obj);
 //	}
 }
-void setup_gemm_tensor_cores_dmr(Log& log) {
+void setup_gemm_tensor_cores_dmr(Parameters& log) {
 //	if (log.precision == "half") {
 //		DMRTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
 //				log.size_matrices);

@@ -1,4 +1,4 @@
-#include "Log.h"
+#include "Parameters.h"
 #include "setup.h"
 #include "common.h"
 
@@ -11,7 +11,7 @@ void usage(char **argv) {
 }
 
 int main(int argc, char** argv) {
-	Log log(argc, argv);
+	Parameters log(argc, argv);
 	if (log.verbose)
 		std::cout << log << std::endl;
 

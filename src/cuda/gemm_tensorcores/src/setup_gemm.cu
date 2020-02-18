@@ -1,5 +1,5 @@
 #include "setup.h"
-#include "Log.h"
+#include "Parameters.h"
 #include "include/device_vector.h"
 #include "common_template_functions.h"
 #include "no_tensor_kernels.h"
@@ -168,7 +168,7 @@ struct DMRGemmCaller: public GemmCaller<0, real_t, real_t> {
 };
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
-void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
+void setup_execute(Parameters& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		const uint32_t threshold = 0) {
 	double elapsed_time = 0;
 
@@ -283,7 +283,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 	}
 }
 
-void setup_gemm_unhardened(Log& log) {
+void setup_gemm_unhardened(Parameters& log) {
 	if (log.precision == "half") {
 #if __CUDA_ARCH__ >= 600
 		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
@@ -307,7 +307,7 @@ void setup_gemm_unhardened(Log& log) {
 	}
 }
 
-void setup_gemm_cublas(Log& log) {
+void setup_gemm_cublas(Parameters& log) {
 	if (log.precision == "half") {
 #if __CUDA_ARCH__ >= 600
 		CUBLASGemmCaller<half> gemm_obj(log.size_matrices, log.size_matrices,
@@ -331,7 +331,7 @@ void setup_gemm_cublas(Log& log) {
 	}
 }
 
-void setup_gemm_dmr(Log& log) {
+void setup_gemm_dmr(Parameters& log) {
 	if (log.precision == "float" || log.precision == "single") {
 		throw_line("Not ready yet");
 	}

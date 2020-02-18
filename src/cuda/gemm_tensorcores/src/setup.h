@@ -8,20 +8,20 @@
 #ifndef SETUP_H_
 #define SETUP_H_
 
-struct Log;
+struct Parameters;
 
 /**
  * Setup for common MxM (GEMM)
  */
-void setup_gemm_unhardened(Log& log);
-void setup_gemm_dmr(Log& log);
-void setup_gemm_cublas(Log& log);
+void setup_gemm_unhardened(Parameters& log);
+void setup_gemm_dmr(Parameters& log);
+void setup_gemm_cublas(Parameters& log);
 
 /**
  * Setup for Tensor (GEMM)
  */
-void setup_gemm_tensor_cores_unhardened(Log& log);
-void setup_gemm_tensor_cores_dmr(Log& log);
+void setup_gemm_tensor_cores_unhardened(Parameters& log);
+void setup_gemm_tensor_cores_dmr(Parameters& log);
 
 
 
