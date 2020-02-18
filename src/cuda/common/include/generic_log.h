@@ -23,8 +23,8 @@ struct Log {
 	std::string test_name;
 	std::string test_info;
 
-	bool was_info_updated;
 	bool was_error_updated;
+	bool was_info_updated;
 
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
@@ -40,20 +40,22 @@ struct Log {
 	}
 
 	Log(const Log& l) :
-			error(l.error), info(l.info), was_error_updated(false), was_info_updated(
-					false) {
+			error(l.error), info(l.info), was_error_updated(
+					l.was_error_updated), was_info_updated(l.was_info_updated) {
 	}
 
 	Log() :
 			error(0), info(0), was_error_updated(false), was_info_updated(false) {
 	}
 
-	Log(std::string& test_name, std::string& test_info) :
+	Log(std::string test_name, std::string test_info, size_t print_interval = 1) :
 			error(0), info(0), test_name(test_name), test_info(test_info), was_error_updated(
 					false), was_info_updated(false) {
 #ifdef LOGS
 		start_log_file(const_cast<char*>(test_name.c_str()),
 				const_cast<char*>(test_info.c_str()));
+
+		::set_iter_interval_print(print_interval);
 #endif
 	}
 
@@ -121,6 +123,11 @@ struct Log {
 		}
 	}
 
+	void set_iter_interval_print(size_t print_interval) {
+#ifdef LOGS
+		::set_iter_interval_print(print_interval);
+#endif
+	}
 };
 
 }
