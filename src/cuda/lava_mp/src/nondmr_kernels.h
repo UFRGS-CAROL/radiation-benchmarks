@@ -145,6 +145,7 @@ __global__ void kernel_gpu_cuda_nondmr(par_str<real_t> d_par_gpu, dim_str d_dim_
 			//-----------------------------------------------------
 			while (wtx < NUMBER_PAR_PER_BOX) {
 
+#pragma unroll 192
 				for (j = 0; j < NUMBER_PAR_PER_BOX; j++) {
 
 					r2 = rA_shared[wtx].v + rB_shared[j].v -

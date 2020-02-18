@@ -153,6 +153,7 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 				FOUR_VECTOR<half_t> acc_half;
 				acc_real = fA[wtx];
 				acc_half = acc_real;
+#pragma unroll 192
 				for (j = 0; j < NUMBER_PAR_PER_BOX; j++) {
 					//----DMR----------
 					rA_half = rA_shared[wtx];

@@ -29,7 +29,7 @@
 #define FULL_BLOCK NUMBER_PAR_PER_BOX
 
 //For AT_THE_END iterations
-#define THRESHOLD_MAX 6141811
+#define THRESHOLD_MAX 374643
 #define AT_THE_END_BLOCK NUMBER_PAR_PER_BOX + 2
 
 void setup_double(Parameters& parameters, Log& log) {
@@ -42,14 +42,14 @@ void setup_double(Parameters& parameters, Log& log) {
 		setup_execution(parameters, log, kc);
 	} else if (parameters.redundancy == DMRMIXED) {
 		switch (parameters.block_check) {
-		case ONE_BLOCK: {
-			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<ONE_BLOCK, float, double> kc(THRESHOLD_1);
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
+//		case ONE_BLOCK: {
+//			//CASE FOR 1 Iteration-------------------
+//			DMRMixedKernelCaller<ONE_BLOCK, float, double> kc(THRESHOLD_1);
+//			setup_execution(parameters, log, kc);
+//
+//			break;
+//		}
+//			//---------------------------------------
 
 		default:
 			//CASE AT THE END Iterations----------------

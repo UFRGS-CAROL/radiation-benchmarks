@@ -238,9 +238,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
 		bool result = false;
 		if (val_gold != val_output) {
-#pragma omp critical
-			{
-				host_errors++;
 				std::stringstream error_detail;
 				error_detail << std::scientific << std::setprecision(20);
 				error_detail << "stream: " << streamIdx;
@@ -262,9 +259,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				if (verbose && (host_errors < 10)) {
 					std::cout << error_detail.str() << std::endl;
 				}
+				auto result_i = check_bit_error(val_output_ht, val_output, val_gold, i);
+#pragma omp critical
+			{
+				host_errors++;
 				log.log_error_detail(error_detail.str());
-
-				result = check_bit_error(val_output_ht, val_output, val_gold, i);
+				result = result_i;
 			}
 		}
 		return result;
@@ -274,20 +274,20 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-//		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
-//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
-//		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
+		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
+		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
+		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
 
-		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
-		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
-
-		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
-		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
-		this->d_fv_gpu_ht[stream_idx].data());
+//		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+//
+//		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
+//		this->d_fv_gpu_ht[stream_idx].data());
 		stream.sync();
-
-		compare_two_outputs<<<blocks, threads, 0, stream.stream>>>
-		(this->d_fv_gpu_ht[stream_idx].data(), d_fv_gpu);
+//
+//		compare_two_outputs<<<blocks, threads, 0, stream.stream>>>
+//		(this->d_fv_gpu_ht[stream_idx].data(), d_fv_gpu);
 	}
 
 	inline std::vector<uint32_t>
