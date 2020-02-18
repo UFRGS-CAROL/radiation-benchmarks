@@ -72,7 +72,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-#pragma unroll
+#pragma unroll 32
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			real_t ar = As[ty][k];
 			real_t br = Bs[k][tx];
@@ -166,7 +166,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-#pragma unroll
+#pragma unroll 32
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			half_t ah = half_t(As[ty][k]);
 			half_t bh = half_t(Bs[k][tx]);
@@ -256,7 +256,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-#pragma unroll
+#pragma unroll 32
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			Csub += As[ty][k] * Bs[k][tx];
 		}
