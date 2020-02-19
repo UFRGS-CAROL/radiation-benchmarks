@@ -31,7 +31,13 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 	if (argc < 2) {
 		throw_line(
-				"Usage: ./cudaLUD --size N [--generate] [--input <path>] [--gold <path>] [--iterations N] [--verbose]");
+				"<mandatory arguments> [optional arguments]\nUsage: ./cudaACCL"
+				" --size <N frames in the image>"
+				" --frames <(HyperQ) Frames per Stream>"
+				" --input <Input image path>"
+				" --gold <GOLD path>"
+				" --iterations <#iteractions>"
+				" [--verbose] [--debug]");
 	}
 
 }

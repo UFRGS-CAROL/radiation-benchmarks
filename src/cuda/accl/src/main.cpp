@@ -43,26 +43,29 @@
 /*
  * Include files
  */
-#include <stdio.h>
+//#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <algorithm>
 #include <time.h>
 #include <sys/time.h>
-#include "image.h"
-#include "misc.h"
-#include "accl.h"
 #include <omp.h>
 #include <limits.h>
+
 #define MAX_LABELS 262144
 #define BUF_SIZE 256
 
+#include "Parameters.h"
 #include "log_helper.h"
+
+#include "image.h"
+#include "misc.h"
+#include "accl.h"
 
 class errorHandler {
 };
-using namespace std;
+//using namespace std;
 /*
  * ---------------------------------------------------------------------
  * Prototypes
@@ -70,7 +73,7 @@ using namespace std;
  */
 double getWallTime();
 double getCpuTime();
-void pgmRead(ifstream &file, char *buf);
+void pgmRead(std::ifstream &file, char *buf);
 image<uchar> *loadPGM(const char *name);
 image<int> *imageUcharToInt(image<uchar> *input);
 void savePGM(image<rgb> *im, const char *name);
@@ -110,12 +113,12 @@ double getCpuTime() {
 /*
  * pgmRead: read a pgm image file
  * Parameters:
- * - file:  ifstream
+ * - file:  std::ifstream
  *          path of the pgm image file
  * - buf:   char*
  *          buffer where information will be allocated
  */
-void pgmRead(ifstream &file, char *buf) {
+void pgmRead(std::ifstream &file, char *buf) {
 	char doc[BUF_SIZE];
 	char c;
 
@@ -215,7 +218,7 @@ void readGold(int *gold_spans, int *gold_components, int spansSize,
 	FILE *fgold;
 	fgold = fopen(fpath, "rb");
 	if (!fgold) {
-		cout << "Could not open gold output." << endl;
+		std::cout << "Could not open gold output." << std::endl;
 		exit(0);
 	}
 	// Caio: output format: SPANSCOMPONENTS
@@ -224,20 +227,25 @@ void readGold(int *gold_spans, int *gold_components, int spansSize,
 	fclose(fgold);
 }
 
-void usage() {
-	cout
-			<< "Usage: ./accl <N frames in the image> <(HyperQ) Frames per Stream> <Input image path> <GOLD path> <#iteractions>"
-			<< endl;
-}
+//void usage() {
+//	std::cout
+//			<< "Usage: ./accl <N frames in the image> <(HyperQ) Frames per Stream> <Input image path> <GOLD path> <#iteractions>"
+//			<< std::endl;
+//}
 
 int main(int argc, char** argv) {
-	if (argc < 6) {
-		usage();
-		exit(0);
+//	if (argc < 6) {
+//		usage();
+//		exit(0);
+//	}
+	Parameters parameters(argc, argv);
+
+	if(parameters.verbose){
+		std::cout << parameters << std::endl;
 	}
-	cout << "Accelerated Connected Component Labeling" << endl;
-	cout << "========================================" << endl;
-	cout << "Loading input image..." << endl;
+	std::cout << "Accelerated Connected Component Labeling" << std::endl;
+	std::cout << "========================================" << std::endl;
+	std::cout << "Loading input image..." << std::endl;
 	image<uchar> *input = loadPGM(argv[3]);
 	const int width = input->width();
 	const int height = input->height();
@@ -255,9 +263,9 @@ int main(int argc, char** argv) {
 	uint nFrames = atoi(argv[1]);
 	uint nFramsPerStream = atoi(argv[2]);
 	if (nFrames < nFramsPerStream) {
-		cout
+		std::cout
 				<< "Num Frames per stream should be less than or equal to numFrames in image"
-				<< endl;
+				<< std::endl;
 		exit(0);
 	}
 	const int rows = nFrames * 512;

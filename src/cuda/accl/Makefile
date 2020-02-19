@@ -65,8 +65,8 @@ clean:
 	
 
 generate:
-	./cudaLUD --size $(SIZE) --generate --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --generate --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
 
 test:
-	./cudaLUD --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
 	
