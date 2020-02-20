@@ -42,22 +42,14 @@
  */
 #include <stdio.h>
 #include <math.h>
-#include "log_helper.h"
+
+#include "generic_log.h"
+#include "device_vector.h"
+#include "cuda_utils.h"
 
 #define THREADSX 16
 #define THREADSY 16
 #define THREADS 512
-
-#define cudaErrChk(ans) { cudaAssert((ans), __FILE__, __LINE__); }
-inline void cudaAssert(cudaError_t code, const char *file, int line,
-		bool abort = true) {
-	if (code != cudaSuccess) {
-		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file,
-				line);
-		if (abort)
-			exit(code);
-	}
-}
 
 __global__ void findSpansKernel(int *out, int *components, const int *in,
 		const int rows, const int cols) {
@@ -180,12 +172,9 @@ __global__ void mergeSpansKernel(int *components, int *spans, const int rows,
 	}
 }
 
-double acclCuda(int *out, int *components, const int *in, uint nFrames,
-		uint nFramsPerStream, const int rows, const int cols, int logs_active) {
-	int *devIn = 0;
-	int *devComponents = 0;
-	int *devOut = 0;
-
+double acclCuda(std::vector<int>& out, std::vector<int>& components,
+		const std::vector<int>& in, uint nFrames, uint nFramsPerStream,
+		const int rows, const int cols, int logs_active) {
 	const int colsSpans = ((cols + 2 - 1) / 2) * 2; /*ceil(cols/2)*2*/
 	const int colsComponents = colsSpans / 2;
 
@@ -205,7 +194,7 @@ double acclCuda(int *out, int *components, const int *in, uint nFrames,
 	/*Streams Information*/
 	uint nStreams = nFrames / nFramsPerStream;
 	int rowsOccupancyMax = frameRows * nFramsPerStream;
-	cudaErrChk(
+	rad::checkFrameworkErrors(
 			cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize,
 					findSpansKernel, 0, rowsOccupancyMax));
 	// printf("Best Kernel Size\n");
@@ -220,29 +209,24 @@ double acclCuda(int *out, int *components, const int *in, uint nFrames,
 	cudaEventCreate(&stop);
 
 	/* Choose which GPU to run on, change this on a multi-GPU system.*/
-	cudaErrChk(cudaSetDevice(0));
+	rad::checkFrameworkErrors(cudaSetDevice(0));
 
 	/* Allocate GPU buffers for three vectors (two input, one output)*/
-	cudaErrChk(cudaMalloc((void** )&devOut, sizeOut * sizeof(int)));
-	cudaErrChk(
-			cudaMalloc((void** )&devComponents, sizeComponents * sizeof(int)));
-	cudaErrChk(cudaMalloc((void** )&devIn, sizeIn * sizeof(int)));
-
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devOut, sizeOut * sizeof(int)));
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devComponents, sizeComponents * sizeof(int)));
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devIn, sizeIn * sizeof(int)));
 	/* Copy input vectors from host memory to GPU buffers*/
-	cudaErrChk(
-			cudaMemcpy(devIn, in, sizeIn * sizeof(int), cudaMemcpyHostToDevice));
-	cudaErrChk(
-			cudaMemcpy(devComponents, components, sizeComponents * sizeof(int),
-					cudaMemcpyHostToDevice));
-	cudaErrChk(
-			cudaMemcpy(devOut, out, sizeOut * sizeof(int),
-					cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devIn, in, sizeIn * sizeof(int), cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devComponents, components, sizeComponents * sizeof(int),		cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devOut, out, sizeOut * sizeof(int),		cudaMemcpyHostToDevice));
+	rad::DeviceVector<int> devIn = in;
+	rad::DeviceVector<int> devComponents = components;
+	rad::DeviceVector<int> devOut = out;
 
 	/*launch streams*/
-	cudaStream_t *streams = (cudaStream_t *) malloc(
-			nStreams * sizeof(cudaStream_t));
-	for (int i = 0; i < nStreams; i++) {
-		cudaErrChk(cudaStreamCreate(&(streams[i])));
+	std::vector<cudaStream_t> streams(nStreams);
+	for (auto& stream : streams) {
+		rad::checkFrameworkErrors(cudaStreamCreate(&(stream)));
 	}
 	/*variables for streaming*/
 	const int frameSpansSize = rows / nStreams * colsSpans;
@@ -260,25 +244,28 @@ double acclCuda(int *out, int *components, const int *in, uint nFrames,
 	if (logs_active)
 		start_iteration();
 	for (int i = 0; i < nStreams; ++i) {
-		findSpansKernel<<<gridSize, blockSize>>>(&devOut[i * frameSpansSize],
-				&devComponents[i * frameCompSize], &devIn[i * frameSpansSize],
-				rows, cols);
+		findSpansKernel<<<gridSize, blockSize>>>(
+				devOut.data() + i * frameSpansSize,
+				devComponents.data() + i * frameCompSize,
+				devIn.data() + i * frameSpansSize, rows, cols);
 
 		/*Merge Spans*/
 		mergeSpansKernel<<<1, nFramsPerStream>>>(
-				&devComponents[i * frameCompSize], &devOut[i * frameSpansSize],
-				rows, cols, frameRows);
+				devComponents.data() + i * frameCompSize,
+				devOut.data() + i * frameSpansSize, rows, cols, frameRows);
 	}
 	cudaDeviceSynchronize();
 	if (logs_active)
 		end_iteration();
 	/* Copy device to host*/
-	cudaErrChk(
-			cudaMemcpy(components, devComponents, sizeComponents * sizeof(int),
-					cudaMemcpyDeviceToHost));
-	cudaErrChk(
-			cudaMemcpy(out, devOut, sizeOut * sizeof(int),
-					cudaMemcpyDeviceToHost));
+//	rad::checkFrameworkErrors(
+//			cudaMemcpy(components, devComponents, sizeComponents * sizeof(int),
+//					cudaMemcpyDeviceToHost));
+//	rad::checkFrameworkErrors(
+//			cudaMemcpy(out, devOut, sizeOut * sizeof(int),
+//					cudaMemcpyDeviceToHost));
+	devComponents.to_vector(components);
+	devOut.to_vector(out);
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
@@ -305,9 +292,9 @@ double acclCuda(int *out, int *components, const int *in, uint nFrames,
 	// printf("\t Theoretical occupancy: %f\n", occupancy);
 
 	/*Free*/
-	cudaFree(devOut);
-	cudaFree(devIn);
-	cudaFree(devComponents);
+//	cudaFree(devOut);
+//	cudaFree(devIn);
+//	cudaFree(devComponents);
 
 	return time;
 }

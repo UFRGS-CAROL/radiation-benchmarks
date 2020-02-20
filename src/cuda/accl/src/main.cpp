@@ -305,8 +305,10 @@ int main(int argc, char** argv) {
 	const int rows = nFrames * 512;
 	const int cols = 512;
 	const int imageSize = rows * cols;
-	int *image = new int[imageSize];
-	memcpy(image, imInt->data, rows * cols * sizeof(int));
+	std::vector<int> image(imageSize);
+
+	//	memcpy(image, imInt->data, rows * cols * sizeof(int));
+	std::copy(imInt->data, imInt->data + rows * cols, image.begin());
 
 	/*
 	 * Buffers
@@ -332,11 +334,8 @@ int main(int argc, char** argv) {
 		/*
 		 * CUDA
 		 */
-		std::cout << "Passou " << spans.data() << " " << components.data()
-				<< " " << image << " " << nFrames << " " << nFramsPerStream
-				<< " " << rows << " " << cols << std::endl;
 		double ktime = 0.0;
-		ktime = acclCuda(spans.data(), components.data(), image, nFrames,
+		ktime = acclCuda(spans, components, image, nFrames,
 				nFramsPerStream, rows, cols, 1);
 		//printf("acclCuda time: %.5f", ktime);
 
