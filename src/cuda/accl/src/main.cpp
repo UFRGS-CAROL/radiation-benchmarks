@@ -49,7 +49,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-
+#include <memory>
 #include <omp.h>
 
 #define MAX_LABELS 262144
@@ -74,14 +74,14 @@ class errorHandler {
  * Prototypes
  * ---------------------------------------------------------------------
  */
-double getWallTime();
-double getCpuTime();
-void pgmRead(std::ifstream &file, char *buf);
-image<uchar> *loadPGM(const char *name);
-image<int> *imageUcharToInt(image<uchar> *input);
-void savePGM(image<rgb> *im, const char *name);
-void acclSerial(image<int> *imInt, int *spans, int *components, const int rows,
-		const int cols, image<rgb> *output);
+//double getWallTime();
+//double getCpuTime();
+//void pgmRead(std::ifstream &file, char *buf);
+//image<uchar> *loadPGM(const char *name);
+//image<int> *imageUcharToInt(image<uchar> *input);
+//void savePGM(image<rgb> *im, const char *name);
+//void acclSerial(image<int> *imInt, int *spans, int *components, const int rows,
+//		const int cols, image<rgb> *output);
 /*
  * RGB generation colors randomly
  */
@@ -145,7 +145,7 @@ void pgmRead(std::ifstream &file, char *buf) {
  * Return:
  * - image<uchar>: image loaded in an uchar structure
  */
-image<uchar> *loadPGM(const std::string& name) {
+std::shared_ptr<image<uchar>> loadPGM(const std::string& name) {
 	char buf[BUF_SIZE];
 
 	/*
@@ -166,7 +166,8 @@ image<uchar> *loadPGM(const std::string& name) {
 		throw errorHandler();
 
 	/* read data */
-	image<uchar> *im = new image<uchar>(width, height);
+	std::shared_ptr<image<uchar>> im = std::make_shared < image
+			< uchar >> (width, height);
 	file.read((char *) imPtr(im, 0, 0), width * height * sizeof(uchar));
 	return im;
 }
@@ -179,10 +180,10 @@ image<uchar> *loadPGM(const std::string& name) {
  * - name:  const char*
  *          path for the image output file
  */
-void savePGM(image<rgb> *im, const char *name) {
+void savePGM(std::shared_ptr<image<rgb>> im, const std::string& name) {
 	int width = im->width();
 	int height = im->height();
-	std::ofstream file(name, std::ios::out | std::ios::binary);
+	std::ofstream file(name, std::ios::binary);
 
 	file << "P6\n" << width << " " << height << "\n" << UCHAR_MAX << "\n";
 	file.write((char *) imPtr(im, 0, 0), width * height * sizeof(rgb));
@@ -196,10 +197,12 @@ void savePGM(image<rgb> *im, const char *name) {
  * Return:
  * - image<int>: image with integer values
  */
-image<int> *imageUcharToInt(image<uchar> *input) {
+std::shared_ptr<image<int>> imageUcharToInt(
+		std::shared_ptr<image<uchar>> input) {
 	int width = input->width();
 	int height = input->height();
-	image<int> *output = new image<int>(width, height, false);
+	std::shared_ptr<image<int>> output = std::make_shared<image<int>>(width,
+			height, false);
 
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
@@ -287,17 +290,22 @@ int main(int argc, char** argv) {
 		std::cout << "Loading input image..." << std::endl;
 	}
 
-	image<uchar> *input = loadPGM(parameters.input);
+	std::shared_ptr<image<uchar>> input = loadPGM(parameters.input);
 	const int width = input->width();
 	const int height = input->height();
 
 	/*
 	 * Declaration of Variables
 	 */
-	image<int> *imInt = new image<int>(width, height);
-	image<rgb> *output1 = new image<rgb>(width, height);
-	image<rgb> *output2 = new image<rgb>(width, height);
-	imInt = imageUcharToInt(input);
+//	image<int> *imInt = new image<int>(width, height);
+//	image<rgb> *output1 = new image<rgb>(width, height);
+//	image<rgb> *output2 = new image<rgb>(width, height);
+	std::shared_ptr<image<int>> imInt = imageUcharToInt(input); //std::make_shared<image<int>>(width, height);
+	std::shared_ptr<image<rgb>> output1 = std::make_shared < image
+			< rgb >> (width, height);
+	std::shared_ptr<image<rgb>> output2 = std::make_shared < image
+			< rgb >> (width, height);
+//	imInt = imageUcharToInt(input);
 
 	auto nFrames = parameters.nFrames;
 	auto nFramsPerStream = parameters.nFramesPerStream;
@@ -323,24 +331,41 @@ int main(int argc, char** argv) {
 
 	readGold(gold_spans, gold_components, parameters.gold);
 
+	std::fill(spans.begin(), spans.end(), -1);
+	std::fill(components.begin(), components.end(), -1);
+
+	rad::DeviceVector<int> devSpans = spans;
+	rad::DeviceVector<int> devComponents = components;
+	rad::DeviceVector<int> devImage = image;
+	const rad::DeviceVector<int> dev_spans_set(spans);
+	const rad::DeviceVector<int> dev_components_set(components);
+
 	for (size_t loop1 = 0; loop1 < parameters.iterations; loop1++) {
 
 		/*
 		 * Initialize
 		 */
-		std::fill(spans.begin(), spans.end(), -1);
-		std::fill(components.begin(), components.end(), -1);
+		auto set_time = rad::mysecond();
+		devSpans = dev_spans_set;
+		devComponents = dev_components_set;
+		set_time = rad::mysecond() - set_time;
 
 		/*
 		 * CUDA
 		 */
-		double ktime = 0.0;
-		ktime = acclCuda(spans, components, image, nFrames,
-				nFramsPerStream, rows, cols, 1);
+
+		//std::vector<int>& out, std::vector<int>& components,
+		//		const std::vector<int>& in
+		auto ktime = acclCuda(devSpans, devComponents, devImage, nFrames, nFramsPerStream, rows, cols, 1, log);
 		//printf("acclCuda time: %.5f", ktime);
 
-		ktime /= 1000;
+		auto copy_time = rad::mysecond();
+		devComponents.to_vector(components);
+		devSpans.to_vector(spans);
+		copy_time = rad::mysecond() - copy_time;
+		//		ktime /= 1000;
 
+		auto comparisson_time = rad::mysecond();
 		// output validation
 		int kernel_errors = 0;
 
@@ -355,7 +380,9 @@ int main(int argc, char** argv) {
 							"t: [spans], p: [%d][%d], r: %d, e: %d", i, j,
 							spans[index], gold_spans[index]);
 					printf("%s\n", error_detail);
-					log_error_detail(error_detail);
+//					log_error_detail(error_detail);
+					log.log_error_detail(std::string(error_detail));
+
 					kernel_errors++;
 				}
 			}
@@ -384,7 +411,8 @@ int main(int argc, char** argv) {
 							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
 							components[index], gold_components[index]);
 					printf("%s\n", error_detail);
-					log_error_detail(error_detail);
+//					log_error_detail(error_detail);
+					log.log_error_detail(std::string(error_detail));
 					kernel_errors++;
 				}
 			}
@@ -403,9 +431,22 @@ int main(int argc, char** argv) {
 //				kernel_errors++;
 //			}
 //		}
-		log_error_count(kernel_errors);
+//		log_error_count(kernel_errors);
+		comparisson_time = rad::mysecond() - comparisson_time;
+		log.update_errors();
+		if (parameters.verbose) {
+			std::cout << "Iteration " << loop1 << " - kernel time: " << ktime
+					<< " errors: " << kernel_errors << std::endl;
+			auto wasted_time = copy_time + set_time + comparisson_time;
+			auto overall_time = ktime + wasted_time;
+			std::cout << "Overall time: " << overall_time << " wasted time: "
+					<< wasted_time << " - "
+					<< int((wasted_time / overall_time) * 100.0) << "%" << std::endl;
 
-		std::cout << "." << std::endl;
+		} else {
+			std::cout << "." << std::endl;
+
+		}
 	}
 
 //	end_log_file();

@@ -119,7 +119,7 @@ public:
 						cudaMemcpyDeviceToHost));
 	}
 
-	T* data() {
+	T* data() const {
 		return this->data_;
 	}
 

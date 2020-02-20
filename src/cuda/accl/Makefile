@@ -23,7 +23,9 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ=  accl.o  main.o Parameters.o
+GPUOBJ= accl.o_dlink.o
+OBJ= accl.o main.o Parameters.o
+
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -42,9 +44,10 @@ LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand  -Wno-deprecated-gpu-targets
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
+GPUOBJS = $(addprefix $(OBJDIR), $(GPUOBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
 
@@ -52,13 +55,14 @@ all: mkdir $(EXEC)
 
 
 $(EXEC): $(OBJS)  
-	$(NVCC) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(INCLUDE)
+	$(CXX) $(CXXFLAGS) $(GPUOBJS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
 	
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+	$(NVCC) $(ARCH)  -dlink $@ -o $@_dlink.o -lcudadevrt
 
 mkdir:
 	mkdir -p $(OBJDIR)

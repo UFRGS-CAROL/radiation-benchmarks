@@ -172,16 +172,23 @@ __global__ void mergeSpansKernel(int *components, int *spans, const int rows,
 	}
 }
 
-double acclCuda(std::vector<int>& out, std::vector<int>& components,
-		const std::vector<int>& in, uint nFrames, uint nFramsPerStream,
-		const int rows, const int cols, int logs_active) {
+/***
+ * 	rad::DeviceVector<int> devIn = in;
+ rad::DeviceVector<int> devComponents = components;
+ rad::DeviceVector<int> devOut = out;
+ */
+
+double acclCuda(rad::DeviceVector<int>& devOut,
+		rad::DeviceVector<int>& devComponents,
+		const rad::DeviceVector<int>& devIn, uint nFrames, uint nFramsPerStream,
+		const int rows, const int cols, int logs_active, rad::Log& log) {
 	const int colsSpans = ((cols + 2 - 1) / 2) * 2; /*ceil(cols/2)*2*/
 	const int colsComponents = colsSpans / 2;
 
 	/*compute sizes of matrices*/
-	const int sizeIn = rows * cols;
-	const int sizeComponents = colsComponents * rows;
-	const int sizeOut = colsSpans * rows;
+//	const int sizeIn = rows * cols;
+//	const int sizeComponents = colsComponents * rows;
+//	const int sizeOut = colsSpans * rows;
 
 	/*Block and Grid size*/
 	int blockSize;
@@ -219,12 +226,11 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 //	rad::checkFrameworkErrors(cudaMemcpy(devIn, in, sizeIn * sizeof(int), cudaMemcpyHostToDevice));
 //	rad::checkFrameworkErrors(cudaMemcpy(devComponents, components, sizeComponents * sizeof(int),		cudaMemcpyHostToDevice));
 //	rad::checkFrameworkErrors(cudaMemcpy(devOut, out, sizeOut * sizeof(int),		cudaMemcpyHostToDevice));
-	rad::DeviceVector<int> devIn = in;
-	rad::DeviceVector<int> devComponents = components;
-	rad::DeviceVector<int> devOut = out;
-
+//	rad::DeviceVector<int> devIn = in;
+//	rad::DeviceVector<int> devComponents = components;
+//	rad::DeviceVector<int> devOut = out;
 	/*launch streams*/
-	std::vector<cudaStream_t> streams(nStreams);
+	std::vector < cudaStream_t > streams(nStreams);
 	for (auto& stream : streams) {
 		rad::checkFrameworkErrors(cudaStreamCreate(&(stream)));
 	}
@@ -242,7 +248,7 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 	// printf("Number of streams created: %d\n", nStreams);
 	cudaEventRecord(start, 0); /*measure time*/
 	if (logs_active)
-		start_iteration();
+		log.start_iteration();
 	for (int i = 0; i < nStreams; ++i) {
 		findSpansKernel<<<gridSize, blockSize>>>(
 				devOut.data() + i * frameSpansSize,
@@ -256,7 +262,7 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 	}
 	cudaDeviceSynchronize();
 	if (logs_active)
-		end_iteration();
+		log.end_iteration();
 	/* Copy device to host*/
 //	rad::checkFrameworkErrors(
 //			cudaMemcpy(components, devComponents, sizeComponents * sizeof(int),
@@ -264,9 +270,8 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 //	rad::checkFrameworkErrors(
 //			cudaMemcpy(out, devOut, sizeOut * sizeof(int),
 //					cudaMemcpyDeviceToHost));
-	devComponents.to_vector(components);
-	devOut.to_vector(out);
-
+//	devComponents.to_vector(components);
+//	devOut.to_vector(out);
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 
@@ -282,8 +287,8 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 	cudaDeviceProp props;
 	cudaGetDevice(&device);
 	cudaGetDeviceProperties(&props, device);
-	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
-			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+//	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+//			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
 	// printf("Occupancy Results\n");
 	// printf("-----------------\n");
@@ -298,5 +303,5 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 	for (auto& stream : streams) {
 		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
 	}
-	return time;
+	return time / 1000;
 }
