@@ -52,8 +52,6 @@
 #include <memory>
 #include <omp.h>
 
-#include <sstream>
-
 #define MAX_LABELS 262144
 #define BUF_SIZE 256
 
@@ -331,7 +329,13 @@ int main(int argc, char** argv) {
 	std::vector<int> gold_spans(spansSize);
 	std::vector<int> gold_components(componentsSize);
 
-	readGold(gold_spans, gold_components, parameters.gold);
+	if(parameters.generate == false){
+		readGold(gold_spans, gold_components, parameters.gold);
+		if(parameters.debug){
+			gold_components[22] = 22;
+			gold_spans[24] = 33;
+		}
+	}
 
 	std::fill(spans.begin(), spans.end(), -1);
 	std::fill(components.begin(), components.end(), -1);
@@ -376,33 +380,33 @@ int main(int argc, char** argv) {
 			for (int j = 0; j < colsSpans; j++) {
 				int index = i + j * rows;
 				if (spans[index] != gold_spans[index]) {
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"t: [spans], p: [%d][%d], r: %d, e: %d", i, j,
-							spans[index], gold_spans[index]);
-					printf("%s\n", error_detail);
-
+					//"t: [spans], p: [%d][%d], r: %d, e: %d
+					auto gc = std::to_string(gold_spans[index]);
+					auto fc = std::to_string(spans[index]);
+					auto istr = std::to_string(i);
+					auto jstr = std::to_string(j);
+					std::string error_detail;
+					error_detail = "t: [spans], p: [" + istr + "][" + jstr	+ "], ";
+					error_detail += "r: " + fc + ", e: " + gc;
+//					char error_detail[150];
+//					snprintf(error_detail, 150,
+//							, i, j,
+//							spans[index], gold_spans[index]);
+//					printf("%s\n", error_detail);
 #pragma omp critical
 					{
 						//					log_error_detail(error_detail);
-						log.log_error_detail(std::string(error_detail));
+						log.log_error_detail(error_detail);
 						kernel_errors++;
+						if(parameters.verbose && index <= 10){
+							std::cout << error_detail << std::endl;
+						}
 					}
 
 				}
 			}
 		}
-//		for (int k = 0; k < spansSize; k++) {
-//#pragma omp critical
-//			if (spans[k] != gold_spans[k]) {
-//				char error_detail[150];
-//				snprintf(error_detail, 150, "t: [spans], p: [%d], r: %d, e: %d",
-//						k, spans[k], gold_spans[k]);
-//				printf("%s\n", error_detail);
-//				log_error_detail(error_detail);
-//				kernel_errors++;
-//			}
-//		}
+
 		// output validation
 		const int component_width = (colsSpans / 2);
 #pragma omp parallel for
@@ -410,35 +414,32 @@ int main(int argc, char** argv) {
 			for (int j = 0; j < component_width; j++) {
 				int index = i + j * rows;
 				if (components[index] != gold_components[index]) {
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
-							components[index], gold_components[index]);
-					printf("%s\n", error_detail);
+					auto gc = std::to_string(gold_components[index]);
+					auto fc = std::to_string(components[index]);
+					auto istr = std::to_string(i);
+					auto jstr = std::to_string(j);
+					std::string error_detail;
+					error_detail = "t: [components], p: [" + istr + "][" + jstr	+ "], ";
+					error_detail += "r: " + fc + ", e: " + gc;
+
+//					char error_detail[150];
+//					snprintf(error_detail, 150,
+//							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
+//							components[index], gold_components[index]);
+//					printf("%s\n", error_detail);
 #pragma omp critical
 					{
 						//					log_error_detail(error_detail);
-						log.log_error_detail(std::string(error_detail));
+						log.log_error_detail(error_detail);
 						kernel_errors++;
+						if(parameters.verbose && index <= 10){
+							std::cout << error_detail << std::endl;
+						}
 					}
 				}
 			}
 		}
 
-//		for (int k = 0; k < componentsSize; k++) {
-//			if (components[k] != gold_components[k])
-//#pragma omp critical
-//					{
-//				char error_detail[150];
-//				snprintf(error_detail, 150,
-//						"t: [components], p: [%d], r: %d, e: %d", k,
-//						components[k], gold_components[k]);
-//				printf("%s\n", error_detail);
-//				log_error_detail(error_detail);
-//				kernel_errors++;
-//			}
-//		}
-//		log_error_count(kernel_errors);
 		comparisson_time = rad::mysecond() - comparisson_time;
 		log.update_errors();
 		if (parameters.verbose) {
