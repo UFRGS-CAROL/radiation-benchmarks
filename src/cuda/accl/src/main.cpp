@@ -223,7 +223,6 @@ template<typename int_t>
 void writeGold(std::vector<int_t>& gold_spans,
 		std::vector<int_t>& gold_components, const std::string& fpath) {
 
-
 	std::ofstream output(fpath, std::ios::binary);
 	if (output.good()) {
 		output.write(reinterpret_cast<char*>(gold_spans.data()),
@@ -233,7 +232,7 @@ void writeGold(std::vector<int_t>& gold_spans,
 
 		output.close();
 
-	}else{
+	} else {
 		throw_line("Could not write file " + fpath);
 	}
 
@@ -325,9 +324,9 @@ int main(int argc, char** argv) {
 	std::vector<int> gold_spans(spansSize);
 	std::vector<int> gold_components(componentsSize);
 
-	if(parameters.generate == false){
+	if (parameters.generate == false) {
 		readGold(gold_spans, gold_components, parameters.gold);
-		if(parameters.debug){
+		if (parameters.debug) {
 			gold_components[22] = 22;
 			gold_spans[24] = 33;
 		}
@@ -370,52 +369,54 @@ int main(int argc, char** argv) {
 		auto comparisson_time = rad::mysecond();
 		// output validation
 		int kernel_errors = 0;
-
+		if (parameters.generate == false) {
 #pragma omp parallel for
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < colsSpans; j++) {
-				int index = i + j * rows;
-				if (spans[index] != gold_spans[index]) {
-					//"t: [spans], p: [%d][%d], r: %d, e: %d
-					auto gc = std::to_string(gold_spans[index]);
-					auto fc = std::to_string(spans[index]);
-					auto istr = std::to_string(i);
-					auto jstr = std::to_string(j);
-					std::string error_detail;
-					error_detail = "t: [spans], p: [" + istr + "][" + jstr	+ "], ";
-					error_detail += "r: " + fc + ", e: " + gc;
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < colsSpans; j++) {
+					int index = i + j * rows;
+					if (spans[index] != gold_spans[index]) {
+						//"t: [spans], p: [%d][%d], r: %d, e: %d
+						auto gc = std::to_string(gold_spans[index]);
+						auto fc = std::to_string(spans[index]);
+						auto istr = std::to_string(i);
+						auto jstr = std::to_string(j);
+						std::string error_detail;
+						error_detail = "t: [spans], p: [" + istr + "][" + jstr
+								+ "], ";
+						error_detail += "r: " + fc + ", e: " + gc;
 //					char error_detail[150];
 //					snprintf(error_detail, 150,
 //							, i, j,
 //							spans[index], gold_spans[index]);
 //					printf("%s\n", error_detail);
 #pragma omp critical
-					{
-						if(parameters.verbose && index <= 10){
-							std::cout << error_detail << std::endl;
+						{
+							if (parameters.verbose && index <= 10) {
+								std::cout << error_detail << std::endl;
+							}
+							log.log_error_detail(error_detail);
+							kernel_errors++;
 						}
-						log.log_error_detail(error_detail);
-						kernel_errors++;
-					}
 
+					}
 				}
 			}
-		}
 
-		// output validation
-		const int component_width = (colsSpans / 2);
+			// output validation
+			const int component_width = (colsSpans / 2);
 #pragma omp parallel for
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < component_width; j++) {
-				int index = i + j * rows;
-				if (components[index] != gold_components[index]) {
-					auto gc = std::to_string(gold_components[index]);
-					auto fc = std::to_string(components[index]);
-					auto istr = std::to_string(i);
-					auto jstr = std::to_string(j);
-					std::string error_detail;
-					error_detail = "t: [components], p: [" + istr + "][" + jstr	+ "], ";
-					error_detail += "r: " + fc + ", e: " + gc;
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < component_width; j++) {
+					int index = i + j * rows;
+					if (components[index] != gold_components[index]) {
+						auto gc = std::to_string(gold_components[index]);
+						auto fc = std::to_string(components[index]);
+						auto istr = std::to_string(i);
+						auto jstr = std::to_string(j);
+						std::string error_detail;
+						error_detail = "t: [components], p: [" + istr + "]["
+								+ jstr + "], ";
+						error_detail += "r: " + fc + ", e: " + gc;
 
 //					char error_detail[150];
 //					snprintf(error_detail, 150,
@@ -423,20 +424,22 @@ int main(int argc, char** argv) {
 //							components[index], gold_components[index]);
 //					printf("%s\n", error_detail);
 #pragma omp critical
-					{
-						//					log_error_detail(error_detail);
-						if(parameters.verbose && index <= 10){
-							std::cout << error_detail << std::endl;
+						{
+							//					log_error_detail(error_detail);
+							if (parameters.verbose && index <= 10) {
+								std::cout << error_detail << std::endl;
+							}
+							log.log_error_detail(error_detail);
+							kernel_errors++;
 						}
-						log.log_error_detail(error_detail);
-						kernel_errors++;
 					}
 				}
 			}
 		}
-
 		comparisson_time = rad::mysecond() - comparisson_time;
 		log.update_errors();
+
+
 		if (parameters.verbose) {
 			std::cout << "Iteration " << loop1 << " - kernel time: " << ktime
 					<< " errors: " << kernel_errors << std::endl;
@@ -453,7 +456,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if(parameters.generate){
+	if (parameters.generate) {
 		writeGold(spans, components, parameters.gold);
 	}
 	std::cout << "Image Segmentation ended" << std::endl;
