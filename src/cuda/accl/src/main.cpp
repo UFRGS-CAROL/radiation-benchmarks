@@ -291,14 +291,9 @@ int main(int argc, char** argv) {
 	image<rgb> *output2 = new image<rgb>(width, height);
 	imInt = imageUcharToInt(input);
 
-	uint nFrames = parameters.size;
-	uint nFramsPerStream = parameters.frames;
-	if (nFrames < nFramsPerStream) {
-		std::cout
-				<< "Num Frames per stream should be less than or equal to numFrames in image"
-				<< std::endl;
-		exit(0);
-	}
+	auto nFrames = parameters.nFrames;
+	auto nFramsPerStream = parameters.nFramesPerStream;
+
 	const int rows = nFrames * 512;
 	const int cols = 512;
 	const int imageSize = rows * cols;

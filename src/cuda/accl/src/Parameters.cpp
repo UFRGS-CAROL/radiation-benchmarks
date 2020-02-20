@@ -18,8 +18,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->generate = rad::find_arg(argc, argv, "--generate");
 	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/accl/7Frames.pgm ");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
-	this->size = rad::find_int_arg(argc, argv, "--size", 7);
-	this->frames = rad::find_int_arg(argc, argv, "--frames", 7);
+	this->nFrames = rad::find_int_arg(argc, argv, "--size", 7);
+	this->nFramesPerStream = rad::find_int_arg(argc, argv, "--nFramesPerStream", 7);
 
 
 	auto dev_prop = rad::get_device();
@@ -42,12 +42,16 @@ Parameters::Parameters(int argc, char* argv[]) {
 				" [--verbose] [--debug]");
 	}
 
+	if (this->nFrames < this->nFramesPerStream) {
+		throw_line("Num Frames per stream should be less than or equal to numFrames in image");
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
-	os << "Testing LUD on " << p.device << std::endl;
-	os << "Matrix size: " << p.size << "x" << p.size << std::endl;
+	os << "Testing ACCL on " << p.device << std::endl;
+	os << "nFrames: " << p.nFrames  << std::endl;
+	os << "nFramsPerStream: " << p.nFramesPerStream  << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
