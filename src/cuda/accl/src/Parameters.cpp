@@ -16,9 +16,11 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
-	this->input = rad::find_char_arg(argc, argv, "--input", "./input.data");
+	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/accl/7Frames.pgm ");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
-	this->size = rad::find_int_arg(argc, argv, "--size", 1024);
+	this->size = rad::find_int_arg(argc, argv, "--size", 7);
+	this->frames = rad::find_int_arg(argc, argv, "--frames", 7);
+
 
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
@@ -29,7 +31,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
 
-	if (argc < 2) {
+	if (argc < 6) {
 		throw_line(
 				"<mandatory arguments> [optional arguments]\nUsage: ./cudaACCL"
 				" --size <N frames in the image>"

@@ -11,7 +11,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -dc
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -dc  -Wno-deprecated-gpu-targets
 
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
@@ -39,7 +39,7 @@ LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand  -Wno-deprecated-gpu-targets
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -49,7 +49,7 @@ all: mkdir $(EXEC)
 
 
 $(EXEC): $(OBJS)  
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
+	$(NVCC) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(INCLUDE)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)

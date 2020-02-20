@@ -23,6 +23,7 @@ struct Parameters {
 	size_t sm_count;
 	size_t iterations;
 	size_t size;
+	size_t frames;
 
 	bool verbose;
 	bool debug;

@@ -47,17 +47,22 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <algorithm>
-#include <time.h>
-#include <sys/time.h>
+
 #include <omp.h>
-#include <limits.h>
 
 #define MAX_LABELS 262144
 #define BUF_SIZE 256
 
 #include "Parameters.h"
 #include "log_helper.h"
+#include "utils.h"
+
+#include "cuda_utils.h"
+#include "generic_log.h"
+
+
 
 #include "image.h"
 #include "misc.h"
@@ -91,24 +96,24 @@ rgb randomRgb() {
 	return c;
 }
 
-/*
- * getWallTime: Compute timing of execution including I/O
- */
-double getWallTime() {
-	struct timeval time;
-	if (gettimeofday(&time, NULL)) {
-		printf("Error getting time\n");
-		return 0;
-	}
-	return (double) time.tv_sec + (double) time.tv_usec * .000001;
-}
-
-/*
- * getCpuTime: Compute timing of execution using Clocks function from C++
- */
-double getCpuTime() {
-	return (double) clock() / CLOCKS_PER_SEC;
-}
+///*
+// * getWallTime: Compute timing of execution including I/O
+// */
+//double getWallTime() {
+//	struct timeval time;
+//	if (gettimeofday(&time, NULL)) {
+//		printf("Error getting time\n");
+//		return 0;
+//	}
+//	return (double) time.tv_sec + (double) time.tv_usec * .000001;
+//}
+//
+///*
+// * getCpuTime: Compute timing of execution using Clocks function from C++
+// */
+//double getCpuTime() {
+//	return (double) clock() / CLOCKS_PER_SEC;
+//}
 
 /*
  * pgmRead: read a pgm image file
@@ -142,7 +147,7 @@ void pgmRead(std::ifstream &file, char *buf) {
  * Return:
  * - image<uchar>: image loaded in an uchar structure
  */
-image<uchar> *loadPGM(const char *name) {
+image<uchar> *loadPGM(const std::string& name) {
 	char buf[BUF_SIZE];
 
 	/*
@@ -206,25 +211,52 @@ image<int> *imageUcharToInt(image<uchar> *input) {
 	return output;
 }
 
-double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	int i = gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+//double mysecond() {
+//	struct timeval tp;
+//	struct timezone tzp;
+//	int i = gettimeofday(&tp, &tzp);
+//	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+//}
+template<typename real_t>
+bool read_from_file(std::string& path, std::vector<real_t>& array) {
+	std::ifstream input(path, std::ios::binary);
+	if (input.good()) {
+		input.read(reinterpret_cast<char*>(array.data()),
+				array.size() * sizeof(real_t));
+		input.close();
+		return false;
+	}
+	return true;
 }
 
-void readGold(int *gold_spans, int *gold_components, int spansSize,
-		int componentsSize, const char *fpath) {
-	FILE *fgold;
-	fgold = fopen(fpath, "rb");
-	if (!fgold) {
-		std::cout << "Could not open gold output." << std::endl;
-		exit(0);
+template<typename real_t>
+bool write_to_file(std::string& path, std::vector<real_t>& array) {
+	std::ofstream output(path, std::ios::binary);
+	if (output.good()) {
+		output.write(reinterpret_cast<char*>(array.data()),
+				array.size() * sizeof(real_t));
+		output.close();
+
+		return false;
 	}
-	// Caio: output format: SPANSCOMPONENTS
-	fread(gold_spans, spansSize * sizeof(int), 1, fgold);
-	fread(gold_components, componentsSize * sizeof(int), 1, fgold);
-	fclose(fgold);
+	return true;
+}
+
+template<typename int_t>
+void readGold(std::vector<int_t>& gold_spans,
+		std::vector<int_t>& gold_components, const std::string& fpath) {
+
+	std::ifstream input(fpath, std::ios::binary);
+	if (input.good()) {
+		input.read(reinterpret_cast<char*>(gold_spans.data()),
+				gold_spans.size() * sizeof(int_t));
+		input.read(reinterpret_cast<char*>(gold_components.data()),
+				gold_components.size() * sizeof(int_t));
+
+		input.close();
+	} else {
+		throw_line("Could not read file " + fpath);
+	}
 }
 
 //void usage() {
@@ -240,17 +272,16 @@ int main(int argc, char** argv) {
 //	}
 	Parameters parameters(argc, argv);
 
-	if(parameters.verbose){
+	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
 	}
 	std::cout << "Accelerated Connected Component Labeling" << std::endl;
 	std::cout << "========================================" << std::endl;
 	std::cout << "Loading input image..." << std::endl;
-	image<uchar> *input = loadPGM(argv[3]);
+
+	image<uchar> *input = loadPGM(parameters.input);
 	const int width = input->width();
 	const int height = input->height();
-
-	int iterations = atoi(argv[5]);
 
 	/*
 	 * Declaration of Variables
@@ -260,8 +291,8 @@ int main(int argc, char** argv) {
 	image<rgb> *output2 = new image<rgb>(width, height);
 	imInt = imageUcharToInt(input);
 
-	uint nFrames = atoi(argv[1]);
-	uint nFramsPerStream = atoi(argv[2]);
+	uint nFrames = parameters.size;
+	uint nFramsPerStream = parameters.frames;
 	if (nFrames < nFramsPerStream) {
 		std::cout
 				<< "Num Frames per stream should be less than or equal to numFrames in image"
@@ -280,31 +311,33 @@ int main(int argc, char** argv) {
 	const int colsSpans = ((cols + 2 - 1) / 2) * 2; /*ceil(cols/2)*2*/
 	const int spansSize = colsSpans * rows;
 	const int componentsSize = (colsSpans / 2) * rows;
-	int *spans = new int[spansSize];
-	int *components = new int[componentsSize];
-	int *gold_spans = new int[spansSize];
-	int *gold_components = new int[componentsSize];
+	std::vector<int> spans(spansSize);
+	std::vector<int> components(componentsSize);
+	std::vector<int> gold_spans(spansSize);
+	std::vector<int> gold_components(componentsSize);
 
-	readGold(gold_spans, gold_components, spansSize, componentsSize, argv[4]);
+	readGold(gold_spans, gold_components, parameters.gold);
 
-	char test_info[90];
-	snprintf(test_info, 90, "frames:%d, framesPerStream:%d", nFrames,
-			nFramsPerStream);
-	start_log_file("cudaCCL", test_info);
+	//	"frames:%d, framesPerStream:%d"
+	std::string test_info = "frames:" + std::to_string(nFrames);
+	test_info += ", framesPerStream:" + std::to_string(nFramsPerStream);
+	std::string test_name = "cudaCCL";
 
-	for (int loop1 = 0; loop1 < iterations; loop1++) {
+	rad::Log log(test_name, test_info);
+
+	for (size_t loop1 = 0; loop1 < parameters.iterations; loop1++) {
 
 		/*
 		 * Initialize
 		 */
-		memset(spans, -1, spansSize * sizeof(int));
-		memset(components, -1, componentsSize * sizeof(int));
+		std::fill(spans.begin(), spans.end(), -1);
+		std::fill(components.begin(), components.end(), -1);
 
 		/*
 		 * CUDA
 		 */
 		double ktime = 0.0;
-		ktime = acclCuda(spans, components, image, nFrames, nFramsPerStream,
+		ktime = acclCuda(spans.data(), components.data(), image, nFrames, nFramsPerStream,
 				rows, cols, 1);
 		//printf("acclCuda time: %.5f", ktime);
 
@@ -374,12 +407,11 @@ int main(int argc, char** argv) {
 //		}
 		log_error_count(kernel_errors);
 
-		printf(".");
-		fflush (stdout);
+		std::cout << "." << std::endl;
 	}
 
-	end_log_file();
+//	end_log_file();
 
-	printf("Image Segmentation ended.\n");
+	std::cout << "Image Segmentation ended" << std::endl;
 	return 0;
 }
