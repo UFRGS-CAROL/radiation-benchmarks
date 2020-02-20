@@ -218,29 +218,25 @@ std::shared_ptr<image<int>> imageUcharToInt(
 //	int i = gettimeofday(&tp, &tzp);
 //	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 //}
-template<typename real_t>
-bool read_from_file(std::string& path, std::vector<real_t>& array) {
-	std::ifstream input(path, std::ios::binary);
-	if (input.good()) {
-		input.read(reinterpret_cast<char*>(array.data()),
-				array.size() * sizeof(real_t));
-		input.close();
-		return false;
-	}
-	return true;
-}
 
-template<typename real_t>
-bool write_to_file(std::string& path, std::vector<real_t>& array) {
-	std::ofstream output(path, std::ios::binary);
+template<typename int_t>
+void writeGold(std::vector<int_t>& gold_spans,
+		std::vector<int_t>& gold_components, const std::string& fpath) {
+
+
+	std::ofstream output(fpath, std::ios::binary);
 	if (output.good()) {
-		output.write(reinterpret_cast<char*>(array.data()),
-				array.size() * sizeof(real_t));
+		output.write(reinterpret_cast<char*>(gold_spans.data()),
+				gold_spans.size() * sizeof(int_t));
+		output.write(reinterpret_cast<char*>(gold_components.data()),
+				gold_components.size() * sizeof(int_t));
+
 		output.close();
 
-		return false;
+	}else{
+		throw_line("Could not write file " + fpath);
 	}
-	return true;
+
 }
 
 template<typename int_t>
@@ -395,12 +391,11 @@ int main(int argc, char** argv) {
 //					printf("%s\n", error_detail);
 #pragma omp critical
 					{
-						//					log_error_detail(error_detail);
-						log.log_error_detail(error_detail);
-						kernel_errors++;
 						if(parameters.verbose && index <= 10){
 							std::cout << error_detail << std::endl;
 						}
+						log.log_error_detail(error_detail);
+						kernel_errors++;
 					}
 
 				}
@@ -430,11 +425,11 @@ int main(int argc, char** argv) {
 #pragma omp critical
 					{
 						//					log_error_detail(error_detail);
-						log.log_error_detail(error_detail);
-						kernel_errors++;
 						if(parameters.verbose && index <= 10){
 							std::cout << error_detail << std::endl;
 						}
+						log.log_error_detail(error_detail);
+						kernel_errors++;
 					}
 				}
 			}
@@ -458,8 +453,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
-//	end_log_file();
-
+	if(parameters.generate){
+		writeGold(spans, components, parameters.gold);
+	}
 	std::cout << "Image Segmentation ended" << std::endl;
 	return 0;
 }

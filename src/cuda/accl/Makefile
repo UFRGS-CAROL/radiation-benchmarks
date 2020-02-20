@@ -6,7 +6,8 @@ BUILDPROFILER=0
 ITERATIONS=10
 SIZE=7
 FRAMES=7
-GOLD=../gold_accl/gold_7_7 
+GOLD=./gold_$(SIZE)_$(FRAMES).data
+#../gold_accl/gold_7_7 
 INPUT=../../../data/accl/7Frames.pgm
 
 VPATH=./src/
