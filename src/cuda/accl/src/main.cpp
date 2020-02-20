@@ -52,6 +52,8 @@
 #include <memory>
 #include <omp.h>
 
+#include <sstream>
+
 #define MAX_LABELS 262144
 #define BUF_SIZE 256
 
@@ -66,8 +68,8 @@
 #include "misc.h"
 #include "accl.h"
 
-class errorHandler {
-};
+//class errorHandler {
+//};
 //using namespace std;
 /*
  * ---------------------------------------------------------------------
@@ -154,7 +156,7 @@ std::shared_ptr<image<uchar>> loadPGM(const std::string& name) {
 	std::ifstream file(name, std::ios::in | std::ios::binary);
 	pgmRead(file, buf);
 	if (strncmp(buf, "P5", 2))
-		throw errorHandler();
+		throw_line("P5");
 
 	pgmRead(file, buf);
 	int width = atoi(buf);
@@ -163,11 +165,11 @@ std::shared_ptr<image<uchar>> loadPGM(const std::string& name) {
 
 	pgmRead(file, buf);
 	if (atoi(buf) > UCHAR_MAX)
-		throw errorHandler();
+		throw_line("CHAR MAX");
 
 	/* read data */
-	std::shared_ptr<image<uchar>> im = std::make_shared < image
-			< uchar >> (width, height);
+	std::shared_ptr<image<uchar>> im = std::make_shared<image<uchar>>(width,
+			height);
 	file.read((char *) imPtr(im, 0, 0), width * height * sizeof(uchar));
 	return im;
 }
@@ -301,10 +303,10 @@ int main(int argc, char** argv) {
 //	image<rgb> *output1 = new image<rgb>(width, height);
 //	image<rgb> *output2 = new image<rgb>(width, height);
 	std::shared_ptr<image<int>> imInt = imageUcharToInt(input); //std::make_shared<image<int>>(width, height);
-	std::shared_ptr<image<rgb>> output1 = std::make_shared < image
-			< rgb >> (width, height);
-	std::shared_ptr<image<rgb>> output2 = std::make_shared < image
-			< rgb >> (width, height);
+	std::shared_ptr<image<rgb>> output1 = std::make_shared<image<rgb>>(width,
+			height);
+	std::shared_ptr<image<rgb>> output2 = std::make_shared<image<rgb>>(width,
+			height);
 //	imInt = imageUcharToInt(input);
 
 	auto nFrames = parameters.nFrames;
@@ -373,17 +375,20 @@ int main(int argc, char** argv) {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < colsSpans; j++) {
 				int index = i + j * rows;
-#pragma omp critical
 				if (spans[index] != gold_spans[index]) {
 					char error_detail[150];
 					snprintf(error_detail, 150,
 							"t: [spans], p: [%d][%d], r: %d, e: %d", i, j,
 							spans[index], gold_spans[index]);
 					printf("%s\n", error_detail);
-//					log_error_detail(error_detail);
-					log.log_error_detail(std::string(error_detail));
 
-					kernel_errors++;
+#pragma omp critical
+					{
+						//					log_error_detail(error_detail);
+						log.log_error_detail(std::string(error_detail));
+						kernel_errors++;
+					}
+
 				}
 			}
 		}
@@ -404,16 +409,18 @@ int main(int argc, char** argv) {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < component_width; j++) {
 				int index = i + j * rows;
-#pragma omp critical
 				if (components[index] != gold_components[index]) {
 					char error_detail[150];
 					snprintf(error_detail, 150,
 							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
 							components[index], gold_components[index]);
 					printf("%s\n", error_detail);
-//					log_error_detail(error_detail);
-					log.log_error_detail(std::string(error_detail));
-					kernel_errors++;
+#pragma omp critical
+					{
+						//					log_error_detail(error_detail);
+						log.log_error_detail(std::string(error_detail));
+						kernel_errors++;
+					}
 				}
 			}
 		}
