@@ -356,14 +356,14 @@ int main(int argc, char** argv) {
 
 		//std::vector<int>& out, std::vector<int>& components,
 		//		const std::vector<int>& in
-		auto ktime = acclCuda(devSpans, devComponents, devImage, nFrames, nFramsPerStream, rows, cols, 1, log);
+		auto ktime = acclCuda(devSpans, devComponents, devImage, nFrames,
+				nFramsPerStream, rows, cols, 1, log);
 		//printf("acclCuda time: %.5f", ktime);
 
 		auto copy_time = rad::mysecond();
 		devComponents.to_vector(components);
 		devSpans.to_vector(spans);
 		copy_time = rad::mysecond() - copy_time;
-		//		ktime /= 1000;
 
 		auto comparisson_time = rad::mysecond();
 		// output validation
@@ -441,7 +441,8 @@ int main(int argc, char** argv) {
 			auto overall_time = ktime + wasted_time;
 			std::cout << "Overall time: " << overall_time << " wasted time: "
 					<< wasted_time << " - "
-					<< int((wasted_time / overall_time) * 100.0) << "%" << std::endl;
+					<< int((wasted_time / overall_time) * 100.0) << "%"
+					<< std::endl;
 
 		} else {
 			std::cout << "." << std::endl;
