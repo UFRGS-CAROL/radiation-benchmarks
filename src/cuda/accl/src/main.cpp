@@ -62,8 +62,6 @@
 #include "cuda_utils.h"
 #include "generic_log.h"
 
-
-
 #include "image.h"
 #include "misc.h"
 #include "accl.h"
@@ -270,14 +268,24 @@ int main(int argc, char** argv) {
 //		usage();
 //		exit(0);
 //	}
+
 	Parameters parameters(argc, argv);
+
+	//	"frames:%d, framesPerStream:%d"
+	std::string test_info = "frames:" + std::to_string(parameters.nFrames);
+	test_info += ", framesPerStream:"
+			+ std::to_string(parameters.nFramesPerStream);
+	std::string test_name = "cudaCCL";
+
+	rad::Log log(test_name, test_info);
 
 	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
+		std::cout << log << std::endl;
+		std::cout << "Accelerated Connected Component Labeling" << std::endl;
+		std::cout << "========================================" << std::endl;
+		std::cout << "Loading input image..." << std::endl;
 	}
-	std::cout << "Accelerated Connected Component Labeling" << std::endl;
-	std::cout << "========================================" << std::endl;
-	std::cout << "Loading input image..." << std::endl;
 
 	image<uchar> *input = loadPGM(parameters.input);
 	const int width = input->width();
@@ -313,13 +321,6 @@ int main(int argc, char** argv) {
 
 	readGold(gold_spans, gold_components, parameters.gold);
 
-	//	"frames:%d, framesPerStream:%d"
-	std::string test_info = "frames:" + std::to_string(nFrames);
-	test_info += ", framesPerStream:" + std::to_string(nFramsPerStream);
-	std::string test_name = "cudaCCL";
-
-	rad::Log log(test_name, test_info);
-
 	for (size_t loop1 = 0; loop1 < parameters.iterations; loop1++) {
 
 		/*
@@ -331,9 +332,12 @@ int main(int argc, char** argv) {
 		/*
 		 * CUDA
 		 */
+		std::cout << "Passou " << spans.data() << " " << components.data()
+				<< " " << image << " " << nFrames << " " << nFramsPerStream
+				<< " " << rows << " " << cols << std::endl;
 		double ktime = 0.0;
-		ktime = acclCuda(spans.data(), components.data(), image, nFrames, nFramsPerStream,
-				rows, cols, 1);
+		ktime = acclCuda(spans.data(), components.data(), image, nFrames,
+				nFramsPerStream, rows, cols, 1);
 		//printf("acclCuda time: %.5f", ktime);
 
 		ktime /= 1000;
