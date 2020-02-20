@@ -295,6 +295,8 @@ double acclCuda(std::vector<int>& out, std::vector<int>& components,
 //	cudaFree(devOut);
 //	cudaFree(devIn);
 //	cudaFree(devComponents);
-
+	for (auto& stream : streams) {
+		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
+	}
 	return time;
 }
