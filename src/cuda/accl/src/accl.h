@@ -7,5 +7,6 @@
 double acclCuda(rad::DeviceVector<int>& devOut,
 		rad::DeviceVector<int>& devComponents,
 		const rad::DeviceVector<int>& devIn, uint nFrames, uint nFramsPerStream,
-		const int rows, const int cols, int logs_active, rad::Log& log);
+		const int rows, const int cols, int logs_active, rad::Log& log,
+		std::vector<cudaStream_t>& streams);
 #endif

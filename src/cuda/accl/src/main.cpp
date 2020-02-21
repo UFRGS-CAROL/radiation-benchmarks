@@ -341,6 +341,12 @@ int main(int argc, char** argv) {
 	const rad::DeviceVector<int> dev_spans_set(spans);
 	const rad::DeviceVector<int> dev_components_set(components);
 
+	uint nStreams = nFrames / nFramsPerStream;
+
+	std::vector < cudaStream_t > streams(nStreams);
+	for (auto& stream : streams) {
+		rad::checkFrameworkErrors(cudaStreamCreate(&(stream)));
+	}
 	for (size_t loop1 = 0; loop1 < parameters.iterations; loop1++) {
 
 		/*
@@ -358,7 +364,7 @@ int main(int argc, char** argv) {
 		//std::vector<int>& out, std::vector<int>& components,
 		//		const std::vector<int>& in
 		auto ktime = acclCuda(devSpans, devComponents, devImage, nFrames,
-				nFramsPerStream, rows, cols, 1, log);
+				nFramsPerStream, rows, cols, 1, log, streams);
 		//printf("acclCuda time: %.5f", ktime);
 
 		auto copy_time = rad::mysecond();
@@ -458,6 +464,10 @@ int main(int argc, char** argv) {
 
 	if (parameters.generate) {
 		writeGold(spans, components, parameters.gold);
+	}
+
+	for (auto& stream : streams) {
+		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
 	}
 	std::cout << "Image Segmentation ended" << std::endl;
 	return 0;

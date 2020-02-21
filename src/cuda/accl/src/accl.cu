@@ -181,7 +181,8 @@ __global__ void mergeSpansKernel(int *components, int *spans, const int rows,
 double acclCuda(rad::DeviceVector<int>& devOut,
 		rad::DeviceVector<int>& devComponents,
 		const rad::DeviceVector<int>& devIn, uint nFrames, uint nFramsPerStream,
-		const int rows, const int cols, int logs_active, rad::Log& log) {
+		const int rows, const int cols, int logs_active, rad::Log& log,
+		std::vector<cudaStream_t>& streams) {
 	const int colsSpans = ((cols + 2 - 1) / 2) * 2; /*ceil(cols/2)*2*/
 	const int colsComponents = colsSpans / 2;
 
@@ -189,7 +190,6 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 //	const int sizeIn = rows * cols;
 //	const int sizeComponents = colsComponents * rows;
 //	const int sizeOut = colsSpans * rows;
-
 	/*Block and Grid size*/
 	int blockSize;
 	int minGridSize;
@@ -230,10 +230,7 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 //	rad::DeviceVector<int> devComponents = components;
 //	rad::DeviceVector<int> devOut = out;
 	/*launch streams*/
-	std::vector < cudaStream_t > streams(nStreams);
-	for (auto& stream : streams) {
-		rad::checkFrameworkErrors(cudaStreamCreate(&(stream)));
-	}
+
 	/*variables for streaming*/
 	const int frameSpansSize = rows / nStreams * colsSpans;
 	const int frameCompSize = rows / nStreams * colsComponents;
@@ -300,8 +297,5 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 //	cudaFree(devOut);
 //	cudaFree(devIn);
 //	cudaFree(devComponents);
-	for (auto& stream : streams) {
-		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
-	}
 	return time / 1000;
 }
