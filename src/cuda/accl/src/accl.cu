@@ -250,13 +250,13 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 	if (logs_active)
 		log.start_iteration();
 	for (int i = 0; i < nStreams; ++i) {
-		findSpansKernel<<<gridSize, blockSize>>>(
+		findSpansKernel<<<gridSize, blockSize, 0, streams[i]>>>(
 				devOut.data() + i * frameSpansSize,
 				devComponents.data() + i * frameCompSize,
 				devIn.data() + i * frameSpansSize, rows, cols);
 
 		/*Merge Spans*/
-		mergeSpansKernel<<<1, nFramsPerStream>>>(
+		mergeSpansKernel<<<1, nFramsPerStream, 0, streams[i]>>>(
 				devComponents.data() + i * frameCompSize,
 				devOut.data() + i * frameSpansSize, rows, cols, frameRows);
 	}
