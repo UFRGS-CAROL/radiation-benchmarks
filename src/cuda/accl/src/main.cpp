@@ -390,9 +390,6 @@ int main(int argc, char** argv) {
 						error_detail = "t: [spans], p: [" + istr + "][" + jstr
 								+ "], ";
 						error_detail += "r: " + fc + ", e: " + gc;
-						if (parameters.verbose && index <= 10) {
-							std::cout << error_detail << std::endl;
-						}
 //					char error_detail[150];
 //					snprintf(error_detail, 150,
 //							, i, j,
@@ -400,6 +397,9 @@ int main(int argc, char** argv) {
 //					printf("%s\n", error_detail);
 #pragma omp critical
 						{
+							if (parameters.verbose && kernel_errors <= 10) {
+								std::cout << error_detail << std::endl;
+							}
 							log.log_error_detail(error_detail);
 							kernel_errors++;
 						}
@@ -423,9 +423,7 @@ int main(int argc, char** argv) {
 						error_detail = "t: [components], p: [" + istr + "]["
 								+ jstr + "], ";
 						error_detail += "r: " + fc + ", e: " + gc;
-						if (parameters.verbose && index <= 10) {
-							std::cout << error_detail << std::endl;
-						}
+
 //					char error_detail[150];
 //					snprintf(error_detail, 150,
 //							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
@@ -434,6 +432,9 @@ int main(int argc, char** argv) {
 #pragma omp critical
 						{
 							//					log_error_detail(error_detail);
+							if (parameters.verbose && kernel_errors <= 10) {
+								std::cout << error_detail << std::endl;
+							}
 							log.log_error_detail(error_detail);
 							kernel_errors++;
 						}
