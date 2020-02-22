@@ -7,6 +7,10 @@
 #include <iostream>
 #include <fstream>
 
+
+#include "device_vector.h"
+#include "cuda_utils.h"
+
 /*
  * Options 
  * 
@@ -90,42 +94,42 @@
 /*
  * Generic functions
  */
-template<typename T>
-T* alloc(int N) {
-	T* t;
-	checkCudaErrors(cudaMalloc((void**) &t, sizeof(T) * N));
-	return t;
-}
+//template<typename T>
+//T* alloc(int N) {
+//	T* t;
+//	checkCudaErrors(cudaMalloc((void**) &t, sizeof(T) * N));
+//	return t;
+//}
+//
+//template<typename T>
+//void dealloc(T* array) {
+//	checkCudaErrors(cudaFree((void*) array));
+//}
+//
+//template<typename T>
+//void copy(T* dst, T* src, int N) {
+//	checkCudaErrors(
+//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
+//					cudaMemcpyDeviceToDevice));
+//}
+//
+//template<typename T>
+//void upload(T* dst, T* src, int N) {
+//	checkCudaErrors(
+//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
+//					cudaMemcpyHostToDevice));
+//}
+//
+//template<typename T>
+//void download(T* dst, T* src, int N) {
+//	checkCudaErrors(
+//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
+//					cudaMemcpyDeviceToHost));
+//}
 
-template<typename T>
-void dealloc(T* array) {
-	checkCudaErrors(cudaFree((void*) array));
-}
-
-template<typename T>
-void copy(T* dst, T* src, int N) {
-	checkCudaErrors(
-			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-					cudaMemcpyDeviceToDevice));
-}
-
-template<typename T>
-void upload(T* dst, T* src, int N) {
-	checkCudaErrors(
-			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-					cudaMemcpyHostToDevice));
-}
-
-template<typename T>
-void download(T* dst, T* src, int N) {
-	checkCudaErrors(
-			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-					cudaMemcpyDeviceToHost));
-}
-
-void dump(float* variables, int nel, int nelr) {
-	float* h_variables = new float[nelr * NVAR];
-	download(h_variables, variables, nelr * NVAR);
+void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
+	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
+//	download(h_variables, variables, nelr * NVAR);
 
 	{
 		std::ofstream file("density");
@@ -150,7 +154,7 @@ void dump(float* variables, int nel, int nelr) {
 		for (int i = 0; i < nel; i++)
 			file << h_variables[i + VAR_DENSITY_ENERGY * nelr] << std::endl;
 	}
-	delete[] h_variables;
+//	delete[] h_variables;
 }
 
 /*
@@ -170,7 +174,9 @@ __global__ void cuda_initialize_variables(int nelr, float* variables) {
 void initialize_variables(int nelr, float* variables) {
 	dim3 Dg(nelr / BLOCK_SIZE_1), Db(BLOCK_SIZE_1);
 	cuda_initialize_variables<<<Dg, Db>>>(nelr, variables);
-	getLastCudaError("initialize_variables failed");
+	//getLastCudaError("initialize_variables failed");
+	std::cout << ("initialize_variables failed\n");
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 }
 
 __device__ __host__ inline void compute_flux_contribution(float& density,
@@ -245,6 +251,7 @@ void compute_step_factor(int nelr, float* variables, float* areas,
 	dim3 Dg(nelr / BLOCK_SIZE_2), Db(BLOCK_SIZE_2);
 	cuda_compute_step_factor<<<Dg, Db>>>(nelr, variables, areas, step_factors);
 	getLastCudaError("compute_step_factor failed");
+
 }
 
 /*
@@ -574,9 +581,9 @@ int euler3D(int argc, char** argv) {
 	int nelr;
 
 	// read in domain geometry
-	float* areas;
-	int* elements_surrounding_elements;
-	float* normals;
+	rad::DeviceVector<float> areas;
+	rad::DeviceVector<int> elements_surrounding_elements;
+	rad::DeviceVector<float> normals;
 	{
 		std::ifstream file(data_file_name);
 
@@ -584,9 +591,9 @@ int euler3D(int argc, char** argv) {
 		nelr = BLOCK_SIZE_0
 				* ((nel / BLOCK_SIZE_0) + std::min(1, nel % BLOCK_SIZE_0));
 
-		float* h_areas = new float[nelr];
-		int* h_elements_surrounding_elements = new int[nelr * NNB];
-		float* h_normals = new float[nelr * NDIM * NNB];
+		std::vector<float> h_areas(nelr);
+		std::vector<int> h_elements_surrounding_elements(nelr * NNB);
+		std::vector<float> h_normals(nelr * NDIM * NNB);
 
 		// read in data
 		for (int i = 0; i < nel; i++) {
@@ -619,33 +626,38 @@ int euler3D(int argc, char** argv) {
 			}
 		}
 
-		areas = alloc<float>(nelr);
-		upload<float>(areas, h_areas, nelr);
+//		areas = alloc<float>(nelr);
+//		upload<float>(areas, h_areas, nelr);
+		areas = h_areas;
 
-		elements_surrounding_elements = alloc<int>(nelr * NNB);
-		upload<int>(elements_surrounding_elements,
-				h_elements_surrounding_elements, nelr * NNB);
+//		elements_surrounding_elements = alloc<int>(nelr * NNB);
+//		upload<int>(elements_surrounding_elements,
+//				h_elements_surrounding_elements, nelr * NNB);
+		elements_surrounding_elements = h_elements_surrounding_elements;
 
-		normals = alloc<float>(nelr * NDIM * NNB);
-		upload<float>(normals, h_normals, nelr * NDIM * NNB);
+//		normals = alloc<float>(nelr * NDIM * NNB);
+//		upload<float>(normals, h_normals, nelr * NDIM * NNB);
+		normals = h_normals;
 
-		delete[] h_areas;
-		delete[] h_elements_surrounding_elements;
-		delete[] h_normals;
+//		delete[] h_areas;
+//		delete[] h_elements_surrounding_elements;
+//		delete[] h_normals;
 	}
 
 	// Create arrays and set initial conditions
-	float* variables = alloc<float>(nelr * NVAR);
-	initialize_variables(nelr, variables);
+	rad::DeviceVector<float> variables(nelr * NVAR);
+	initialize_variables(nelr, variables.data());
 
-	float* old_variables = alloc<float>(nelr * NVAR);
-	float* fluxes = alloc<float>(nelr * NVAR);
-	float* step_factors = alloc<float>(nelr);
+	rad::DeviceVector<float> old_variables(nelr * NVAR);
+	rad::DeviceVector<float> fluxes(nelr * NVAR);
+	rad::DeviceVector<float> step_factors(nelr);
 
 	// make sure all memory is floatly allocated before we start timing
-	initialize_variables(nelr, old_variables);
-	initialize_variables(nelr, fluxes);
-	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
+	initialize_variables(nelr, old_variables.data());
+	initialize_variables(nelr, fluxes.data());
+//	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
+	step_factors.clear();
+
 	// make sure CUDA isn't still doing something before we start timing
 	cudaDeviceSynchronize();
 
@@ -661,22 +673,26 @@ int euler3D(int argc, char** argv) {
 	sdkStartTimer(&timer);
 	// Begin iterations
 	for (int i = 0; i < iterations; i++) {
-		copy<float>(old_variables, variables, nelr * NVAR);
+//		copy<float>(old_variables, variables, nelr * NVAR);
+		old_variables = variables;
 
 		// for the first iteration we compute the time step
-		compute_step_factor(nelr, variables, areas, step_factors);
-		getLastCudaError("compute_step_factor failed");
+		compute_step_factor(nelr, variables.data(), areas.data(), step_factors.data());
+		std::cout << ("compute_step_factor failed\n");
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		for (int j = 0; j < RK; j++) {
-			compute_flux(nelr, elements_surrounding_elements, normals,
-					variables, fluxes);
-			getLastCudaError("compute_flux failed");
-			time_step(j, nelr, old_variables, variables, step_factors, fluxes);
-			getLastCudaError("time_step failed");
+			compute_flux(nelr, elements_surrounding_elements.data(), normals.data(),
+					variables.data(), fluxes.data());
+			std::cout << ("compute_flux failed\n");
+			rad::checkFrameworkErrors(cudaPeekAtLastError());
+			time_step(j, nelr, old_variables.data(), variables.data(), step_factors.data(), fluxes.data());
+			std::cout << ("time_step failed\n");
+			rad::checkFrameworkErrors(cudaPeekAtLastError());
 		}
 	}
 
-	cudaDeviceSynchronize();
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );  
 	sdkStopTimer(&timer);
 
@@ -688,14 +704,14 @@ int euler3D(int argc, char** argv) {
 	std::cout << "Saved solution..." << std::endl;
 
 	std::cout << "Cleaning up..." << std::endl;
-	dealloc<float>(areas);
-	dealloc<int>(elements_surrounding_elements);
-	dealloc<float>(normals);
-
-	dealloc<float>(variables);
-	dealloc<float>(old_variables);
-	dealloc<float>(fluxes);
-	dealloc<float>(step_factors);
+//	dealloc<float>(areas);
+//	dealloc<int>(elements_surrounding_elements);
+//	dealloc<float>(normals);
+//
+//	dealloc<float>(variables);
+//	dealloc<float>(old_variables);
+//	dealloc<float>(fluxes);
+//	dealloc<float>(step_factors);
 
 	std::cout << "Done..." << std::endl;
 
