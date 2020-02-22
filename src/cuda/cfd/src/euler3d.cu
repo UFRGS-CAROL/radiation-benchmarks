@@ -91,42 +91,6 @@
 #define VAR_DENSITY_ENERGY (VAR_MOMENTUM+NDIM)
 #define NVAR (VAR_DENSITY_ENERGY+1)
 
-/*
- * Generic functions
- */
-//template<typename T>
-//T* alloc(int N) {
-//	T* t;
-//	checkCudaErrors(cudaMalloc((void**) &t, sizeof(T) * N));
-//	return t;
-//}
-//
-//template<typename T>
-//void dealloc(T* array) {
-//	checkCudaErrors(cudaFree((void*) array));
-//}
-//
-//template<typename T>
-//void copy(T* dst, T* src, int N) {
-//	checkCudaErrors(
-//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-//					cudaMemcpyDeviceToDevice));
-//}
-//
-//template<typename T>
-//void upload(T* dst, T* src, int N) {
-//	checkCudaErrors(
-//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-//					cudaMemcpyHostToDevice));
-//}
-//
-//template<typename T>
-//void download(T* dst, T* src, int N) {
-//	checkCudaErrors(
-//			cudaMemcpy((void*) dst, (void*) src, N * sizeof(T),
-//					cudaMemcpyDeviceToHost));
-//}
-
 void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
 	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
 //	download(h_variables, variables, nelr * NVAR);
@@ -175,7 +139,6 @@ void initialize_variables(int nelr, float* variables) {
 	dim3 Dg(nelr / BLOCK_SIZE_1), Db(BLOCK_SIZE_1);
 	cuda_initialize_variables<<<Dg, Db>>>(nelr, variables);
 	//getLastCudaError("initialize_variables failed");
-	std::cout << ("initialize_variables failed\n");
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 }
 
@@ -250,8 +213,8 @@ void compute_step_factor(int nelr, float* variables, float* areas,
 		float* step_factors) {
 	dim3 Dg(nelr / BLOCK_SIZE_2), Db(BLOCK_SIZE_2);
 	cuda_compute_step_factor<<<Dg, Db>>>(nelr, variables, areas, step_factors);
-	getLastCudaError("compute_step_factor failed");
-
+//	getLastCudaError("compute_step_factor failed");
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 }
 
 /*
@@ -460,7 +423,8 @@ void compute_flux(int nelr, int* elements_surrounding_elements, float* normals,
 	dim3 Dg(nelr / BLOCK_SIZE_3), Db(BLOCK_SIZE_3);
 	cuda_compute_flux<<<Dg, Db>>>(nelr, elements_surrounding_elements, normals,
 			variables, fluxes);
-	getLastCudaError("compute_flux failed");
+//	getLastCudaError("compute_flux failed");
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 }
 
 __global__ void cuda_time_step(int j, int nelr, float* old_variables,
@@ -489,7 +453,8 @@ void time_step(int j, int nelr, float* old_variables, float* variables,
 	dim3 Dg(nelr / BLOCK_SIZE_4), Db(BLOCK_SIZE_4);
 	cuda_time_step<<<Dg, Db>>>(j, nelr, old_variables, variables, step_factors,
 			fluxes);
-	getLastCudaError("update failed");
+//	getLastCudaError("update failed");
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 }
 
 /*
