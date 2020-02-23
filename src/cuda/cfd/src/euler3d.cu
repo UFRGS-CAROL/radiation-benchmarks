@@ -103,9 +103,9 @@ __global__ void cuda_compute_step_factor(int nelr, float* variables,
 			/ (sqrtf(areas[i]) * (sqrtf(speed_sqd) + speed_of_sound));
 }
 void compute_step_factor(int nelr, float* variables, float* areas,
-		float* step_factors) {
+		float* step_factors, cudaStream_t& stream) {
 	dim3 Dg(nelr / BLOCK_SIZE_2), Db(BLOCK_SIZE_2);
-	cuda_compute_step_factor<<<Dg, Db>>>(nelr, variables, areas, step_factors);
+	cuda_compute_step_factor<<<Dg, Db, 0, stream>>>(nelr, variables, areas, step_factors);
 //	getLastCudaError("compute_step_factor failed");
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
@@ -389,7 +389,7 @@ void euler3D(rad::DeviceVector<int>& elements_surrounding_elements,
 
 	// for the first iteration we compute the time step
 	compute_step_factor(nelr, variables.data(), areas.data(),
-			step_factors.data());
+			step_factors.data(), stream);
 //		std::cout << ("compute_step_factor failed\n");
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
