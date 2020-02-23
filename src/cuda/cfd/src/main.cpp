@@ -12,7 +12,8 @@ extern void euler3D(rad::DeviceVector<int>& elements_surrounding_elements,
 		rad::DeviceVector<float>& normals, rad::DeviceVector<float>& variables,
 		rad::DeviceVector<float>& fluxes,
 		rad::DeviceVector<float>& step_factors, rad::DeviceVector<float>& areas,
-		rad::DeviceVector<float>& old_variables, int nelr, cudaStream_t& stream);
+		rad::DeviceVector<float>& old_variables, int nelr,
+		cudaStream_t& stream);
 
 extern void compute_flux_contribution(float& density, float3& momentum,
 		float& density_energy, float& pressure, float3& velocity,
@@ -25,7 +26,8 @@ extern void copy_to_symbol_variables(float h_ff_variable[NVAR],
 		float3 h_ff_flux_contribution_momentum_z,
 		float3 h_ff_flux_contribution_density_energy);
 
-extern void initialize_variables(int nelr, float* variables, cudaStream_t& stream);
+extern void initialize_variables(int nelr, float* variables,
+		cudaStream_t& stream);
 
 void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
 	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
@@ -89,7 +91,7 @@ int main(int argc, char** argv) {
 
 	float ff_pressure = float(1.0f);
 	float ff_speed_of_sound = sqrt(
-			GAMMA * ff_pressure / h_ff_variable[VAR_DENSITY]);
+	GAMMA * ff_pressure / h_ff_variable[VAR_DENSITY]);
 	float ff_speed = float(ff_mach) * ff_speed_of_sound;
 
 	float3 ff_velocity;
@@ -130,11 +132,6 @@ int main(int argc, char** argv) {
 			h_ff_flux_contribution_density_energy);
 	int nel;
 	int nelr;
-
-	// read in domain geometry
-	rad::DeviceVector<float> areas;
-	rad::DeviceVector<int> elements_surrounding_elements;
-	rad::DeviceVector<float> normals;
 
 	std::ifstream file(data_file_name);
 
@@ -177,38 +174,63 @@ int main(int argc, char** argv) {
 		}
 	}
 
-//		areas = alloc<float>(nelr);
-//		upload<float>(areas, h_areas, nelr);
-	areas = h_areas;
-
-//		elements_surrounding_elements = alloc<int>(nelr * NNB);
-//		upload<int>(elements_surrounding_elements,
-//				h_elements_surrounding_elements, nelr * NNB);
-	elements_surrounding_elements = h_elements_surrounding_elements;
-
-//		normals = alloc<float>(nelr * NDIM * NNB);
-//		upload<float>(normals, h_normals, nelr * NDIM * NNB);
-	normals = h_normals;
-
-//		delete[] h_areas;
-//		delete[] h_elements_surrounding_elements;
-//		delete[] h_normals;
-
-	cudaStream_t stream(0);
+	// read in domain geometry
+	std::vector<rad::DeviceVector<float>> host_stream_areas(
+			parameters.stream_number);
+	std::vector<rad::DeviceVector<int>> host_stream_elements_surrounding_elements(
+			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_normals(
+			parameters.stream_number);
 
 	// Create arrays and set initial conditions
-	rad::DeviceVector<float> variables(nelr * NVAR);
-	initialize_variables(nelr, variables.data(), stream);
+	std::vector<rad::DeviceVector<float>> host_stream_variables(
+			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_old_variables(
+			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_fluxes(
+			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_step_factors(
+			parameters.stream_number);
 
-	rad::DeviceVector<float> old_variables(nelr * NVAR);
-	rad::DeviceVector<float> fluxes(nelr * NVAR);
-	rad::DeviceVector<float> step_factors(nelr);
+	std::vector < cudaStream_t > streams(parameters.stream_number);
 
-	// make sure all memory is floatly allocated before we start timing
-	initialize_variables(nelr, old_variables.data(), stream);
-	initialize_variables(nelr, fluxes.data(), stream);
-//	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
-	step_factors.clear();
+	for (auto i = 0; i < parameters.stream_number; i++) {
+		rad::checkFrameworkErrors(cudaStreamCreate(&streams[i]));
+
+		//		areas = alloc<float>(nelr);
+		//		upload<float>(areas, h_areas, nelr);
+		host_stream_areas[i] = h_areas;
+
+		//		elements_surrounding_elements = alloc<int>(nelr * NNB);
+		//		upload<int>(elements_surrounding_elements,
+		//				h_elements_surrounding_elements, nelr * NNB);
+		host_stream_elements_surrounding_elements[i] =
+				h_elements_surrounding_elements;
+
+		//		normals = alloc<float>(nelr * NDIM * NNB);
+		//		upload<float>(normals, h_normals, nelr * NDIM * NNB);
+		host_stream_normals[i] = h_normals;
+
+		//		delete[] h_areas;
+		//		delete[] h_elements_surrounding_elements;
+		//		delete[] h_normals;
+
+		auto& variables = host_stream_variables[i];
+		auto& old_variables = host_stream_old_variables[i];
+		auto& fluxes = host_stream_fluxes[i];
+		auto& step_factors = host_stream_step_factors[i];
+		variables.resize(nelr * NVAR);
+		old_variables.resize(nelr * NVAR);
+		fluxes.resize(nelr * NVAR);
+		step_factors.resize(nelr);
+
+		// make sure all memory is floatly allocated before we start timing
+		initialize_variables(nelr, variables.data(), streams[i]);
+		initialize_variables(nelr, old_variables.data(), streams[i]);
+		initialize_variables(nelr, fluxes.data(), streams[i]);
+		//	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
+		step_factors.clear();
+	}
 
 	// make sure CUDA isn't still doing something before we start timing
 	cudaDeviceSynchronize();
@@ -228,9 +250,25 @@ int main(int argc, char** argv) {
 	auto begin = rad::mysecond();
 	// Begin iterations
 	for (int i = 0; i < parameters.iterations; i++) {
-		euler3D(elements_surrounding_elements, normals, variables, fluxes,
-				step_factors, areas, old_variables, nelr, stream);
-		variables.to_vector(h_variables);
+		for (auto stream = 0; stream < parameters.stream_number; stream++) {
+			auto& variables = host_stream_variables[stream];
+			auto& old_variables = host_stream_old_variables[stream];
+			auto& fluxes = host_stream_fluxes[stream];
+			auto& step_factors = host_stream_step_factors[stream];
+			auto& elements_surrounding_elements =
+					host_stream_elements_surrounding_elements[stream];
+			auto& normals = host_stream_normals[stream];
+			auto& areas = host_stream_areas[stream];
+
+			euler3D(elements_surrounding_elements, normals, variables, fluxes,
+					step_factors, areas, old_variables, nelr, streams[stream]);
+		}
+
+		for (auto stream = 0; stream < parameters.stream_number; stream++) {
+			rad::checkFrameworkErrors (cudaStreamSynchronize(streams[stream]));;
+			 host_stream_variables[stream].to_vector(h_variables);
+
+		}
 	}
 
 	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
@@ -242,10 +280,12 @@ int main(int argc, char** argv) {
 			<< " seconds per iteration" << std::endl;
 
 	std::cout << "Saving solution..." << std::endl;
-	dump(variables, nel, nelr);
+	dump(host_stream_variables[0], nel, nelr);
 	std::cout << "Saved solution..." << std::endl;
 
 	std::cout << "Done..." << std::endl;
-
+	for (auto& stream : streams) {
+		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
+	}
 	return 0;
 }
