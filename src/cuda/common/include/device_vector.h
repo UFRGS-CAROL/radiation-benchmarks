@@ -119,6 +119,17 @@ public:
 						cudaMemcpyDeviceToHost));
 	}
 
+	void to_vector_async(std::vector<T>& lhs, const cudaStream_t& stream) {
+		if (lhs.size() != this->v_size) {
+			lhs.resize(this->v_size);
+		}
+
+		checkFrameworkErrors(
+				cudaMemcpyAsync(lhs.data(), this->data_,
+						sizeof(T) * this->v_size, cudaMemcpyDeviceToHost,
+						stream));
+	}
+
 	T* data() const {
 		return this->data_;
 	}

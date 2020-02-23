@@ -275,13 +275,15 @@ int main(int argc, char** argv) {
 		auto begin_copy = rad::mysecond();
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
 			rad::checkFrameworkErrors (cudaStreamSynchronize(streams[stream]));;
-			host_stream_variables[stream].to_vector(h_variables);
+			host_stream_variables[stream].to_vector_async(h_variables, streams[stream]);
 		}
 		acc_copy_time += (rad::mysecond() - begin_copy);
 	}
 
 	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 	auto end = rad::mysecond();
+	std::cout << host_stream_variables[0].size() << std::endl;
+
 	std::cout << "TIME ASSIGMENT " << acc_assigment_time << std::endl;
 	std::cout << "TIME COPY " << acc_copy_time << std::endl;
 

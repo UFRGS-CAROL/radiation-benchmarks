@@ -385,19 +385,9 @@ void euler3D(int* elements_surrounding_elements, float* normals,
 
 	// for the first iteration we compute the time step
 	compute_step_factor(nelr, variables, areas, step_factors, stream);
-//		std::cout << ("compute_step_factor failed\n");
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
-//	;
-
 	for (int j = 0; j < RK; j++) {
-		compute_flux(nelr, elements_surrounding_elements, normals, variables,
-				fluxes, stream);
-//			std::cout << ("compute_flux failed\n");
-//		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		time_step(j, nelr, old_variables, variables, step_factors, fluxes,
-				stream);
-//			std::cout << ("time_step failed\n");
-//		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		compute_flux(nelr, elements_surrounding_elements, normals, variables, fluxes, stream);
+		time_step(j, nelr, old_variables, variables, step_factors, fluxes, stream);
 	}
 //	rad::checkFrameworkErrors(cudaPeekAtLastError());
 
