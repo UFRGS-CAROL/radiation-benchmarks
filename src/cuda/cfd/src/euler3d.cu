@@ -4,121 +4,12 @@
 //#include <cutil.h>
 //#include <helper_cuda.h>
 //#include <helper_timer.h>
-#include <iostream>
-#include <fstream>
+
 
 #include "device_vector.h"
 #include "cuda_utils.h"
 
-/*
- * Options 
- * 
- */
-#define GAMMA 1.4f
-#define iterations 2000
-// #ifndef block_length
-// 	#define block_length 192
-// #endif
-
-#define NDIM 3
-#define NNB 4
-
-#define RK 3	// 3rd order RK
-#define ff_mach 1.2f
-#define deg_angle_of_attack 0.0f
-
-/*
- * not options
- */
-
-#ifdef RD_WG_SIZE_0_0
-#define BLOCK_SIZE_0 RD_WG_SIZE_0_0
-#elif defined(RD_WG_SIZE_0)
-#define BLOCK_SIZE_0 RD_WG_SIZE_0
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE_0 RD_WG_SIZE
-#else
-#define BLOCK_SIZE_0 192
-#endif
-
-#ifdef RD_WG_SIZE_1_0
-#define BLOCK_SIZE_1 RD_WG_SIZE_1_0
-#elif defined(RD_WG_SIZE_1)
-#define BLOCK_SIZE_1 RD_WG_SIZE_1
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE_1 RD_WG_SIZE
-#else
-#define BLOCK_SIZE_1 192
-#endif
-
-#ifdef RD_WG_SIZE_2_0
-#define BLOCK_SIZE_2 RD_WG_SIZE_2_0
-#elif defined(RD_WG_SIZE_1)
-#define BLOCK_SIZE_2 RD_WG_SIZE_2
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE_2 RD_WG_SIZE
-#else
-#define BLOCK_SIZE_2 192
-#endif
-
-#ifdef RD_WG_SIZE_3_0
-#define BLOCK_SIZE_3 RD_WG_SIZE_3_0
-#elif defined(RD_WG_SIZE_3)
-#define BLOCK_SIZE_3 RD_WG_SIZE_3
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE_3 RD_WG_SIZE
-#else
-#define BLOCK_SIZE_3 192
-#endif
-
-#ifdef RD_WG_SIZE_4_0
-#define BLOCK_SIZE_4 RD_WG_SIZE_4_0
-#elif defined(RD_WG_SIZE_4)
-#define BLOCK_SIZE_4 RD_WG_SIZE_4
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE_4 RD_WG_SIZE
-#else
-#define BLOCK_SIZE_4 192
-#endif
-
-// #if block_length > 128
-// #warning "the kernels may fail too launch on some systems if the block length is too large"
-// #endif
-
-#define VAR_DENSITY 0
-#define VAR_MOMENTUM  1
-#define VAR_DENSITY_ENERGY (VAR_MOMENTUM+NDIM)
-#define NVAR (VAR_DENSITY_ENERGY+1)
-
-void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
-	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
-//	download(h_variables, variables, nelr * NVAR);
-
-	{
-		std::ofstream file("density");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++)
-			file << h_variables[i + VAR_DENSITY * nelr] << std::endl;
-	}
-
-	{
-		std::ofstream file("momentum");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++) {
-			for (int j = 0; j != NDIM; j++)
-				file << h_variables[i + (VAR_MOMENTUM + j) * nelr] << " ";
-			file << std::endl;
-		}
-	}
-
-	{
-		std::ofstream file("density_energy");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++)
-			file << h_variables[i + VAR_DENSITY_ENERGY * nelr] << std::endl;
-	}
-//	delete[] h_variables;
-}
+#include "common.h"
 
 /*
  * Element-based Cell-centered FVM solver functions
@@ -134,13 +25,15 @@ __global__ void cuda_initialize_variables(int nelr, float* variables) {
 	for (int j = 0; j < NVAR; j++)
 		variables[i + j * nelr] = ff_variable[j];
 }
+
 void initialize_variables(int nelr, float* variables) {
 	dim3 Dg(nelr / BLOCK_SIZE_1), Db(BLOCK_SIZE_1);
 	cuda_initialize_variables<<<Dg, Db>>>(nelr, variables);
 	//getLastCudaError("initialize_variables failed");
-	rad::checkFrameworkErrors (cudaPeekAtLastError());}
+	rad::checkFrameworkErrors (cudaPeekAtLastError());;
+}
 
-__device__ __host__ inline void compute_flux_contribution(float& density,
+__device__ __host__ void compute_flux_contribution(float& density,
 		float3& momentum, float& density_energy, float& pressure,
 		float3& velocity, float3& fc_momentum_x, float3& fc_momentum_y,
 		float3& fc_momentum_z, float3& fc_density_energy) {
@@ -452,221 +345,52 @@ void time_step(int j, int nelr, float* old_variables, float* variables,
 //	getLastCudaError("update failed");
 	rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
-	/*
-	 * Main function
-	 */
-int euler3D(int argc, char** argv) {
-	printf(
-			"WG size of kernel:initialize = %d, WG size of kernel:compute_step_factor = %d, WG size of kernel:compute_flux = %d, WG size of kernel:time_step = %d\n",
-			BLOCK_SIZE_1, BLOCK_SIZE_2, BLOCK_SIZE_3, BLOCK_SIZE_4);
+void copy_to_symbol_variables(float h_ff_variable[NVAR],
+		float3 h_ff_flux_contribution_momentum_x,
+		float3 h_ff_flux_contribution_momentum_y,
+		float3 h_ff_flux_contribution_momentum_z,
+		float3 h_ff_flux_contribution_density_energy) {
+	// copy far field conditions to the gpu
+	rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_variable, h_ff_variable,
+	NVAR * sizeof(float)));
+	rad::checkFrameworkErrors(
+			cudaMemcpyToSymbol(ff_flux_contribution_momentum_x,
+					&h_ff_flux_contribution_momentum_x, sizeof(float3)));
+	rad::checkFrameworkErrors(
+			cudaMemcpyToSymbol(ff_flux_contribution_momentum_y,
+					&h_ff_flux_contribution_momentum_y, sizeof(float3)));
+	rad::checkFrameworkErrors(
+			cudaMemcpyToSymbol(ff_flux_contribution_momentum_z,
+					&h_ff_flux_contribution_momentum_z, sizeof(float3)));
+	rad::checkFrameworkErrors(
+			cudaMemcpyToSymbol(ff_flux_contribution_density_energy,
+					&h_ff_flux_contribution_density_energy, sizeof(float3)));
+}
 
-	if (argc < 2) {
-		std::cout << "specify data file name" << std::endl;
-		return 0;
-	}
-	const char* data_file_name = argv[1];
+/*
+ * Main function
+ */
+void euler3D(int nelr, rad::DeviceVector<int>& elements_surrounding_elements,
+		rad::DeviceVector<float>& normals, rad::DeviceVector<float>& variables,
+		rad::DeviceVector<float>& fluxes,
+		rad::DeviceVector<float>& step_factors, rad::DeviceVector<float>& areas,
+		rad::DeviceVector<float>& old_variables) {
 
-	cudaDeviceProp prop;
-	int dev;
-
-	rad::checkFrameworkErrors(cudaSetDevice(0));
-	rad::checkFrameworkErrors(cudaGetDevice(&dev));
-	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, dev));
-
-	printf("Name:                     %s\n", prop.name);
-
-	// set far field conditions and load them into constant memory on the gpu
-	{
-		float h_ff_variable[NVAR];
-		const float angle_of_attack = float(3.1415926535897931 / 180.0f)
-				* float(deg_angle_of_attack);
-
-		h_ff_variable[VAR_DENSITY] = float(1.4);
-
-		float ff_pressure = float(1.0f);
-		float ff_speed_of_sound = sqrt(
-		GAMMA * ff_pressure / h_ff_variable[VAR_DENSITY]);
-		float ff_speed = float(ff_mach) * ff_speed_of_sound;
-
-		float3 ff_velocity;
-		ff_velocity.x = ff_speed * float(cos((float) angle_of_attack));
-		ff_velocity.y = ff_speed * float(sin((float) angle_of_attack));
-		ff_velocity.z = 0.0f;
-
-		h_ff_variable[VAR_MOMENTUM + 0] = h_ff_variable[VAR_DENSITY]
-				* ff_velocity.x;
-		h_ff_variable[VAR_MOMENTUM + 1] = h_ff_variable[VAR_DENSITY]
-				* ff_velocity.y;
-		h_ff_variable[VAR_MOMENTUM + 2] = h_ff_variable[VAR_DENSITY]
-				* ff_velocity.z;
-
-		h_ff_variable[VAR_DENSITY_ENERGY] = h_ff_variable[VAR_DENSITY]
-				* (float(0.5f) * (ff_speed * ff_speed))
-				+ (ff_pressure / float(GAMMA - 1.0f));
-
-		float3 h_ff_momentum;
-		h_ff_momentum.x = *(h_ff_variable + VAR_MOMENTUM + 0);
-		h_ff_momentum.y = *(h_ff_variable + VAR_MOMENTUM + 1);
-		h_ff_momentum.z = *(h_ff_variable + VAR_MOMENTUM + 2);
-		float3 h_ff_flux_contribution_momentum_x;
-		float3 h_ff_flux_contribution_momentum_y;
-		float3 h_ff_flux_contribution_momentum_z;
-		float3 h_ff_flux_contribution_density_energy;
-		compute_flux_contribution(h_ff_variable[VAR_DENSITY], h_ff_momentum,
-				h_ff_variable[VAR_DENSITY_ENERGY], ff_pressure, ff_velocity,
-				h_ff_flux_contribution_momentum_x,
-				h_ff_flux_contribution_momentum_y,
-				h_ff_flux_contribution_momentum_z,
-				h_ff_flux_contribution_density_energy);
-
-		// copy far field conditions to the gpu
-		rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_variable, h_ff_variable,
-		NVAR * sizeof(float)));
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(ff_flux_contribution_momentum_x,
-						&h_ff_flux_contribution_momentum_x, sizeof(float3)));
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(ff_flux_contribution_momentum_y,
-						&h_ff_flux_contribution_momentum_y, sizeof(float3)));
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(ff_flux_contribution_momentum_z,
-						&h_ff_flux_contribution_momentum_z, sizeof(float3)));
-
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(ff_flux_contribution_density_energy,
-						&h_ff_flux_contribution_density_energy,
-						sizeof(float3)));
-	}
-	int nel;
-	int nelr;
-
-	// read in domain geometry
-	rad::DeviceVector<float> areas;
-	rad::DeviceVector<int> elements_surrounding_elements;
-	rad::DeviceVector<float> normals;
-	{
-		std::ifstream file(data_file_name);
-
-		file >> nel;
-		nelr = BLOCK_SIZE_0
-				* ((nel / BLOCK_SIZE_0) + std::min(1, nel % BLOCK_SIZE_0));
-
-		std::vector<float> h_areas(nelr);
-		std::vector<int> h_elements_surrounding_elements(nelr * NNB);
-		std::vector<float> h_normals(nelr * NDIM * NNB);
-
-		// read in data
-		for (int i = 0; i < nel; i++) {
-			file >> h_areas[i];
-			for (int j = 0; j < NNB; j++) {
-				file >> h_elements_surrounding_elements[i + j * nelr];
-				if (h_elements_surrounding_elements[i + j * nelr] < 0)
-					h_elements_surrounding_elements[i + j * nelr] = -1;
-				h_elements_surrounding_elements[i + j * nelr]--; //it's coming in with Fortran numbering
-
-				for (int k = 0; k < NDIM; k++) {
-					file >> h_normals[i + (j + k * NNB) * nelr];
-					h_normals[i + (j + k * NNB) * nelr] = -h_normals[i
-							+ (j + k * NNB) * nelr];
-				}
-			}
-		}
-
-		// fill in remaining data
-		int last = nel - 1;
-		for (int i = nel; i < nelr; i++) {
-			h_areas[i] = h_areas[last];
-			for (int j = 0; j < NNB; j++) {
-				// duplicate the last element
-				h_elements_surrounding_elements[i + j * nelr] =
-						h_elements_surrounding_elements[last + j * nelr];
-				for (int k = 0; k < NDIM; k++)
-					h_normals[last + (j + k * NNB) * nelr] = h_normals[last
-							+ (j + k * NNB) * nelr];
-			}
-		}
-
-//		areas = alloc<float>(nelr);
-//		upload<float>(areas, h_areas, nelr);
-		areas = h_areas;
-
-//		elements_surrounding_elements = alloc<int>(nelr * NNB);
-//		upload<int>(elements_surrounding_elements,
-//				h_elements_surrounding_elements, nelr * NNB);
-		elements_surrounding_elements = h_elements_surrounding_elements;
-
-//		normals = alloc<float>(nelr * NDIM * NNB);
-//		upload<float>(normals, h_normals, nelr * NDIM * NNB);
-		normals = h_normals;
-
-//		delete[] h_areas;
-//		delete[] h_elements_surrounding_elements;
-//		delete[] h_normals;
-	}
-
-	// Create arrays and set initial conditions
-	rad::DeviceVector<float> variables(nelr * NVAR);
-	initialize_variables(nelr, variables.data());
-
-	rad::DeviceVector<float> old_variables(nelr * NVAR);
-	rad::DeviceVector<float> fluxes(nelr * NVAR);
-	rad::DeviceVector<float> step_factors(nelr);
-
-	// make sure all memory is floatly allocated before we start timing
-	initialize_variables(nelr, old_variables.data());
-	initialize_variables(nelr, fluxes.data());
-//	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
-	step_factors.clear();
-
-	// make sure CUDA isn't still doing something before we start timing
-	cudaDeviceSynchronize();
-
-	// these need to be computed the first time in order to compute time step
-	std::cout << "Starting..." << std::endl;
-
-//	StopWatchInterface *timer = 0;
-	//	unsigned int timer = 0;
-
-	// CUT_SAFE_CALL( cutCreateTimer( &timer));
-	// CUT_SAFE_CALL( cutStartTimer( timer));
-//	sdkCreateTimer(&timer);
-//	sdkStartTimer(&timer);
-	auto begin = rad::mysecond();
-	// Begin iterations
-	for (int i = 0; i < iterations; i++) {
-//		copy<float>(old_variables, variables, nelr * NVAR);
-		old_variables = variables;
-
-		// for the first iteration we compute the time step
-		compute_step_factor(nelr, variables.data(), areas.data(),
-				step_factors.data());
+	// for the first iteration we compute the time step
+	compute_step_factor(nelr, variables.data(), areas.data(),
+			step_factors.data());
 //		std::cout << ("compute_step_factor failed\n");
-		rad::checkFrameworkErrors (cudaPeekAtLastError());
+	rad::checkFrameworkErrors (cudaPeekAtLastError());;
 
-for(		int j = 0; j < RK; j++) {
-			compute_flux(nelr, elements_surrounding_elements.data(), normals.data(),
-			variables.data(), fluxes.data());
+	for (int j = 0; j < RK; j++) {
+		compute_flux(nelr, elements_surrounding_elements.data(), normals.data(),
+				variables.data(), fluxes.data());
 //			std::cout << ("compute_flux failed\n");
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-			time_step(j, nelr, old_variables.data(), variables.data(), step_factors.data(), fluxes.data());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		time_step(j, nelr, old_variables.data(), variables.data(),
+				step_factors.data(), fluxes.data());
 //			std::cout << ("time_step failed\n");
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 	}
 
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	auto end = rad::mysecond();
-	//	CUT_SAFE_CALL( cutStopTimer(timer) );  
-//	sdkStopTimer(&timer);
-
-	std::cout << ((end - begin) / float(iterations)) << " seconds per iteration"
-			<< std::endl;
-
-	std::cout << "Saving solution..." << std::endl;
-	dump(variables, nel, nelr);
-	std::cout << "Saved solution..." << std::endl;
-
-	std::cout << "Done..." << std::endl;
-
-	return 0;
 }
