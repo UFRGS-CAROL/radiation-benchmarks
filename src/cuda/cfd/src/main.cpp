@@ -250,6 +250,7 @@ int main(int argc, char** argv) {
 	auto begin = rad::mysecond();
 	// Begin iterations
 	auto acc_assigment_time = 0.0;
+	auto acc_copy_time = 0.0;
 	for (int i = 0; i < parameters.iterations; i++) {
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
 			auto begin_assigment = rad::mysecond();
@@ -268,17 +269,19 @@ int main(int argc, char** argv) {
 					step_factors, areas, old_variables, nelr, streams[stream]);
 		}
 
+		auto begin_copy = rad::mysecond();
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
 			rad::checkFrameworkErrors (cudaStreamSynchronize(streams[stream]));;
 			host_stream_variables[stream].to_vector(h_variables);
-
 		}
+		acc_copy_time += (rad::mysecond() - begin_copy);
 	}
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	;
 	auto end = rad::mysecond();
 	std::cout << "TIME ASSIGMENT " << acc_assigment_time << std::endl;
+	std::cout << "TIME COPY " << acc_copy_time << std::endl;
 
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );
 //	sdkStopTimer(&timer);
