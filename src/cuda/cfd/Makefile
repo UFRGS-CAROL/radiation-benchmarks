@@ -4,9 +4,9 @@ EXEC=cudaCFD
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-SIZE=7
-FRAMES=7
-GOLD=./gold_$(SIZE)_$(FRAMES).data
+STREAMS=1
+
+GOLD=./gold_$(STREAMS).data
 #../gold_accl/gold_7_7 
 INPUT=../../../data/cfd/missile.domn.0.2M
 
@@ -70,8 +70,8 @@ clean:
 	
 
 generate:
-	./$(EXEC)
+	./$(EXEC) --streams $(STREAMS) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate ;
 
 test:
-	./$(EXEC)
+	./$(EXEC) --streams $(STREAMS) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose;
 	

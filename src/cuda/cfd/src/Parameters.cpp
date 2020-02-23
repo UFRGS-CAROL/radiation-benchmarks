@@ -29,14 +29,14 @@ Parameters::Parameters(int argc, char* argv[]) {
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
 
-	if (argc < 6) {
+	if (argc < 2) {
 		throw_line(
 				"<mandatory arguments> [optional arguments]\n"
 				"Usage: ./cudaCFD"
-				" --streams <N streams>"
 				" --input <specify data file name>"
-				" --gold <GOLD path>"
-				" --iterations <#iteractions>"
+				" --streams [N streams]"
+				" --gold [GOLD path]"
+				" --iterations [#iteractions]"
 				" [--verbose] [--debug]");
 	}
 
@@ -44,7 +44,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
-	os << "Testing ACCL on " << p.device << std::endl;
+	os << "Testing CFD on " << p.device << std::endl;
 	os << "Streams: " << p.stream_number  << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;

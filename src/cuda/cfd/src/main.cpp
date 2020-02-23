@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
 						"WG size of kernel:compute_flux = " << BLOCK_SIZE_3
 				<< ", WG size of kernel:time_step = " << BLOCK_SIZE_4 << "\n";
 		std::cout << "Name:" << prop.name << std::endl;
+		std::cout << parameters << std::endl;
 	}
 
 	// set far field conditions and load them into constant memory on the gpu
