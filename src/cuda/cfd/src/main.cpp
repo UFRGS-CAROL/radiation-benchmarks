@@ -249,8 +249,10 @@ int main(int argc, char** argv) {
 
 	auto begin = rad::mysecond();
 	// Begin iterations
+	auto acc_assigment_time = 0.0;
 	for (int i = 0; i < parameters.iterations; i++) {
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
+			auto begin_assigment = rad::mysecond();
 			auto& variables = host_stream_variables[stream];
 			auto& old_variables = host_stream_old_variables[stream];
 			auto& fluxes = host_stream_fluxes[stream];
@@ -260,19 +262,24 @@ int main(int argc, char** argv) {
 			auto& normals = host_stream_normals[stream];
 			auto& areas = host_stream_areas[stream];
 
+			acc_assigment_time += (rad::mysecond() - begin_assigment);
+
 			euler3D(elements_surrounding_elements, normals, variables, fluxes,
 					step_factors, areas, old_variables, nelr, streams[stream]);
 		}
 
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
 			rad::checkFrameworkErrors (cudaStreamSynchronize(streams[stream]));;
-			 host_stream_variables[stream].to_vector(h_variables);
+			host_stream_variables[stream].to_vector(h_variables);
 
 		}
 	}
 
-	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	;
 	auto end = rad::mysecond();
+	std::cout << "TIME ASSIGMENT " << acc_assigment_time << std::endl;
+
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );
 //	sdkStopTimer(&timer);
 
