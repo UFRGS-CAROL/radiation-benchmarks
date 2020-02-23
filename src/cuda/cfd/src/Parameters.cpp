@@ -15,10 +15,9 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
-	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/accl/7Frames.pgm ");
+	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/cfd/missile.domn.0.2M ");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
-	this->nFrames = rad::find_int_arg(argc, argv, "--size", 7);
-	this->nFramesPerStream = rad::find_int_arg(argc, argv, "--nFramesPerStream", 7);
+	this->stream_number = rad::find_int_arg(argc, argv, "--streams", 1);
 
 
 	auto dev_prop = rad::get_device();
@@ -32,25 +31,21 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 	if (argc < 6) {
 		throw_line(
-				"<mandatory arguments> [optional arguments]\nUsage: ./cudaACCL"
-				" --size <N frames in the image>"
-				" --frames <(HyperQ) Frames per Stream>"
-				" --input <Input image path>"
+				"<mandatory arguments> [optional arguments]\n"
+				"Usage: ./cudaCFD"
+				" --streams <N streams>"
+				" --input <specify data file name>"
 				" --gold <GOLD path>"
 				" --iterations <#iteractions>"
 				" [--verbose] [--debug]");
 	}
 
-	if (this->nFrames < this->nFramesPerStream) {
-		throw_line("Num Frames per stream should be less than or equal to numFrames in image");
-	}
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
 	os << "Testing ACCL on " << p.device << std::endl;
-	os << "nFrames: " << p.nFrames  << std::endl;
-	os << "nFramsPerStream: " << p.nFramesPerStream  << std::endl;
+	os << "Streams: " << p.stream_number  << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;

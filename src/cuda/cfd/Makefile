@@ -70,8 +70,8 @@ clean:
 	
 
 generate:
-	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate ;
+	./$(EXEC)
 
 test:
-	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose;
+	./$(EXEC)
 	

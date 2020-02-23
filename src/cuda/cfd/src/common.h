@@ -13,7 +13,6 @@
  *
  */
 #define GAMMA 1.4f
-#define iterations 2000
 // #ifndef block_length
 // 	#define block_length 192
 // #endif
@@ -24,6 +23,9 @@
 #define RK 3	// 3rd order RK
 #define ff_mach 1.2f
 #define deg_angle_of_attack 0.0f
+
+
+#define DEVICE 0
 
 /*
  * not options

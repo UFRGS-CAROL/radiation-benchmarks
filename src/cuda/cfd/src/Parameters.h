@@ -31,8 +31,7 @@ struct Parameters {
 
 	size_t sm_count;
 	size_t iterations;
-	size_t nFrames;
-	size_t nFramesPerStream;
+	size_t stream_number;
 
 	bool verbose;
 	bool debug;

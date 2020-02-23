@@ -6,6 +6,7 @@
 #include "cuda_utils.h"
 
 #include "common.h"
+#include "Parameters.h"
 
 extern void euler3D(int nelr,
 		rad::DeviceVector<int>& elements_surrounding_elements,
@@ -31,53 +32,52 @@ void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
 	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
 //	download(h_variables, variables, nelr * NVAR);
 
-	{
-		std::ofstream file("density");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++)
-			file << h_variables[i + VAR_DENSITY * nelr] << std::endl;
+	std::ofstream file("density");
+	file << nel << " " << nelr << std::endl;
+	for (int i = 0; i < nel; i++)
+		file << h_variables[i + VAR_DENSITY * nelr] << std::endl;
+
+	std::ofstream file_momentum("momentum");
+	file_momentum << nel << " " << nelr << std::endl;
+	for (int i = 0; i < nel; i++) {
+		for (int j = 0; j != NDIM; j++)
+			file_momentum << h_variables[i + (VAR_MOMENTUM + j) * nelr] << " ";
+		file_momentum << std::endl;
 	}
 
-	{
-		std::ofstream file("momentum");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++) {
-			for (int j = 0; j != NDIM; j++)
-				file << h_variables[i + (VAR_MOMENTUM + j) * nelr] << " ";
-			file << std::endl;
-		}
-	}
+	std::ofstream file_energy("density_energy");
+	file_energy << nel << " " << nelr << std::endl;
+	for (int i = 0; i < nel; i++)
+		file_energy << h_variables[i + VAR_DENSITY_ENERGY * nelr] << std::endl;
 
-	{
-		std::ofstream file("density_energy");
-		file << nel << " " << nelr << std::endl;
-		for (int i = 0; i < nel; i++)
-			file << h_variables[i + VAR_DENSITY_ENERGY * nelr] << std::endl;
-	}
 //	delete[] h_variables;
 }
 
 int main(int argc, char** argv) {
-	std::cout << "WG size of kernel:initialize = " << BLOCK_SIZE_1
-			<< ", WG size of kernel:compute_step_factor = " << BLOCK_SIZE_2
-			<< ", "
-					"WG size of kernel:compute_flux = " << BLOCK_SIZE_3
-			<< ", WG size of kernel:time_step = " << BLOCK_SIZE_4 << "\n";
 
-	if (argc < 2) {
-		std::cout << "specify data file name" << std::endl;
-		return 0;
-	}
-	const char* data_file_name = argv[1];
+//	if (argc < 2) {
+//		std::cout << "specify data file name" << std::endl;
+//		return 0;
+//	}
+	Parameters parameters(argc, argv);
+
+	std::string& data_file_name = parameters.input;
 
 	cudaDeviceProp prop;
 	int dev;
 
-	rad::checkFrameworkErrors(cudaSetDevice(0));
+	rad::checkFrameworkErrors(cudaSetDevice(DEVICE));
 	rad::checkFrameworkErrors(cudaGetDevice(&dev));
 	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, dev));
 
-	std::cout << "Name:" << prop.name << std::endl;
+	if (parameters.verbose) {
+		std::cout << "WG size of kernel:initialize = " << BLOCK_SIZE_1
+				<< ", WG size of kernel:compute_step_factor = " << BLOCK_SIZE_2
+				<< ", "
+						"WG size of kernel:compute_flux = " << BLOCK_SIZE_3
+				<< ", WG size of kernel:time_step = " << BLOCK_SIZE_4 << "\n";
+		std::cout << "Name:" << prop.name << std::endl;
+	}
 
 	// set far field conditions and load them into constant memory on the gpu
 
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
 //	sdkStartTimer(&timer);
 	auto begin = rad::mysecond();
 	// Begin iterations
-	for (int i = 0; i < iterations; i++) {
+	for (int i = 0; i < parameters.iterations; i++) {
 //		copy<float>(old_variables, variables, nelr * NVAR);
 		old_variables = variables;
 
@@ -238,8 +238,8 @@ int main(int argc, char** argv) {
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );
 //	sdkStopTimer(&timer);
 
-	std::cout << ((end - begin) / float(iterations)) << " seconds per iteration"
-			<< std::endl;
+	std::cout << ((end - begin) / float(parameters.iterations))
+			<< " seconds per iteration" << std::endl;
 
 	std::cout << "Saving solution..." << std::endl;
 	dump(variables, nel, nelr);
