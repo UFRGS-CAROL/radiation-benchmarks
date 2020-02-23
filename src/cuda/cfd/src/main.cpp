@@ -8,12 +8,11 @@
 #include "common.h"
 #include "Parameters.h"
 
-extern void euler3D(int nelr,
-		rad::DeviceVector<int>& elements_surrounding_elements,
+extern void euler3D(rad::DeviceVector<int>& elements_surrounding_elements,
 		rad::DeviceVector<float>& normals, rad::DeviceVector<float>& variables,
 		rad::DeviceVector<float>& fluxes,
 		rad::DeviceVector<float>& step_factors, rad::DeviceVector<float>& areas,
-		rad::DeviceVector<float>& old_variables);
+		rad::DeviceVector<float>& old_variables, int nelr, cudaStream_t& stream);
 
 extern void compute_flux_contribution(float& density, float3& momentum,
 		float& density_energy, float& pressure, float3& velocity,
@@ -26,7 +25,7 @@ extern void copy_to_symbol_variables(float h_ff_variable[NVAR],
 		float3 h_ff_flux_contribution_momentum_z,
 		float3 h_ff_flux_contribution_density_energy);
 
-extern void initialize_variables(int nelr, float* variables);
+extern void initialize_variables(int nelr, float* variables, cudaStream_t& stream);
 
 void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
 	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
@@ -90,7 +89,7 @@ int main(int argc, char** argv) {
 
 	float ff_pressure = float(1.0f);
 	float ff_speed_of_sound = sqrt(
-	GAMMA * ff_pressure / h_ff_variable[VAR_DENSITY]);
+			GAMMA * ff_pressure / h_ff_variable[VAR_DENSITY]);
 	float ff_speed = float(ff_mach) * ff_speed_of_sound;
 
 	float3 ff_velocity;
@@ -195,17 +194,19 @@ int main(int argc, char** argv) {
 //		delete[] h_elements_surrounding_elements;
 //		delete[] h_normals;
 
+	cudaStream_t stream(0);
+
 	// Create arrays and set initial conditions
 	rad::DeviceVector<float> variables(nelr * NVAR);
-	initialize_variables(nelr, variables.data());
+	initialize_variables(nelr, variables.data(), stream);
 
 	rad::DeviceVector<float> old_variables(nelr * NVAR);
 	rad::DeviceVector<float> fluxes(nelr * NVAR);
 	rad::DeviceVector<float> step_factors(nelr);
 
 	// make sure all memory is floatly allocated before we start timing
-	initialize_variables(nelr, old_variables.data());
-	initialize_variables(nelr, fluxes.data());
+	initialize_variables(nelr, old_variables.data(), stream);
+	initialize_variables(nelr, fluxes.data(), stream);
 //	cudaMemset((void*) step_factors, 0, sizeof(float) * nelr);
 	step_factors.clear();
 
@@ -225,16 +226,11 @@ int main(int argc, char** argv) {
 	auto begin = rad::mysecond();
 	// Begin iterations
 	for (int i = 0; i < parameters.iterations; i++) {
-//		copy<float>(old_variables, variables, nelr * NVAR);
-		old_variables = variables;
-
-		euler3D(nelr, elements_surrounding_elements, normals, variables, fluxes,
-				step_factors, areas, old_variables);
-
+		euler3D(elements_surrounding_elements, normals, variables, fluxes,
+				step_factors, areas, old_variables, nelr, stream);
 	}
 
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	;
+	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 	auto end = rad::mysecond();
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );
 //	sdkStopTimer(&timer);
