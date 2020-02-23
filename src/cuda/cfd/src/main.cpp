@@ -267,7 +267,6 @@ int main(int argc, char** argv) {
 
 			acc_assigment_time += (rad::mysecond() - begin_assigment);
 
-
 			euler3D(elements_surrounding_elements, normals, variables, fluxes,
 					step_factors, areas, old_variables, nelr, streams[stream]);
 		}
@@ -281,8 +280,7 @@ int main(int argc, char** argv) {
 		acc_copy_time += (rad::mysecond() - begin_copy);
 	}
 
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	;
+	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 	auto end = rad::mysecond();
 	std::cout << "TIME ASSIGMENT " << acc_assigment_time << std::endl;
 	std::cout << "TIME COPY " << acc_copy_time << std::endl;
