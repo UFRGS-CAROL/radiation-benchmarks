@@ -8,12 +8,9 @@
 #include "common.h"
 #include "Parameters.h"
 
-extern void euler3D(rad::DeviceVector<int>& elements_surrounding_elements,
-		rad::DeviceVector<float>& normals, rad::DeviceVector<float>& variables,
-		rad::DeviceVector<float>& fluxes,
-		rad::DeviceVector<float>& step_factors, rad::DeviceVector<float>& areas,
-		rad::DeviceVector<float>& old_variables, int nelr,
-		cudaStream_t& stream);
+extern void euler3D(int* elements_surrounding_elements, float* normals,
+		float* variables, float* fluxes, float* step_factors, float* areas,
+		float* old_variables, int nelr, cudaStream_t& stream);
 
 extern void compute_flux_contribution(float& density, float3& momentum,
 		float& density_energy, float& pressure, float3& velocity,
@@ -252,22 +249,29 @@ int main(int argc, char** argv) {
 	auto acc_assigment_time = 0.0;
 	auto acc_copy_time = 0.0;
 	for (int i = 0; i < parameters.iterations; i++) {
+
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
+			//		copy<float>(old_variables, variables, nelr * NVAR);
+//			old_variables = variables;
+			host_stream_old_variables[stream] = host_stream_variables[stream];
+
 			auto begin_assigment = rad::mysecond();
-			auto& variables = host_stream_variables[stream];
-			auto& old_variables = host_stream_old_variables[stream];
-			auto& fluxes = host_stream_fluxes[stream];
-			auto& step_factors = host_stream_step_factors[stream];
-			auto& elements_surrounding_elements =
-					host_stream_elements_surrounding_elements[stream];
-			auto& normals = host_stream_normals[stream];
-			auto& areas = host_stream_areas[stream];
+			auto variables = host_stream_variables[stream].data();
+			auto old_variables = host_stream_old_variables[stream].data();
+			auto fluxes = host_stream_fluxes[stream].data();
+			auto step_factors = host_stream_step_factors[stream].data();
+			auto elements_surrounding_elements =
+					host_stream_elements_surrounding_elements[stream].data();
+			auto normals = host_stream_normals[stream].data();
+			auto areas = host_stream_areas[stream].data();
 
 			acc_assigment_time += (rad::mysecond() - begin_assigment);
+
 
 			euler3D(elements_surrounding_elements, normals, variables, fluxes,
 					step_factors, areas, old_variables, nelr, streams[stream]);
 		}
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		auto begin_copy = rad::mysecond();
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
