@@ -223,11 +223,14 @@ int main(int argc, char** argv) {
 	// CUT_SAFE_CALL( cutStartTimer( timer));
 //	sdkCreateTimer(&timer);
 //	sdkStartTimer(&timer);
+	std::vector<float> h_variables;
+
 	auto begin = rad::mysecond();
 	// Begin iterations
 	for (int i = 0; i < parameters.iterations; i++) {
 		euler3D(elements_surrounding_elements, normals, variables, fluxes,
 				step_factors, areas, old_variables, nelr, stream);
+		variables.to_vector(h_variables);
 	}
 
 	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
