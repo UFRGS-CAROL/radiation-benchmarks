@@ -8,7 +8,7 @@
 #include "device_vector.h"
 #include "Parameters.h"
 
-void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
+int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		rad::DeviceVector<bool_t>& d_graph_mask,
 		rad::DeviceVector<bool_t>& d_updating_graph_mask,
 		rad::DeviceVector<bool_t>& d_graph_visited,
@@ -145,6 +145,7 @@ int main(int argc, char** argv) {
 			h_updating_graph_mask;
 	const rad::DeviceVector<bool_t> d_save_graph_visited = h_graph_visited;
 	const rad::DeviceVector<int> d_save_cost = h_cost[0];
+	std::vector<int> k_times(streams_in_parallel);
 
 	for (size_t iteration = 0; iteration < parameters.iterations; iteration++) {
 		std::cout << ("Copied Everything to GPU memory\n");
@@ -164,7 +165,7 @@ int main(int argc, char** argv) {
 
 		auto kernel_time = rad::mysecond();
 		for (int i = 0; i < streams_in_parallel; i++) {
-			BFSGraph(h_d_graph_nodes[i], h_d_graph_mask[i],
+			k_times[i] = BFSGraph(h_d_graph_nodes[i], h_d_graph_mask[i],
 					h_d_updating_graph_mask[i], h_d_graph_visited[i],
 					h_d_graph_edges[i], h_d_cost[i], streams[i], no_of_nodes);
 		}

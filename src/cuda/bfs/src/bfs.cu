@@ -80,7 +80,7 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		k++;
 	} while (stop[0]);
 
-	std::cout << "Kernel Executed " << k << " times\n";
+//	std::cout << "Kernel Executed " << k << " times\n";
 
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
