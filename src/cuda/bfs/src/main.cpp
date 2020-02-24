@@ -291,10 +291,9 @@ int main(int argc, char** argv) {
 		} else {
 			throw_line("Could not write " + parameters.gold);
 		}
+		std::cout << "Result of stream 0 stored in " << parameters.gold
+				<< std::endl;
 	}
-
-	std::cout << "Result of stream 0 stored in " << parameters.gold
-			<< std::endl;
 
 	for (auto& stream : streams) {
 		rad::checkFrameworkErrors(cudaStreamDestroy(stream));
