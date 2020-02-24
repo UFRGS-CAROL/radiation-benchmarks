@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <tuple>
-#include <numeric>
+#include <algorithm>
 #include <omp.h>
 #include "common.h"
 #include "Parameters.h"
@@ -85,11 +85,16 @@ void compare_output(std::vector<std::vector<int>>& output,
 		std::vector<int>& gold) {
 	auto stream_number = output.size();
 	auto no_of_nodes = gold.size();
-	auto num_of_threads = omp_get_num_threads();
+	auto num_of_threads = 1;
+#pragma omp parallel
+	{
+		num_of_threads = omp_get_num_threads();
+	}
 	auto stream_slice = stream_number / num_of_threads;
 	static std::vector<bool> equal_array(num_of_threads);
 
-	std::cout << "NUM THR " << num_of_threads << " STREAM SLICE " << stream_slice << std::endl;
+	std::cout << "NUM THR " << num_of_threads << " STREAM SLICE "
+			<< stream_slice << std::endl;
 
 #pragma omp parallel default(shared)
 	{
@@ -103,7 +108,8 @@ void compare_output(std::vector<std::vector<int>>& output,
 		}
 	}
 
-	if (std::accumulate(equal_array.begin(), equal_array.end(), 0) == 0) {
+	auto falses = std::count(equal_array.begin(), equal_array.end(), false);
+	if (falses != equal_array.size()) {
 #pragma omp parallel for default(shared)
 		for (auto stream = 0; stream < stream_number; stream++) {
 			for (auto node = 0; node < no_of_nodes; node++) {
