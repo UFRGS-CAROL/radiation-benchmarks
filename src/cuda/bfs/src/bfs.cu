@@ -162,14 +162,14 @@ void BFSGraph(int argc, char** argv) {
 	bool_t *d_over;
 	cudaMalloc((void**) &d_over, sizeof(bool_t));
 
-	printf("Copied Everything to GPU memory\n");
+	std::cout << ("Copied Everything to GPU memory\n");
 
 	// setup execution parameters
 	dim3 grid(num_of_blocks, 1, 1);
 	dim3 threads(num_of_threads_per_block, 1, 1);
 
 	int k = 0;
-	printf("Start traversing the tree\n");
+	std::cout << ("Start traversing the tree\n");
 	bool_t stop;
 	//Call the Kernel untill all the elements of Frontier are not FALSE
 	do {
@@ -188,30 +188,18 @@ void BFSGraph(int argc, char** argv) {
 		k++;
 	} while (stop);
 
-	printf("Kernel Executed %d times\n", k);
+	std::cout << "Kernel Executed "<< k << " times\n";
 
 	// copy result from device to host
 	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
 			cudaMemcpyDeviceToHost);
 
 	//Store the result into a file
-	FILE *fpo = fopen("result.txt", "w");
+	std::ofstream fo("result.txt");
+//	fprintf(fpo, "%d) cost:%d\n", i, h_cost[i]);
 	for (int i = 0; i < no_of_nodes; i++)
-		fprintf(fpo, "%d) cost:%d\n", i, h_cost[i]);
-	fclose(fpo);
-	printf("Result stored in result.txt\n");
-
-	// cleanup memory
-//	free(h_graph_nodes);
-//	free(h_graph_edges);
-//	free(h_graph_mask);
-//	free(h_updating_graph_mask);
-//	free(h_graph_visited);
-//	free(h_cost);
-//	cudaFree(d_graph_nodes);
-//	cudaFree(d_graph_edges);
-//	cudaFree(d_graph_mask);
-//	cudaFree(d_updating_graph_mask);
-//	cudaFree(d_graph_visited);
-//	cudaFree(d_cost);
+		fo << i << ") cost:" << h_cost[i] << std::endl;
+	fo.close();
+//	fclose(fpo);
+	std::cout << ("Result stored in result.txt\n");
 }
