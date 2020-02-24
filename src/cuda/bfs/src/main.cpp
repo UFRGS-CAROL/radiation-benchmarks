@@ -90,16 +90,17 @@ size_t compare_output(std::vector<std::vector<int>>& output,
 	// acc errors
 	size_t errors = 0;
 
-	/*//first check if output is ok
-	 #pragma omp parallel for default(shared)
-	 for(auto i = 0; i < stream_number; i++){
-	 equal_array[i] = (output[i] != gold);
-	 }
+	static std::vector<bool> equal_array(stream_number, false);
+	//first check if output is ok
+	//by not doing it the comparison time increases 20%
+#pragma omp parallel for default(shared)
+	for (auto i = 0; i < stream_number; i++) {
+		equal_array[i] = (output[i] != gold);
+	}
 
-	 auto falses = std::count(equal_array.begin(), equal_array.end(), false);
+	auto falses = std::count(equal_array.begin(), equal_array.end(), false);
 
-	 if (falses != equal_array.size())*/
-	{
+	if (falses != equal_array.size()) {
 #pragma omp parallel for default(shared)
 		for (auto stream = 0; stream < stream_number; stream++) {
 			for (auto node = 0; node < no_of_nodes; node++) {
@@ -117,6 +118,7 @@ size_t compare_output(std::vector<std::vector<int>>& output,
 					error_detail += " cost_r: " + cost_r;
 #pragma omp critical
 					{
+						std::cout << error_detail << std::endl;
 						log.log_error_detail(error_detail);
 						errors++;
 					}
@@ -176,6 +178,10 @@ int main(int argc, char** argv) {
 					sizeof(int) * no_of_nodes);
 		} else {
 			throw_line("Could not read " + parameters.gold);
+		}
+
+		if(parameters.debug){
+			gold_cost[rand() % gold_cost.size()] = rand();
 		}
 
 	}
