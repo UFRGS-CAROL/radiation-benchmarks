@@ -83,18 +83,18 @@ void BFSGraph(int argc, char** argv) {
 		fscanf(fp, "%d %d", &start, &edgeno);
 		h_graph_nodes[i].starting = start;
 		h_graph_nodes[i].no_of_edges = edgeno;
-		h_graph_mask[i] = false;
-		h_updating_graph_mask[i] = false;
-		h_graph_visited[i] = false;
+		h_graph_mask[i] = FALSE;
+		h_updating_graph_mask[i] = FALSE;
+		h_graph_visited[i] = FALSE;
 	}
 
 	//read the source node from the file
 	fscanf(fp, "%d", &source);
 	source = 0;
 
-	//set the source node as true in the mask
-	h_graph_mask[source] = true;
-	h_graph_visited[source] = true;
+	//set the source node as TRUE in the mask
+	h_graph_mask[source] = TRUE;
+	h_graph_visited[source] = TRUE;
 
 	fscanf(fp, "%d", &edge_list_size);
 
@@ -165,10 +165,10 @@ void BFSGraph(int argc, char** argv) {
 	int k = 0;
 	printf("Start traversing the tree\n");
 	bool_t stop;
-	//Call the Kernel untill all the elements of Frontier are not false
+	//Call the Kernel untill all the elements of Frontier are not FALSE
 	do {
 		//if no thread changes this value then the loop stops
-		stop = false;
+		stop = FALSE;
 		cudaMemcpy(d_over, &stop, sizeof(bool_t), cudaMemcpyHostToDevice);
 		Kernel<<<grid, threads, 0>>>(d_graph_nodes.data(), d_graph_edges.data(), d_graph_mask.data(),
 				d_updating_graph_mask.data(), d_graph_visited.data(), d_cost.data(), no_of_nodes);
