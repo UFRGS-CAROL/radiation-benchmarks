@@ -109,7 +109,10 @@ std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
 	;
 
 	// copy result from device to host
+	auto copy_time = rad::mysecond();
 	d_cost.to_vector(h_cost);
+	copy_time = rad::mysecond() - copy_time;
+	std::cout << "Copy time " << copy_time << std::endl;
 //	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
 //			cudaMemcpyDeviceToHost);
 
