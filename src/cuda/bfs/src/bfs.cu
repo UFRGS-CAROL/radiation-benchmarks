@@ -34,8 +34,10 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		int no_of_nodes) {
 
 	//make a bool_t to check if the execution is over
-	bool_t *d_over;
-	cudaMalloc((void**) &d_over, sizeof(bool_t));
+	rad::DeviceVector<bool_t> d_over(1);
+	std::vector<bool_t> stop(1);
+
+//	cudaMalloc((void**) &d_over, sizeof(bool_t));
 
 	std::cout << ("Copied Everything to GPU memory\n");
 
@@ -56,12 +58,12 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 
 	int k = 0;
 	std::cout << ("Start traversing the tree\n");
-	bool_t stop;
 	//Call the Kernel untill all the elements of Frontier are not FALSE
 	do {
 		//if no thread changes this value then the loop stops
-		stop = FALSE;
-		cudaMemcpy(d_over, &stop, sizeof(bool_t), cudaMemcpyHostToDevice);
+		stop[0] = FALSE;
+		d_over = stop;
+//		cudaMemcpy(d_over, &stop, sizeof(bool_t), cudaMemcpyHostToDevice);
 		Kernel<<<grid, threads, 0>>>(d_graph_nodes.data(), d_graph_edges.data(),
 				d_graph_mask.data(), d_updating_graph_mask.data(),
 				d_graph_visited.data(), d_cost.data(), no_of_nodes);
@@ -71,20 +73,21 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		;
 
 		Kernel2<<<grid, threads, 0>>>(d_graph_mask.data(),
-				d_updating_graph_mask.data(), d_graph_visited.data(), d_over,
+				d_updating_graph_mask.data(), d_graph_visited.data(), d_over.data(),
 				no_of_nodes);
 		// check if kernel execution generated and error
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		;
 
-		cudaMemcpy(&stop, d_over, sizeof(bool_t), cudaMemcpyDeviceToHost);
+//		cudaMemcpy(&stop, d_over, sizeof(bool_t), cudaMemcpyDeviceToHost);
+		d_over.to_vector(stop);
 		k++;
-	} while (stop);
+	} while (stop[0]);
 
 	std::cout << "Kernel Executed " << k << " times\n";
 
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
 
-	cudaFree(d_over);
+//	cudaFree(d_over);
 }
