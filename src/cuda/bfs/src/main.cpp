@@ -80,8 +80,21 @@ std::tuple<int, int> read_input_file(std::vector<Node>& h_graph_nodes,
 	return {no_of_nodes, source};
 }
 
-void compare_output(DevMat<int>& output, std::vector<int>& gold) {
+void compare_output(std::vector<std::vector<int>>& output,
+		std::vector<int>& gold) {
+	auto stream_number = output.size();
+	auto no_of_nodes = gold.size();
+#pragma omp parallel for default(shared)
+	for (auto stream = 0; stream < stream_number; stream++) {
+		for (auto node = 0; node < no_of_nodes; node++) {
+			auto g = gold[node];
+			auto f = output[stream][node];
+			if (g != f) {
+				std::cout << "PAU\n";
+			}
 
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +203,7 @@ int main(int argc, char** argv) {
 		copy_time = rad::mysecond() - copy_time;
 
 		auto compare_time = rad::mysecond();
-		compare_output(h_d_cost, gold_cost);
+		compare_output(h_cost, gold_cost);
 		compare_time = rad::mysecond() - compare_time;
 
 		if (parameters.verbose) {
@@ -215,7 +228,7 @@ int main(int argc, char** argv) {
 		gold_cost.resize(no_of_nodes);
 		std::ofstream gold_f(parameters.gold, std::ios::binary);
 		if (gold_f.good()) {
-			gold_f.write(reinterpret_cast<char*>(h_d_cost[0].data()),
+			gold_f.write(reinterpret_cast<char*>(h_cost[0].data()),
 					sizeof(int) * no_of_nodes);
 		} else {
 			throw_line("Could not write " + parameters.gold);
