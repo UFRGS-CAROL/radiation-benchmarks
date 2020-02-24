@@ -87,31 +87,35 @@ size_t compare_output(std::vector<std::vector<int>>& output,
 		std::vector<int>& gold, rad::Log& log) {
 	auto stream_number = output.size();
 	auto no_of_nodes = gold.size();
-	auto num_of_threads = 1;
-#pragma omp parallel
-	{
-		num_of_threads = omp_get_num_threads();
-	}
-	auto stream_slice = stream_number / num_of_threads;
-	static std::vector<bool> equal_array(num_of_threads);
+//	auto num_of_threads = 1;
+//#pragma omp parallel
+//	{
+//		num_of_threads = omp_get_num_threads();
+//	}
+//	auto stream_slice = stream_number / num_of_threads;
+	static std::vector<bool> equal_array(stream_number);
 
 //	std::cout << "NUM THR " << num_of_threads << " STREAM SLICE "
 //			<< stream_slice << std::endl;
 
-#pragma omp parallel default(shared)
-	{
-		auto tid = omp_get_thread_num();
-		equal_array[tid] = false;
-
-		auto start_slice = tid * stream_slice;
-		auto end_slice = start_slice + stream_slice;
-		for (auto st = start_slice; st < end_slice; st++) {
-			equal_array[tid] = equal_array[tid] || (output[st] != gold);
-		}
+//#pragma omp parallel default(shared)
+//	{
+//		auto tid = omp_get_thread_num();
+//		equal_array[tid] = false;
+//
+//		auto start_slice = tid * stream_slice;
+//		auto end_slice = start_slice + stream_slice;
+//		for (auto st = start_slice; st < end_slice; st++) {
+//			equal_array[tid] = equal_array[tid] || (output[st] != gold);
+//		}
+//	}
+#pragma omp parallel for default(shared)
+	for(auto i = 0; i < stream_number; i++){
+		equal_array[i] = (output[i] != gold);
 	}
 
 	auto falses = std::count(equal_array.begin(), equal_array.end(), false);
-	std::cout << "Falses " << falses << std::endl;
+//	std::cout << "Falses " << falses << std::endl;
 	size_t errors = 0;
 
 	if (falses != equal_array.size()) {
