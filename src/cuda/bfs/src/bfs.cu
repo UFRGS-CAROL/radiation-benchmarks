@@ -19,7 +19,6 @@
 
 #include <iostream>
 
-
 #include "kernel.h"
 #include "cuda_utils.h"
 #include "device_vector.h"
@@ -27,22 +26,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
+void BFSGraph(std::vector<Node>& h_graph_nodes,
 		std::vector<bool_t>& h_graph_mask,
 		std::vector<bool_t>& h_updating_graph_mask,
 		std::vector<bool_t>& h_graph_visited, std::vector<int>& h_graph_edges,
-		int no_of_nodes, int source) {
-
-	int num_of_blocks = 1;
-	int num_of_threads_per_block = no_of_nodes;
-
-	//Make execution Parameters according to the number of nodes
-	//Distribute threads across multiple Blocks if necessary
-	if (no_of_nodes > MAX_THREADS_PER_BLOCK) {
-		num_of_blocks = (int) ceil(
-				no_of_nodes / (double) MAX_THREADS_PER_BLOCK);
-		num_of_threads_per_block = MAX_THREADS_PER_BLOCK;
-	}
+		std::vector<int>& h_cost, int no_of_nodes, int source) {
 
 	//Copy the Node list to device memory
 	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
@@ -57,12 +45,6 @@ std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
 	//Copy the Visited nodes array to device memory
 	rad::DeviceVector<bool_t> d_graph_visited = h_graph_visited;
 
-	// allocate mem for the result on host side
-	std::vector<int> h_cost(no_of_nodes);
-	for (int i = 0; i < no_of_nodes; i++)
-		h_cost[i] = -1;
-	h_cost[source] = 0;
-
 	// allocate device memory for result
 	rad::DeviceVector<int> d_cost = h_cost;
 
@@ -71,6 +53,17 @@ std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
 	cudaMalloc((void**) &d_over, sizeof(bool_t));
 
 	std::cout << ("Copied Everything to GPU memory\n");
+
+	int num_of_blocks = 1;
+	int num_of_threads_per_block = no_of_nodes;
+
+	//Make execution Parameters according to the number of nodes
+	//Distribute threads across multiple Blocks if necessary
+	if (no_of_nodes > MAX_THREADS_PER_BLOCK) {
+		num_of_blocks = (int) ceil(
+				no_of_nodes / (double) MAX_THREADS_PER_BLOCK);
+		num_of_threads_per_block = MAX_THREADS_PER_BLOCK;
+	}
 
 	// setup execution parameters
 	dim3 grid(num_of_blocks, 1, 1);
@@ -115,6 +108,4 @@ std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
 	std::cout << "Copy time " << copy_time << std::endl;
 //	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
 //			cudaMemcpyDeviceToHost);
-
-	return h_cost;
 }

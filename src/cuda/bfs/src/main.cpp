@@ -6,11 +6,11 @@
 
 #include "common.h"
 
-std::vector<int> BFSGraph(std::vector<Node>& h_graph_nodes,
+void BFSGraph(std::vector<Node>& h_graph_nodes,
 		std::vector<bool_t>& h_graph_mask,
 		std::vector<bool_t>& h_updating_graph_mask,
 		std::vector<bool_t>& h_graph_visited, std::vector<int>& h_graph_edges,
-		int no_of_nodes, int source);
+		std::vector<int>& h_cost, int no_of_nodes, int source);
 
 void Usage(int argc, char**argv) {
 
@@ -101,8 +101,14 @@ int main(int argc, char** argv) {
 	std::tie(no_of_nodes, source) = read_input_file(h_graph_nodes, h_graph_mask,
 			h_updating_graph_mask, h_graph_visited, h_graph_edges, input_f);
 
-	auto h_cost = BFSGraph(h_graph_nodes, h_graph_mask, h_updating_graph_mask,
-			h_graph_visited, h_graph_edges, no_of_nodes, source);
+//	for (int i = 0; i < no_of_nodes; i++)
+//		h_cost[i] = -1;
+	// allocate mem for the result on host side
+	std::vector<int> h_cost(no_of_nodes, -1);
+	h_cost[source] = 0;
+
+	BFSGraph(h_graph_nodes, h_graph_mask, h_updating_graph_mask,
+			h_graph_visited, h_graph_edges, h_cost, no_of_nodes, source);
 
 	//Store the result into a file
 	std::ofstream fo(output_f);
