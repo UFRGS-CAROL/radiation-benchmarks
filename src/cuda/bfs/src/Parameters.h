@@ -13,7 +13,7 @@
 //#include <cuda.h>
 #include <cuda_runtime.h>
 
-#define WARPS_PER_SM 4
+#define WARPS_PER_SM 2
 
 //it is the decimal places for
 //logging errors, 20 is from old benchmarks

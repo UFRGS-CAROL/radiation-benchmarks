@@ -115,8 +115,7 @@ int main(int argc, char** argv) {
 		h_cost[stream][source] = 0;
 
 		rad::checkFrameworkErrors(
-				cudaStreamCreateWithFlags(&streams[stream],
-						cudaStreamNonBlocking));
+				cudaStreamCreate(&streams[stream]));
 	}
 
 	//Copy the Node list to device memory
