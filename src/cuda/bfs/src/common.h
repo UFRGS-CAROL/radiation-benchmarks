@@ -16,7 +16,7 @@ typedef uint8_t bool_t;
 
 enum {
 	FALSE = 0,
-	TRUE
+	TRUE = 1
 };
 
 //Structure to hold a node information

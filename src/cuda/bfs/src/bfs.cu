@@ -34,8 +34,8 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		int no_of_nodes) {
 
 	//make a bool_t to check if the execution is over
-	rad::DeviceVector<bool_t> d_over(1);
-	std::vector<bool_t> stop(1);
+	static rad::DeviceVector<bool_t> d_over(1);
+	static std::vector<bool_t> stop(1);
 
 //	cudaMalloc((void**) &d_over, sizeof(bool_t));
 

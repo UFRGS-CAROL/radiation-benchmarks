@@ -7,7 +7,6 @@
 #include "common.h"
 #include "device_vector.h"
 
-
 void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		rad::DeviceVector<bool_t>& d_graph_mask,
 		rad::DeviceVector<bool_t>& d_updating_graph_mask,
@@ -108,7 +107,6 @@ int main(int argc, char** argv) {
 	std::vector<int> h_cost(no_of_nodes, -1);
 	h_cost[source] = 0;
 
-
 	//Copy the Node list to device memory
 	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
 
@@ -125,15 +123,37 @@ int main(int argc, char** argv) {
 	// allocate device memory for result
 	rad::DeviceVector<int> d_cost = h_cost;
 
-	BFSGraph(d_graph_nodes, d_graph_mask, d_updating_graph_mask,
-			d_graph_visited, d_graph_edges, d_cost, no_of_nodes);
+	//saving arrays to re-set memory
+	const auto d_save_graph_mask = d_graph_mask;
+	const auto d_save_updating_graph_mask = d_updating_graph_mask;
+	const auto d_save_graph_visited = d_graph_visited;
+	const auto d_save_cost = d_cost;
+
+	for (size_t iteration = 0; iteration < 1000; iteration++) {
+		auto set_time = rad::mysecond();
+		d_cost = d_save_cost;
+		d_graph_mask = d_save_graph_mask;
+		d_updating_graph_mask = d_save_updating_graph_mask;
+		d_graph_visited = d_save_graph_visited;
+		set_time = rad::mysecond() - set_time;
+
+		auto kernel_time = rad::mysecond();
+		BFSGraph(d_graph_nodes, d_graph_mask, d_updating_graph_mask,
+				d_graph_visited, d_graph_edges, d_cost, no_of_nodes);
+
+		kernel_time = rad::mysecond() - kernel_time;
+
+		auto copy_time = rad::mysecond();
+		d_cost.to_vector(h_cost);
+		copy_time = rad::mysecond() - copy_time;
+
+		std::cout << "Set time " << set_time << std::endl;
+		std::cout << "Kernel time " << kernel_time << std::endl;
+		std::cout << "Copy time " << copy_time << std::endl;
+
+	}
 
 	// copy result from device to host
-	auto copy_time = rad::mysecond();
-	d_cost.to_vector(h_cost);
-	copy_time = rad::mysecond() - copy_time;
-	std::cout << "Copy time " << copy_time << std::endl;
-
 
 	//Store the result into a file
 	std::ofstream fo(output_f);
