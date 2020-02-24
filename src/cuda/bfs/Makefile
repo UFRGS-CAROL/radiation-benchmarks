@@ -4,8 +4,7 @@ EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-GOLD=./gold_$(STREAMS).data
-#../gold_accl/gold_7_7 
+GOLD=./gold.data
 INPUT= ../../../data/bfs/graph1MW_6.txt
 
 VPATH=./src/
