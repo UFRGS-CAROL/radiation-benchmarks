@@ -62,8 +62,8 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 				d_graph_mask.data(), d_updating_graph_mask.data(),
 				d_graph_visited.data(), d_cost.data(), no_of_nodes);
 		// check if kernel execution generated and error
-//		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
-//		;
+		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+		;
 
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -72,15 +72,15 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 				d_updating_graph_mask.data(), d_graph_visited.data(),
 				d_over.data(), no_of_nodes);
 		// check if kernel execution generated and error
-//		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
-//		;
+		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		d_over.to_vector(stop);
 		k++;
 	} while (stop[0]);
 
-//	std::cout << "Kernel Executed " << k << " times\n";
+	std::cout << "Kernel Executed " << k << " times\n";
 
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
