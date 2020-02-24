@@ -26,27 +26,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
-void BFSGraph(std::vector<Node>& h_graph_nodes,
-		std::vector<bool_t>& h_graph_mask,
-		std::vector<bool_t>& h_updating_graph_mask,
-		std::vector<bool_t>& h_graph_visited, std::vector<int>& h_graph_edges,
-		std::vector<int>& h_cost, int no_of_nodes, int source) {
-
-	//Copy the Node list to device memory
-	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
-
-	//Copy the Edge List to device Memory
-	rad::DeviceVector<int> d_graph_edges = h_graph_edges;
-
-	//Copy the Mask to device memory
-	rad::DeviceVector<bool_t> d_graph_mask = h_graph_mask;
-	rad::DeviceVector<bool_t> d_updating_graph_mask = h_updating_graph_mask;
-
-	//Copy the Visited nodes array to device memory
-	rad::DeviceVector<bool_t> d_graph_visited = h_graph_visited;
-
-	// allocate device memory for result
-	rad::DeviceVector<int> d_cost = h_cost;
+void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
+		rad::DeviceVector<bool_t>& d_graph_mask,
+		rad::DeviceVector<bool_t>& d_updating_graph_mask,
+		rad::DeviceVector<bool_t>& d_graph_visited,
+		rad::DeviceVector<int>& d_graph_edges, rad::DeviceVector<int>& d_cost,
+		int no_of_nodes) {
 
 	//make a bool_t to check if the execution is over
 	bool_t *d_over;
@@ -101,11 +86,5 @@ void BFSGraph(std::vector<Node>& h_graph_nodes,
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
 
-	// copy result from device to host
-	auto copy_time = rad::mysecond();
-	d_cost.to_vector(h_cost);
-	copy_time = rad::mysecond() - copy_time;
-	std::cout << "Copy time " << copy_time << std::endl;
-//	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
-//			cudaMemcpyDeviceToHost);
+	cudaFree(d_over);
 }
