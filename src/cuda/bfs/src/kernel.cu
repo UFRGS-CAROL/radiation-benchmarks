@@ -20,7 +20,7 @@
 
 
 __global__ void Kernel(Node* g_graph_nodes, int* g_graph_edges,
-		bool* g_graph_mask, bool* g_updating_graph_mask, bool *g_graph_visited,
+		bool_t* g_graph_mask, bool_t* g_updating_graph_mask, bool_t *g_graph_visited,
 		int* g_cost, int no_of_nodes) {
 	int tid = blockIdx.x * MAX_THREADS_PER_BLOCK + threadIdx.x;
 	if (tid < no_of_nodes && g_graph_mask[tid]) {
@@ -32,21 +32,21 @@ __global__ void Kernel(Node* g_graph_nodes, int* g_graph_edges,
 			int id = g_graph_edges[i];
 			if (!g_graph_visited[id]) {
 				g_cost[id] = g_cost[tid] + 1;
-				g_updating_graph_mask[id] = true;
+				g_updating_graph_mask[id] = TRUE;
 			}
 		}
 	}
 }
 
-__global__ void Kernel2(bool* g_graph_mask, bool *g_updating_graph_mask,
-		bool* g_graph_visited, bool *g_over, int no_of_nodes) {
+__global__ void Kernel2(bool_t* g_graph_mask, bool_t *g_updating_graph_mask,
+		bool_t* g_graph_visited, bool_t *g_over, int no_of_nodes) {
 	int tid = blockIdx.x * MAX_THREADS_PER_BLOCK + threadIdx.x;
 	if (tid < no_of_nodes && g_updating_graph_mask[tid]) {
 
-		g_graph_mask[tid] = true;
-		g_graph_visited[tid] = true;
+		g_graph_mask[tid] = TRUE;
+		g_graph_visited[tid] = TRUE;
 		*g_over = true;
-		g_updating_graph_mask[tid] = false;
+		g_updating_graph_mask[tid] = FALSE;
 	}
 }
 

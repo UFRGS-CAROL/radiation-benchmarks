@@ -8,7 +8,16 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
 
+#include <cstdint>
+
 #define MAX_THREADS_PER_BLOCK 512
+
+typedef uint8_t bool_t;
+
+enum {
+	FALSE = 0,
+	TRUE
+};
 
 //Structure to hold a node information
 struct Node {
@@ -17,11 +26,11 @@ struct Node {
 };
 
 __global__ void Kernel(Node* g_graph_nodes, int* g_graph_edges,
-		bool* g_graph_mask, bool* g_updating_graph_mask, bool *g_graph_visited,
+		bool_t* g_graph_mask, bool_t* g_updating_graph_mask, bool_t *g_graph_visited,
 		int* g_cost, int no_of_nodes);
 
-__global__ void Kernel2(bool* g_graph_mask, bool *g_updating_graph_mask,
-		bool* g_graph_visited, bool *g_over, int no_of_nodes);
+__global__ void Kernel2(bool_t* g_graph_mask, bool_t *g_updating_graph_mask,
+		bool_t* g_graph_visited, bool_t *g_over, int no_of_nodes);
 
 
 #endif /* KERNEL_H_ */
