@@ -26,20 +26,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
-void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
+int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		rad::DeviceVector<bool_t>& d_graph_mask,
 		rad::DeviceVector<bool_t>& d_updating_graph_mask,
 		rad::DeviceVector<bool_t>& d_graph_visited,
 		rad::DeviceVector<int>& d_graph_edges, rad::DeviceVector<int>& d_cost,
-		int no_of_nodes) {
+		cudaStream_t& stream, int no_of_nodes) {
 
 	//make a bool_t to check if the execution is over
 	static rad::DeviceVector<bool_t> d_over(1);
 	static std::vector<bool_t> stop(1);
-
-//	cudaMalloc((void**) &d_over, sizeof(bool_t));
-
-	std::cout << ("Copied Everything to GPU memory\n");
 
 	int num_of_blocks = 1;
 	int num_of_threads_per_block = no_of_nodes;
@@ -57,29 +53,29 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 	dim3 threads(num_of_threads_per_block, 1, 1);
 
 	int k = 0;
-	std::cout << ("Start traversing the tree\n");
 	//Call the Kernel untill all the elements of Frontier are not FALSE
 	do {
 		//if no thread changes this value then the loop stops
 		stop[0] = FALSE;
 		d_over = stop;
-//		cudaMemcpy(d_over, &stop, sizeof(bool_t), cudaMemcpyHostToDevice);
-		Kernel<<<grid, threads, 0>>>(d_graph_nodes.data(), d_graph_edges.data(),
+		Kernel<<<grid, threads, 0, stream>>>(d_graph_nodes.data(), d_graph_edges.data(),
 				d_graph_mask.data(), d_updating_graph_mask.data(),
 				d_graph_visited.data(), d_cost.data(), no_of_nodes);
 		// check if kernel execution generated and error
+//		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+//		;
 
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-		Kernel2<<<grid, threads, 0>>>(d_graph_mask.data(),
-				d_updating_graph_mask.data(), d_graph_visited.data(), d_over.data(),
-				no_of_nodes);
+
+		Kernel2<<<grid, threads, 0, stream>>>(d_graph_mask.data(),
+				d_updating_graph_mask.data(), d_graph_visited.data(),
+				d_over.data(), no_of_nodes);
 		// check if kernel execution generated and error
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+//		rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+//		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-//		cudaMemcpy(&stop, d_over, sizeof(bool_t), cudaMemcpyDeviceToHost);
 		d_over.to_vector(stop);
 		k++;
 	} while (stop[0]);
@@ -89,5 +85,5 @@ void BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	;
 
-//	cudaFree(d_over);
+	return k;
 }

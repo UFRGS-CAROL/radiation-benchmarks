@@ -13,6 +13,7 @@
 //#include <cuda.h>
 #include <cuda_runtime.h>
 
+#define WARPS_PER_SM 4
 
 //it is the decimal places for
 //logging errors, 20 is from old benchmarks
@@ -31,7 +32,6 @@ struct Parameters {
 
 	size_t sm_count;
 	size_t iterations;
-	size_t stream_number;
 
 	bool verbose;
 	bool debug;

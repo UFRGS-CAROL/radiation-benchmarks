@@ -4,11 +4,9 @@ EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-STREAMS=1
-
 GOLD=./gold_$(STREAMS).data
 #../gold_accl/gold_7_7 
-INPUT=../../../data/cfd/missile.domn.0.2M
+INPUT= ../../../data/bfs/graph1MW_6.txt
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -70,9 +68,8 @@ clean:
 	
 
 generate:
-	./$(EXEC) --streams $(STREAMS) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate ;
-
+	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
 test:
-	./$(EXEC) ../../../data/bfs/graph1MW_6.txt
+	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
 
 	

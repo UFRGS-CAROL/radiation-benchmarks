@@ -15,10 +15,9 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
-	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/cfd/missile.domn.0.2M ");
+	this->input = rad::find_char_arg(argc, argv, "--input",
+			"../../../data/bfs/ ");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
-	this->stream_number = rad::find_int_arg(argc, argv, "--streams", 1);
-
 
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
@@ -30,11 +29,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->sm_count = dev_prop.multiProcessorCount;
 
 	if (argc < 2) {
-		throw_line(
-				"<mandatory arguments> [optional arguments]\n"
-				"Usage: ./cudaCFD"
-				" --input <specify data file name>"
-				" --streams [N streams]"
+		throw_line("<mandatory arguments> [optional arguments]\n"
+				"Usage: ./" + std::string(argv[0]) + " --input <specify data file name>"
 				" --gold [GOLD path]"
 				" --iterations [#iteractions]"
 				" [--verbose] [--debug]");
@@ -45,7 +41,6 @@ Parameters::Parameters(int argc, char* argv[]) {
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
 	os << "Testing CFD on " << p.device << std::endl;
-	os << "Streams: " << p.stream_number  << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
