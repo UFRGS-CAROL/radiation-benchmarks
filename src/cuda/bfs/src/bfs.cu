@@ -22,6 +22,8 @@
 #include <cuda.h>
 
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 #include "kernel.h"
 
@@ -37,28 +39,28 @@ void Usage(int argc, char**argv) {
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
 void BFSGraph(int argc, char** argv) {
-	int no_of_nodes = 0;
-	int edge_list_size = 0;
-	FILE *fp;
+//	FILE *fp;
 
-	char *input_f;
 	if (argc != 2) {
 		Usage(argc, argv);
 		exit(0);
 	}
 
-	input_f = argv[1];
-	printf("Reading File\n");
+	std::string input_f = argv[1];
+	std::cout << "Reading File " << input_f << std::endl;
 	//Read in Graph from a file
-	fp = fopen(input_f, "r");
-	if (!fp) {
-		printf("Error Reading graph file\n");
+	std::ifstream fp(input_f);
+	if (!fp.good()) {
+		std::cout << "Error Reading graph file\n";
 		return;
 	}
 
 	int source = 0;
+	int no_of_nodes = 0;
+	int edge_list_size = 0;
 
-	fscanf(fp, "%d", &no_of_nodes);
+//	fscanf(fp, "%d", &no_of_nodes);
+	fp >> no_of_nodes;
 
 	int num_of_blocks = 1;
 	int num_of_threads_per_block = no_of_nodes;
@@ -80,7 +82,8 @@ void BFSGraph(int argc, char** argv) {
 	int start, edgeno;
 	// initalize the memory
 	for (unsigned int i = 0; i < no_of_nodes; i++) {
-		fscanf(fp, "%d %d", &start, &edgeno);
+//		fscanf(fp, "%d %d", &start, &edgeno);
+		fp >> start >> edgeno;
 		h_graph_nodes[i].starting = start;
 		h_graph_nodes[i].no_of_edges = edgeno;
 		h_graph_mask[i] = FALSE;
@@ -89,27 +92,30 @@ void BFSGraph(int argc, char** argv) {
 	}
 
 	//read the source node from the file
-	fscanf(fp, "%d", &source);
+//	fscanf(fp, "%d", &source);
+	fp >> source;
 	source = 0;
 
 	//set the source node as TRUE in the mask
 	h_graph_mask[source] = TRUE;
 	h_graph_visited[source] = TRUE;
 
-	fscanf(fp, "%d", &edge_list_size);
-
+//	fscanf(fp, "%d", &edge_list_size);
+	fp >> edge_list_size;
 	int id, cost;
 	std::vector<int> h_graph_edges(edge_list_size);
 	for (int i = 0; i < edge_list_size; i++) {
-		fscanf(fp, "%d", &id);
-		fscanf(fp, "%d", &cost);
+//		fscanf(fp, "%d", &id);
+//		fscanf(fp, "%d", &cost);
+		fp >> id >> cost;
 		h_graph_edges[i] = id;
 	}
 
-	if (fp)
-		fclose(fp);
+//	if (fp)
+//		fclose(fp);
+	fp.close();
 
-	printf("Read File\n");
+	std::cout << ("Read File\n");
 
 	//Copy the Node list to device memory
 	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
