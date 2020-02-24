@@ -15,18 +15,12 @@
 
  Created by Pawan Harish.
  ************************************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include <cuda.h>
-
 #include <vector>
 #include <iostream>
 #include <fstream>
 
 #include "kernel.h"
-
 #include "cuda_utils.h"
 #include "device_vector.h"
 
@@ -39,8 +33,6 @@ void Usage(int argc, char**argv) {
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
 void BFSGraph(int argc, char** argv) {
-//	FILE *fp;
-
 	if (argc != 2) {
 		Usage(argc, argv);
 		exit(0);
@@ -59,7 +51,6 @@ void BFSGraph(int argc, char** argv) {
 	int no_of_nodes = 0;
 	int edge_list_size = 0;
 
-//	fscanf(fp, "%d", &no_of_nodes);
 	fp >> no_of_nodes;
 
 	int num_of_blocks = 1;
@@ -100,51 +91,30 @@ void BFSGraph(int argc, char** argv) {
 	h_graph_mask[source] = TRUE;
 	h_graph_visited[source] = TRUE;
 
-//	fscanf(fp, "%d", &edge_list_size);
 	fp >> edge_list_size;
 	int id, cost;
 	std::vector<int> h_graph_edges(edge_list_size);
 	for (int i = 0; i < edge_list_size; i++) {
-//		fscanf(fp, "%d", &id);
-//		fscanf(fp, "%d", &cost);
 		fp >> id >> cost;
 		h_graph_edges[i] = id;
 	}
 
-//	if (fp)
-//		fclose(fp);
 	fp.close();
 
 	std::cout << ("Read File\n");
 
 	//Copy the Node list to device memory
 	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
-//	cudaMalloc((void**) &d_graph_nodes, sizeof(Node) * no_of_nodes);
-//	cudaMemcpy(d_graph_nodes, h_graph_nodes, sizeof(Node) * no_of_nodes,
-//			cudaMemcpyHostToDevice);
 
 	//Copy the Edge List to device Memory
 	rad::DeviceVector<int> d_graph_edges = h_graph_edges;
-//	cudaMalloc((void**) &d_graph_edges, sizeof(int) * edge_list_size);
-//	cudaMemcpy(d_graph_edges, h_graph_edges, sizeof(int) * edge_list_size,
-//			cudaMemcpyHostToDevice);
 
 	//Copy the Mask to device memory
 	rad::DeviceVector<bool_t> d_graph_mask = h_graph_mask;
-//	cudaMalloc((void**) &d_graph_mask, sizeof(bool_t) * no_of_nodes);
-//	cudaMemcpy(d_graph_mask, h_graph_mask, sizeof(bool_t) * no_of_nodes,
-//			cudaMemcpyHostToDevice);
-
 	rad::DeviceVector<bool_t> d_updating_graph_mask = h_updating_graph_mask;
-//	cudaMalloc((void**) &d_updating_graph_mask, sizeof(bool_t) * no_of_nodes);
-//	cudaMemcpy(d_updating_graph_mask, h_updating_graph_mask,
-//			sizeof(bool_t) * no_of_nodes, cudaMemcpyHostToDevice);
 
 	//Copy the Visited nodes array to device memory
 	rad::DeviceVector<bool_t> d_graph_visited = h_graph_visited;
-//	cudaMalloc((void**) &d_graph_visited, sizeof(bool_t) * no_of_nodes);
-//	cudaMemcpy(d_graph_visited, h_graph_visited, sizeof(bool_t) * no_of_nodes,
-//			cudaMemcpyHostToDevice);
 
 	// allocate mem for the result on host side
 	std::vector<int> h_cost(no_of_nodes);
@@ -154,9 +124,6 @@ void BFSGraph(int argc, char** argv) {
 
 	// allocate device memory for result
 	rad::DeviceVector<int> d_cost = h_cost;
-//	cudaMalloc((void**) &d_cost, sizeof(int) * no_of_nodes);
-//	cudaMemcpy(d_cost, h_cost, sizeof(int) * no_of_nodes,
-//			cudaMemcpyHostToDevice);
 
 	//make a bool_t to check if the execution is over
 	bool_t *d_over;
@@ -180,15 +147,20 @@ void BFSGraph(int argc, char** argv) {
 				d_updating_graph_mask.data(), d_graph_visited.data(), d_cost.data(), no_of_nodes);
 		// check if kernel execution generated and error
 
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());;
+
 		Kernel2<<<grid, threads, 0>>>(d_graph_mask.data(), d_updating_graph_mask.data(),
 				d_graph_visited.data(), d_over, no_of_nodes);
 		// check if kernel execution generated and error
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());;
 
 		cudaMemcpy(&stop, d_over, sizeof(bool_t), cudaMemcpyDeviceToHost);
 		k++;
 	} while (stop);
 
 	std::cout << "Kernel Executed "<< k << " times\n";
+
+	rad::checkFrameworkErrors(cudaPeekAtLastError());;
 
 	// copy result from device to host
 	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
