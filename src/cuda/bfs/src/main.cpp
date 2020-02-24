@@ -4,8 +4,10 @@
 #include <tuple>
 #include <algorithm>
 #include <omp.h>
+
 #include "common.h"
 #include "Parameters.h"
+#include "generic_log.h"
 
 int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		rad::DeviceVector<bool_t>& d_graph_mask,
@@ -81,8 +83,8 @@ std::tuple<int, int> read_input_file(std::vector<Node>& h_graph_nodes,
 	return {no_of_nodes, source};
 }
 
-void compare_output(std::vector<std::vector<int>>& output,
-		std::vector<int>& gold) {
+size_t compare_output(std::vector<std::vector<int>>& output,
+		std::vector<int>& gold, rad::Log& log) {
 	auto stream_number = output.size();
 	auto no_of_nodes = gold.size();
 	auto num_of_threads = 1;
@@ -93,8 +95,8 @@ void compare_output(std::vector<std::vector<int>>& output,
 	auto stream_slice = stream_number / num_of_threads;
 	static std::vector<bool> equal_array(num_of_threads);
 
-	std::cout << "NUM THR " << num_of_threads << " STREAM SLICE "
-			<< stream_slice << std::endl;
+//	std::cout << "NUM THR " << num_of_threads << " STREAM SLICE "
+//			<< stream_slice << std::endl;
 
 #pragma omp parallel default(shared)
 	{
@@ -109,6 +111,9 @@ void compare_output(std::vector<std::vector<int>>& output,
 	}
 
 	auto falses = std::count(equal_array.begin(), equal_array.end(), false);
+	std::cout << "Falses " << falses << std::endl;
+	size_t errors = 0;
+
 	if (falses != equal_array.size()) {
 #pragma omp parallel for default(shared)
 		for (auto stream = 0; stream < stream_number; stream++) {
@@ -116,13 +121,28 @@ void compare_output(std::vector<std::vector<int>>& output,
 				auto g = gold[node];
 				auto f = output[stream][node];
 				if (g != f) {
-					std::cout << "PAU\n";
+					auto cost_e = std::to_string(g);
+					auto cost_r = std::to_string(f);
+					auto stream_str = std::to_string(stream);
+					auto node_str = std::to_string(node);
+
+					std::string error_detail = "Stream:" + stream_str;
+					error_detail += " Node: " + node_str;
+					error_detail += " cost_e: " + cost_e;
+					error_detail += " cost_r: " + cost_r;
+#pragma omp critical
+					{
+						log.log_error_detail(error_detail);
+						errors++;
+					}
 				}
 
 			}
 		}
 	}
 
+	log.update_errors();
+	return errors;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,10 +151,6 @@ void compare_output(std::vector<std::vector<int>>& output,
 int main(int argc, char** argv) {
 
 	Parameters parameters(argc, argv);
-
-	if (parameters.verbose) {
-		std::cout << parameters << std::endl;
-	}
 
 	// allocate host memory
 	std::vector<Node> h_graph_nodes;
@@ -147,6 +163,24 @@ int main(int argc, char** argv) {
 	std::tie(no_of_nodes, source) = read_input_file(h_graph_nodes, h_graph_mask,
 			h_updating_graph_mask, h_graph_visited, h_graph_edges,
 			parameters.input);
+
+	auto streams_in_parallel = parameters.sm_count * WARPS_PER_SM;
+
+	std::string test_info = "";
+	test_info += "streams:" + std::to_string(streams_in_parallel);
+	test_info += " nodes:" + std::to_string(no_of_nodes);
+	test_info += " edges:" + std::to_string(h_graph_edges.size());
+	test_info += " source:" + std::to_string(source);
+	test_info += " inputFile:" + parameters.input;
+	test_info += " goldFile:" + parameters.gold;
+
+	std::string test_name = "cudaBFS";
+	rad::Log log(test_name, test_info);
+
+	if (parameters.verbose) {
+		std::cout << parameters << std::endl;
+		std::cout << log << std::endl;
+	}
 
 	std::vector<int> gold_cost;
 	if (!parameters.generate) {
@@ -162,7 +196,6 @@ int main(int argc, char** argv) {
 	}
 
 	// allocate mem for the result on host side
-	auto streams_in_parallel = parameters.sm_count * WARPS_PER_SM;
 	std::vector<cudaStream_t> streams(streams_in_parallel);
 	std::vector<std::vector<int>> h_cost(streams_in_parallel,
 			std::vector<int>(no_of_nodes, -1));
@@ -213,6 +246,7 @@ int main(int argc, char** argv) {
 		//Start traversing the tree
 
 		auto kernel_time = rad::mysecond();
+		log.start_iteration();
 		for (int i = 0; i < streams_in_parallel; i++) {
 			k_times[i] = BFSGraph(h_d_graph_nodes[i], h_d_graph_mask[i],
 					h_d_updating_graph_mask[i], h_d_graph_visited[i],
@@ -222,8 +256,11 @@ int main(int argc, char** argv) {
 		for (auto& stream : streams) {
 			rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
+		log.end_iteration();
+
 		kernel_time = rad::mysecond() - kernel_time;
 
+		// copy result from device to host
 		auto copy_time = rad::mysecond();
 		for (int i = 0; i < streams_in_parallel; i++) {
 			h_d_cost[i].to_vector(h_cost[i]);
@@ -231,25 +268,27 @@ int main(int argc, char** argv) {
 		copy_time = rad::mysecond() - copy_time;
 
 		auto compare_time = rad::mysecond();
-		compare_output(h_cost, gold_cost);
+		size_t errors = 0;
+		if (!parameters.generate) {
+			errors = compare_output(h_cost, gold_cost, log);
+		}
 		compare_time = rad::mysecond() - compare_time;
 
 		if (parameters.verbose) {
 			auto wasted_time = copy_time + set_time + compare_time;
 			auto overall_time = wasted_time + kernel_time;
-			std::cout << "Iteration " << iteration << " - Overall time "
-					<< overall_time;
+			std::cout << "Iteration " << iteration << " - ERRORS: " << errors
+					<< std::endl;
+			std::cout << "Overall time " << overall_time;
 			std::cout << " Set time " << set_time;
 			std::cout << " Kernel time " << kernel_time;
 			std::cout << " Compare time " << compare_time;
 			std::cout << " Copy time " << copy_time << std::endl;
 			std::cout << "Wasted time " << wasted_time << " ("
-					<< int(wasted_time / overall_time * 100.0f) << "%)"
+					<< int(wasted_time / overall_time * 100.0f) << "%)\n"
 					<< std::endl;
 		}
 	}
-
-	// copy result from device to host
 
 	//Store the result into a file
 	if (parameters.generate) {
