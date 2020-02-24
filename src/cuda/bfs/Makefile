@@ -69,6 +69,7 @@ clean:
 
 generate:
 	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
+	
 test:
 	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
 

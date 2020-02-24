@@ -195,12 +195,17 @@ int main(int argc, char** argv) {
 
 		if (parameters.verbose) {
 			auto wasted_time = copy_time + set_time + compare_time;
+			auto overall_time = wasted_time + kernel_time;
+			std::cout << "Iteration " << iteration << " - Overall time "
+					<< overall_time;
+			std::cout << " Set time " << set_time;
+			std::cout << " Kernel time " << kernel_time;
+			std::cout << " Compare time " << compare_time;
+			std::cout << " Copy time " << copy_time << std::endl;
+			std::cout << "Wasted time " << wasted_time << " ("
+					<< int(wasted_time / overall_time * 100.0f) << "%)"
+					<< std::endl;
 		}
-
-		std::cout << "Iteration " << iteration << " Set time " << set_time;
-		std::cout << " Kernel time " << kernel_time;
-		std::cout << " Copy time " << copy_time << std::endl;
-
 	}
 
 	// copy result from device to host
