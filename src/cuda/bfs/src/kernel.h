@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-#define MAX_THREADS_PER_BLOCK 512
+#define MAX_THREADS_PER_BLOCK 1024 //512
 
 typedef uint8_t bool_t;
 

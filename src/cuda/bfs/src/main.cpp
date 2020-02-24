@@ -1,12 +1,22 @@
 
+#include <string>
 
-void BFSGraph(int argc, char** argv);
+void BFSGraph(std::string input_f, std::string output_f);
+
+void Usage(int argc, char**argv) {
+
+	fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main Program
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv) {
-//	no_of_nodes = 0;
-//	edge_list_size = 0;
-	BFSGraph(argc, argv);
+	if (argc != 2) {
+		Usage(argc, argv);
+		exit(0);
+	}
+
+	BFSGraph(std::string(argv[1]), "result.txt");
 }

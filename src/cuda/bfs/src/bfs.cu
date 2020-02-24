@@ -24,21 +24,11 @@
 #include "cuda_utils.h"
 #include "device_vector.h"
 
-void Usage(int argc, char**argv) {
 
-	fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-
-}
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
-void BFSGraph(int argc, char** argv) {
-	if (argc != 2) {
-		Usage(argc, argv);
-		exit(0);
-	}
-
-	std::string input_f = argv[1];
+void BFSGraph(std::string input_f, std::string output_f) {
 	std::cout << "Reading File " << input_f << std::endl;
 	//Read in Graph from a file
 	std::ifstream fp(input_f);
@@ -52,17 +42,6 @@ void BFSGraph(int argc, char** argv) {
 	int edge_list_size = 0;
 
 	fp >> no_of_nodes;
-
-	int num_of_blocks = 1;
-	int num_of_threads_per_block = no_of_nodes;
-
-	//Make execution Parameters according to the number of nodes
-	//Distribute threads across multiple Blocks if necessary
-	if (no_of_nodes > MAX_THREADS_PER_BLOCK) {
-		num_of_blocks = (int) ceil(
-				no_of_nodes / (double) MAX_THREADS_PER_BLOCK);
-		num_of_threads_per_block = MAX_THREADS_PER_BLOCK;
-	}
 
 	// allocate host memory
 	std::vector<Node> h_graph_nodes(no_of_nodes);
@@ -102,6 +81,18 @@ void BFSGraph(int argc, char** argv) {
 	fp.close();
 
 	std::cout << ("Read File\n");
+
+
+	int num_of_blocks = 1;
+	int num_of_threads_per_block = no_of_nodes;
+
+	//Make execution Parameters according to the number of nodes
+	//Distribute threads across multiple Blocks if necessary
+	if (no_of_nodes > MAX_THREADS_PER_BLOCK) {
+		num_of_blocks = (int) ceil(
+				no_of_nodes / (double) MAX_THREADS_PER_BLOCK);
+		num_of_threads_per_block = MAX_THREADS_PER_BLOCK;
+	}
 
 	//Copy the Node list to device memory
 	rad::DeviceVector<Node> d_graph_nodes = h_graph_nodes;
@@ -167,11 +158,11 @@ void BFSGraph(int argc, char** argv) {
 			cudaMemcpyDeviceToHost);
 
 	//Store the result into a file
-	std::ofstream fo("result.txt");
+	std::ofstream fo(output_f);
 //	fprintf(fpo, "%d) cost:%d\n", i, h_cost[i]);
 	for (int i = 0; i < no_of_nodes; i++)
 		fo << i << ") cost:" << h_cost[i] << std::endl;
 	fo.close();
 //	fclose(fpo);
-	std::cout << ("Result stored in result.txt\n");
+	std::cout << "Result stored in " << output_f;
 }
