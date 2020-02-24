@@ -1,11 +1,9 @@
 #include <string>
-#include <vector>
 #include <fstream>
 #include <iostream>
 #include <tuple>
 
 #include "common.h"
-#include "device_vector.h"
 #include "Parameters.h"
 
 int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
@@ -76,10 +74,14 @@ std::tuple<int, int> read_input_file(std::vector<Node>& h_graph_nodes,
 
 		std::cout << ("Read File\n");
 	} else {
-		std::cout << "Error Reading graph file " << input_f << std::endl;
+		throw_line("Error Reading graph file " + input_f);
 	}
 
 	return {no_of_nodes, source};
+}
+
+void compare_output(DevMat<int>& output, std::vector<int>& gold) {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +107,19 @@ int main(int argc, char** argv) {
 			h_updating_graph_mask, h_graph_visited, h_graph_edges,
 			parameters.input);
 
+	std::vector<int> gold_cost;
+	if (!parameters.generate) {
+		gold_cost.resize(no_of_nodes);
+		std::ifstream gold_f(parameters.gold, std::ios::binary);
+		if (gold_f.good()) {
+			gold_f.read(reinterpret_cast<char*>(gold_cost.data()),
+					sizeof(int) * no_of_nodes);
+		} else {
+			throw_line("Could not read " + parameters.gold);
+		}
+
+	}
+
 	// allocate mem for the result on host side
 	auto streams_in_parallel = parameters.sm_count * WARPS_PER_SM;
 	std::vector<cudaStream_t> streams(streams_in_parallel);
@@ -113,30 +128,24 @@ int main(int argc, char** argv) {
 
 	for (auto stream = 0; stream < streams_in_parallel; stream++) {
 		h_cost[stream][source] = 0;
-
-		rad::checkFrameworkErrors(
-				cudaStreamCreate(&streams[stream]));
+		rad::checkFrameworkErrors(cudaStreamCreate(&streams[stream]));
 	}
 
 	//Copy the Node list to device memory
-	std::vector<rad::DeviceVector<Node>> h_d_graph_nodes(streams_in_parallel,
-			h_graph_nodes);
+	DevMat<Node> h_d_graph_nodes(streams_in_parallel, h_graph_nodes);
 
 	//Copy the Edge List to device Memory
-	std::vector<rad::DeviceVector<int>> h_d_graph_edges(streams_in_parallel,
-			h_graph_edges);
+	DevMat<int> h_d_graph_edges(streams_in_parallel, h_graph_edges);
 
 	//Copy the Mask to device memory
-	std::vector<rad::DeviceVector<bool_t>> h_d_graph_mask(streams_in_parallel);
-	std::vector<rad::DeviceVector<bool_t>> h_d_updating_graph_mask(
-			streams_in_parallel);
+	DevMat<bool_t> h_d_graph_mask(streams_in_parallel);
+	DevMat<bool_t> h_d_updating_graph_mask(streams_in_parallel);
 
 	//Copy the Visited nodes array to device memory
-	std::vector<rad::DeviceVector<bool_t>> h_d_graph_visited(
-			streams_in_parallel);
+	DevMat<bool_t> h_d_graph_visited(streams_in_parallel);
 
 	// allocate device memory for result
-	std::vector<rad::DeviceVector<int>> h_d_cost(streams_in_parallel);
+	DevMat<int> h_d_cost(streams_in_parallel);
 
 	//saving arrays to re-set memory
 	const rad::DeviceVector<bool_t> d_save_graph_mask = h_graph_mask;
@@ -147,7 +156,7 @@ int main(int argc, char** argv) {
 	std::vector<int> k_times(streams_in_parallel);
 
 	for (size_t iteration = 0; iteration < parameters.iterations; iteration++) {
-		std::cout << ("Copied Everything to GPU memory\n");
+		// Copied Everything to GPU memory
 
 		auto set_time = rad::mysecond();
 
@@ -160,7 +169,7 @@ int main(int argc, char** argv) {
 
 		set_time = rad::mysecond() - set_time;
 
-		std::cout << ("Start traversing the tree\n");
+		//Start traversing the tree
 
 		auto kernel_time = rad::mysecond();
 		for (int i = 0; i < streams_in_parallel; i++) {
@@ -177,11 +186,18 @@ int main(int argc, char** argv) {
 		auto copy_time = rad::mysecond();
 		for (int i = 0; i < streams_in_parallel; i++) {
 			h_d_cost[i].to_vector(h_cost[i]);
-
 		}
 		copy_time = rad::mysecond() - copy_time;
 
-		std::cout << "Iteration " << iteration << "Set time " << set_time;
+		auto compare_time = rad::mysecond();
+		compare_output(h_d_cost, gold_cost);
+		compare_time = rad::mysecond() - compare_time;
+
+		if (parameters.verbose) {
+			auto wasted_time = copy_time + set_time + compare_time;
+		}
+
+		std::cout << "Iteration " << iteration << " Set time " << set_time;
 		std::cout << " Kernel time " << kernel_time;
 		std::cout << " Copy time " << copy_time << std::endl;
 
@@ -190,11 +206,19 @@ int main(int argc, char** argv) {
 	// copy result from device to host
 
 	//Store the result into a file
-	std::ofstream fo(parameters.gold);
-	for (int i = 0; i < no_of_nodes; i++)
-		fo << i << ") cost:" << h_cost[0][i] << std::endl;
-	fo.close();
-	std::cout << "Result stored in " << parameters.gold << std::endl;
+	if (parameters.generate) {
+		gold_cost.resize(no_of_nodes);
+		std::ofstream gold_f(parameters.gold, std::ios::binary);
+		if (gold_f.good()) {
+			gold_f.write(reinterpret_cast<char*>(h_d_cost[0].data()),
+					sizeof(int) * no_of_nodes);
+		} else {
+			throw_line("Could not write " + parameters.gold);
+		}
+	}
+
+	std::cout << "Result of stream 0 stored in " << parameters.gold
+			<< std::endl;
 
 	for (auto& stream : streams) {
 		rad::checkFrameworkErrors(cudaStreamDestroy(stream));

@@ -15,8 +15,7 @@
 typedef uint8_t bool_t;
 
 enum {
-	FALSE = 0,
-	TRUE = 1
+	FALSE = 0, TRUE = 1
 };
 
 //Structure to hold a node information
@@ -24,5 +23,12 @@ struct Node {
 	int starting;
 	int no_of_edges;
 };
+
+#include "device_vector.h"
+#include <vector>
+
+
+template<typename T>
+using DevMat = std::vector<rad::DeviceVector<T>>;
 
 #endif /* COMMON_H_ */

@@ -16,7 +16,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
 	this->input = rad::find_char_arg(argc, argv, "--input",
-			"../../../data/bfs/ ");
+			"../../../data/bfs/graph1MW_6.txt");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
 
 	auto dev_prop = rad::get_device();
