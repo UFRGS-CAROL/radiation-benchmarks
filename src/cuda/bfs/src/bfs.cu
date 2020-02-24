@@ -24,64 +24,80 @@
 #include "cuda_utils.h"
 #include "device_vector.h"
 
+std::tuple<int, int> read_input_file(std::vector<Node>& h_graph_nodes,
+		std::vector<bool_t>& h_graph_mask,
+		std::vector<bool_t>& h_updating_graph_mask,
+		std::vector<bool_t>& h_graph_visited, std::vector<int>& h_graph_edges, std::string& input_f) {
+
+	std::cout << "Reading File " << input_f << std::endl;
+	//Read in Graph from a file
+	std::ifstream fp(input_f);
+
+	int source = 0;
+	int no_of_nodes = 0;
+	int edge_list_size = 0;
+	if (fp.good()) {
+
+		fp >> no_of_nodes;
+
+		// allocate host memory
+		h_graph_nodes.resize(no_of_nodes);
+		h_graph_mask.resize(no_of_nodes);
+		h_updating_graph_mask.resize(no_of_nodes);
+		h_graph_visited.resize(no_of_nodes);
+
+		// initalize the memory
+		for (auto i = 0; i < no_of_nodes; i++) {
+			int start, edgeno;
+			fp >> start >> edgeno;
+			h_graph_nodes[i].starting = start;
+			h_graph_nodes[i].no_of_edges = edgeno;
+			h_graph_mask[i] = FALSE;
+			h_updating_graph_mask[i] = FALSE;
+			h_graph_visited[i] = FALSE;
+		}
+
+		//read the source node from the file
+		fp >> source;
+		source = 0;
+
+		//set the source node as TRUE in the mask
+		h_graph_mask[source] = TRUE;
+		h_graph_visited[source] = TRUE;
+
+		fp >> edge_list_size;
+		h_graph_edges.resize(edge_list_size);
+		for (int i = 0; i < edge_list_size; i++) {
+			int id, cost;
+
+			fp >> id >> cost;
+			h_graph_edges[i] = id;
+		}
+
+		fp.close();
+
+		std::cout << ("Read File\n");
+	} else {
+		std::cout << "Error Reading graph file " << input_f << std::endl;
+	}
+
+	return {no_of_nodes, source};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
 void BFSGraph(std::string input_f, std::string output_f) {
-	std::cout << "Reading File " << input_f << std::endl;
-	//Read in Graph from a file
-	std::ifstream fp(input_f);
-	if (!fp.good()) {
-		std::cout << "Error Reading graph file\n";
-		return;
-	}
-
-	int source = 0;
-	int no_of_nodes = 0;
-	int edge_list_size = 0;
-
-	fp >> no_of_nodes;
-
 	// allocate host memory
-	std::vector<Node> h_graph_nodes(no_of_nodes);
-	std::vector<bool_t> h_graph_mask(no_of_nodes);
-	std::vector<bool_t> h_updating_graph_mask(no_of_nodes);
-	std::vector<bool_t> h_graph_visited(no_of_nodes);
+	std::vector<Node> h_graph_nodes;
+	std::vector<bool_t> h_graph_mask;
+	std::vector<bool_t> h_updating_graph_mask;
+	std::vector<bool_t> h_graph_visited;
+	std::vector<int> h_graph_edges;
 
-	int start, edgeno;
-	// initalize the memory
-	for (unsigned int i = 0; i < no_of_nodes; i++) {
-//		fscanf(fp, "%d %d", &start, &edgeno);
-		fp >> start >> edgeno;
-		h_graph_nodes[i].starting = start;
-		h_graph_nodes[i].no_of_edges = edgeno;
-		h_graph_mask[i] = FALSE;
-		h_updating_graph_mask[i] = FALSE;
-		h_graph_visited[i] = FALSE;
-	}
-
-	//read the source node from the file
-//	fscanf(fp, "%d", &source);
-	fp >> source;
-	source = 0;
-
-	//set the source node as TRUE in the mask
-	h_graph_mask[source] = TRUE;
-	h_graph_visited[source] = TRUE;
-
-	fp >> edge_list_size;
-	int id, cost;
-	std::vector<int> h_graph_edges(edge_list_size);
-	for (int i = 0; i < edge_list_size; i++) {
-		fp >> id >> cost;
-		h_graph_edges[i] = id;
-	}
-
-	fp.close();
-
-	std::cout << ("Read File\n");
-
+	int no_of_nodes, source;
+	std::tie(no_of_nodes, source) = read_input_file(h_graph_nodes, h_graph_mask, h_updating_graph_mask,
+			h_graph_visited, h_graph_edges, input_f);
 
 	int num_of_blocks = 1;
 	int num_of_threads_per_block = no_of_nodes;
@@ -134,24 +150,29 @@ void BFSGraph(std::string input_f, std::string output_f) {
 		//if no thread changes this value then the loop stops
 		stop = FALSE;
 		cudaMemcpy(d_over, &stop, sizeof(bool_t), cudaMemcpyHostToDevice);
-		Kernel<<<grid, threads, 0>>>(d_graph_nodes.data(), d_graph_edges.data(), d_graph_mask.data(),
-				d_updating_graph_mask.data(), d_graph_visited.data(), d_cost.data(), no_of_nodes);
+		Kernel<<<grid, threads, 0>>>(d_graph_nodes.data(), d_graph_edges.data(),
+				d_graph_mask.data(), d_updating_graph_mask.data(),
+				d_graph_visited.data(), d_cost.data(), no_of_nodes);
 		// check if kernel execution generated and error
 
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 
-		Kernel2<<<grid, threads, 0>>>(d_graph_mask.data(), d_updating_graph_mask.data(),
-				d_graph_visited.data(), d_over, no_of_nodes);
+		Kernel2<<<grid, threads, 0>>>(d_graph_mask.data(),
+				d_updating_graph_mask.data(), d_graph_visited.data(), d_over,
+				no_of_nodes);
 		// check if kernel execution generated and error
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 
 		cudaMemcpy(&stop, d_over, sizeof(bool_t), cudaMemcpyDeviceToHost);
 		k++;
 	} while (stop);
 
-	std::cout << "Kernel Executed "<< k << " times\n";
+	std::cout << "Kernel Executed " << k << " times\n";
 
-	rad::checkFrameworkErrors(cudaPeekAtLastError());;
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	;
 
 	// copy result from device to host
 	cudaMemcpy(h_cost.data(), d_cost.data(), sizeof(int) * no_of_nodes,
@@ -159,10 +180,8 @@ void BFSGraph(std::string input_f, std::string output_f) {
 
 	//Store the result into a file
 	std::ofstream fo(output_f);
-//	fprintf(fpo, "%d) cost:%d\n", i, h_cost[i]);
 	for (int i = 0; i < no_of_nodes; i++)
 		fo << i << ") cost:" << h_cost[i] << std::endl;
 	fo.close();
-//	fclose(fpo);
-	std::cout << "Result stored in " << output_f;
+	std::cout << "Result stored in " << output_f << std::endl;
 }
