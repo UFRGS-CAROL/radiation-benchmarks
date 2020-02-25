@@ -21,7 +21,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ= streamcluster.o streamcluster.o Parameters.o
+OBJ= streamcluster_cpu.o streamcluster_cuda.o Parameters.o
 
 
 ifeq ($(DEBUG), 1) 
