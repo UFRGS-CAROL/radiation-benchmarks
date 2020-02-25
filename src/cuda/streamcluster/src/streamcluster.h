@@ -145,9 +145,9 @@ void outcenterIDs(Points*, long*, char*);
 void streamCluster(PStream*, long, long, int, long, long, char*);
 float pgain(long, Points*, float, long int*, int, bool*, int*, bool*, bool,
 		double*, double*, double*, double*, double*, double*);
-void allocDevMem(int, int, int);
-void allocHostMem(int, int, int);
-void freeDevMem();
-void freeHostMem();
+//void allocDevMem(int, int, int);
+//void allocHostMem(int, int, int);
+//void freeDevMem();
+//void freeHostMem();
 
 #endif
