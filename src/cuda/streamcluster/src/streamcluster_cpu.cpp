@@ -631,8 +631,6 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 	if (block)
 		free(block);
 	if (points.p) {
-		if (points.p->coord)
-			free(points.p->coord);
 		free(points.p);
 	}
 
