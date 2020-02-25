@@ -38,19 +38,11 @@ typedef struct {
 } Point;
 
 /* this is the array of points */
-struct Points{
+typedef struct {
 	long num; /* number of points; may not be N if this is a sample */
 	int dim; /* dimensionality */
 	Point *p; /* the array itself */
-
-	~Points(){
-		if (this->p) {
-			if (this->p->coord)
-				free(this->p->coord);
-			free(this->p);
-		}
-	}
-} ;
+} Points;
 
 struct pkmedian_arg_t {
 	Points* points;
