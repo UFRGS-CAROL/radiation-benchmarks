@@ -21,10 +21,7 @@
 
 //using namespace std;
 
-#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a center
-static int *center_table;			//index table of centers
-static int nproc; 					//# of threads
-bool isCoordChanged;
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;
 
 // GPU Timing Info
 double serial_t;
@@ -630,6 +627,8 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 	localSearch(&centers, kmin, kmax, &kfinal);
 	contcenters(&centers);
 //	outcenterIDs(&centers, centerIDs, outfile);
+	if (block)
+		free(block);
 	return {centers, centerIDs};
 }
 
@@ -698,7 +697,6 @@ int main(int argc, char **argv) {
 
 	outcenterIDs(&pts, centerIDs, outfilename);
 
-
 	if (centerIDs) {
 		free(centerIDs);
 	}
@@ -708,6 +706,13 @@ int main(int argc, char **argv) {
 			free(pts.p->coord);
 		free(pts.p);
 	}
+
+	if (switch_membership)
+		free(switch_membership);		//whether to switch membership in pgain
+	if (is_center)
+		free(is_center);				//whether a point is a center
+	if (center_table)
+		free(center_table);			//index table of centers
 
 	printf("time = %lfs\n", t2 - t1);
 
