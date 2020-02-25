@@ -20,10 +20,10 @@
 #include "streamcluster.h"
 #include "cuda_utils.h"
 
-//using namespace std;
 
-#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;// GPU Timing Info
-double serial_t;
+#include "Parameters.h"
+
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;// GPU Timing Infodouble serial_t;
 double cpu_to_gpu_t;
 double gpu_to_cpu_t;
 double alloc_t;
@@ -543,7 +543,8 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 }
 
 std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
-		int dim, long chunksize, long centersize, char* outfile) {
+		int dim, long chunksize, long centersize) {
+//	, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
 	float* centerBlock = (float*) malloc(centersize * dim * sizeof(float));
 	long* centerIDs = (long*) malloc(centersize * dim * sizeof(long));
@@ -638,49 +639,25 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 int main(int argc, char **argv) {
 //	char *outfilename = new char[MAXNAMESIZE];
 //	char *infilename = new char[MAXNAMESIZE];
-	long kmin, kmax, n, chunksize, clustersize;
-	int dim;
-	printf("PARSEC Benchmark Suite\n");
-	fflush(NULL);
-	if (argc < 10) {
-		fprintf(stderr,
-				"usage: %s k1 k2 d n chunksize clustersize infile outfile nproc\n",
-				argv[0]);
-		fprintf(stderr, "  k1:          Min. number of centers allowed\n");
-		fprintf(stderr, "  k2:          Max. number of centers allowed\n");
-		fprintf(stderr, "  d:           Dimension of each data point\n");
-		fprintf(stderr, "  n:           Number of data points\n");
-		fprintf(stderr,
-				"  chunksize:   Number of data points to handle per step\n");
-		fprintf(stderr,
-				"  clustersize: Maximum number of intermediate centers\n");
-		fprintf(stderr, "  infile:      Input file (if n<=0)\n");
-		fprintf(stderr, "  outfile:     Output file\n");
-		fprintf(stderr, "  nproc:       Number of threads to use\n");
-		fprintf(stderr, "\n");
-		fprintf(stderr,
-				"if n > 0, points will be randomly generated instead of reading from infile.\n");
-		exit(1);
+//	long kmin, kmax, n, chunksize, clustersize;
+//	int dim;
+
+	Parameters parameters(argc, argv);
+	if (parameters.verbose) {
+		std::cout << "PARSEC Benchmark Suite\n";
+		std::cout << parameters << std::endl;
 	}
-	kmin = atoi(argv[1]);
-	kmax = atoi(argv[2]);
-	dim = atoi(argv[3]);
-	n = atoi(argv[4]);
-	chunksize = atoi(argv[5]);
-	clustersize = atoi(argv[6]);
-	std::string infilename(argv[7]);
-	std::string outfilename(argv[8]);
-	nproc = atoi(argv[9]);
+	fflush(NULL);
 
 	srand48(SEED);
 	PStream* stream;
-	if (n > 0) {
-		stream = new SimStream(n);
+	if (parameters.n > 0) {
+		stream = new SimStream(parameters.n);
 	} else {
-		stream = new FileStream(infilename.c_str());
+		stream = new FileStream(parameters.input);
 	}
 
-	for (auto i = 0; i < 100000; i++) {
+	for (auto i = 0; i < parameters.iterations; i++) {
 		double t1 = rad::mysecond();
 
 		serial_t = 0.0;
@@ -695,12 +672,13 @@ int main(int argc, char **argv) {
 		Points pts;
 
 		long *centerIDs;
-		std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim,
-				chunksize, clustersize, const_cast<char*>(outfilename.c_str()));
+		std::tie(pts, centerIDs) = streamCluster(stream, parameters.kmin,
+				parameters.kmax, parameters.dim, parameters.chunksize,
+				parameters.clustersize);
 
 		double t2 = rad::mysecond();
 
-		outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
+		outcenterIDs(&pts, centerIDs, const_cast<char*>(parameters.gold.c_str()));
 
 		if (centerIDs) {
 			free(centerIDs);

@@ -27,11 +27,19 @@ static inline void __throw_line(std::string err, std::string line, std::string f
 
 struct Parameters {
 	std::string device;
-	std::string input;
-	std::string gold;
 
 	size_t sm_count;
 	size_t iterations;
+
+
+	size_t kmin;
+	size_t kmax;
+	size_t dim;
+	size_t n;
+	size_t chunksize;
+	size_t clustersize;
+	std::string input;
+	std::string gold;
 
 	bool verbose;
 	bool debug;

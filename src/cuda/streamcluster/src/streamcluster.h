@@ -93,10 +93,10 @@ private:
 
 class FileStream: public PStream {
 public:
-	FileStream(const char* filename) {
-		fp = fopen(filename, "rb");
+	FileStream(std::string& filename) {
+		fp = fopen(filename.c_str(), "rb");
 		if (fp == NULL) {
-			fprintf(stderr, "error opening file %s\n.", filename);
+			fprintf(stderr, "error opening file %s\n.", filename.c_str());
 			exit(1);
 		}
 	}

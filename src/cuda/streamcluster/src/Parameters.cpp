@@ -15,9 +15,15 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
-	this->input = rad::find_char_arg(argc, argv, "--input",
-			"../../../data/bfs/graph1MW_6.txt");
+	this->input = rad::find_char_arg(argc, argv, "--input", "../../../data/bfs/graph1MW_6.txt");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
+	this->kmin = rad::find_int_arg(argc, argv, "--k1", 10);
+	this->kmax = rad::find_int_arg(argc, argv, "--k2", 20);
+	this->dim = rad::find_int_arg(argc, argv, "--d", 256);
+	this->n = rad::find_int_arg(argc, argv, "--d", 65536);
+	this->chunksize = rad::find_int_arg(argc, argv, "--chunksize", 65536);
+	this->clustersize = rad::find_int_arg(argc, argv, "--clustersize", 1000);
+
 
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
@@ -28,14 +34,27 @@ Parameters::Parameters(int argc, char* argv[]) {
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
 
-	if (argc < 2) {
-		throw_line("<mandatory arguments> [optional arguments]\n"
-				"Usage: ./" + std::string(argv[0]) + " --input <specify data file name>"
-				" --gold [GOLD path]"
-				" --iterations [#iteractions]"
-				" [--verbose] [--debug]");
-	}
+	if (argc < 10) {
+		std::string error = "usage: ./" + std::string(argv[0]);
+		error +=
+				" --k1 <k1> --k2 <k2> --d <d> --n <n> --chunksize <chunksize> "
+				"--clustersize <clsize> --input <input file> --gold <gold>\n";
+		error += "  k1:          Min. number of centers allowed\n";
+		error += "  k2:          Max. number of centers allowed\n";
+		error += "  d:           Dimension of each data point\n";
+		error += "  n:           Number of data points\n";
+		error += "  chunksize:   Number of data points to handle per step\n";
+		error += "  clustersize: Maximum number of intermediate centers\n";
+		error += "  input:      Input file (if n<=0)\n";
+		error += "  gold:       Output file\n";
+		error += "  iterations: are radiation test iterations\n";
+		error += "--generate, --debug and --verbose are optional";
 
+		error +=
+				"if n > 0 and --generate is not given, points will be"
+				" randomly generated instead of reading from infile.\n";
+		throw_line()
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
