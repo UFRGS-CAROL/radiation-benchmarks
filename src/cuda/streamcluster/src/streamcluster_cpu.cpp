@@ -525,7 +525,7 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 		fprintf(stderr, "error opening %s\n", outfile);
 		exit(1);
 	}
-	int* is_a_median = (int*) calloc(sizeof(int), centers->num);
+	std::vector<int> is_a_median(centers->num, 0);
 	for (int i = 0; i < centers->num; i++) {
 		is_a_median[centers->p[i].assign] = 1;
 	}
