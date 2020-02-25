@@ -23,6 +23,7 @@
 //using namespace std;
 
 #define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;
+
 // GPU Timing Info
 double serial_t;
 double cpu_to_gpu_t;
@@ -543,7 +544,7 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-void freePoints(Points& pts) {
+void freePoints(Points& pts){
 	if (pts.p) {
 		if (pts.p->coord)
 			free(pts.p->coord);
@@ -687,44 +688,42 @@ int main(int argc, char **argv) {
 		stream = new FileStream(infilename.c_str());
 	}
 
-	for (auto i = 0; i < 1000000; i++) {
+	double t1 = rad::mysecond();
 
-		double t1 = rad::mysecond();
+	serial_t = 0.0;
+	cpu_to_gpu_t = 0.0;
+	gpu_to_cpu_t = 0.0;
+	alloc_t = 0.0;
+	free_t = 0.0;
+	kernel_t = 0.0;
 
-		serial_t = 0.0;
-		cpu_to_gpu_t = 0.0;
-		gpu_to_cpu_t = 0.0;
-		alloc_t = 0.0;
-		free_t = 0.0;
-		kernel_t = 0.0;
+	isCoordChanged = false;
 
-		isCoordChanged = false;
+	Points pts;
 
-		Points pts;
+	long *centerIDs;
+	std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim, chunksize,
+			clustersize, const_cast<char*>(outfilename.c_str()));
 
-		long *centerIDs;
-		std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim,
-				chunksize, clustersize, const_cast<char*>(outfilename.c_str()));
+	double t2 = rad::mysecond();
 
-		double t2 = rad::mysecond();
+	outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
 
-		outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
-
-		if (centerIDs) {
-			free(centerIDs);
-		}
-
-		freePoints(pts);
-
-		if (switch_membership)
-			free(switch_membership);	//whether to switch membership in pgain
-		if (is_center)
-			free(is_center);				//whether a point is a center
-		if (center_table)
-			free(center_table);			//index table of centers
-
-		std::cout << "Iteration " << i << " time = " <<  t2 - t1 << std::endl;
+	if (centerIDs) {
+		free(centerIDs);
 	}
+
+	freePoints(pts);
+
+	if (switch_membership)
+		free(switch_membership);		//whether to switch membership in pgain
+	if (is_center)
+		free(is_center);				//whether a point is a center
+	if (center_table)
+		free(center_table);			//index table of centers
+
+	printf("time = %lfs\n", t2 - t1);
+
 	delete stream;
 
 	return 0;
