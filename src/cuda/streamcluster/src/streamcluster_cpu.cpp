@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <tuple>
+#include <string>
 
 #include "streamcluster.h"
 #include "cuda_utils.h"
@@ -633,8 +634,8 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 }
 
 int main(int argc, char **argv) {
-	char *outfilename = new char[MAXNAMESIZE];
-	char *infilename = new char[MAXNAMESIZE];
+//	char *outfilename = new char[MAXNAMESIZE];
+//	char *infilename = new char[MAXNAMESIZE];
 	long kmin, kmax, n, chunksize, clustersize;
 	int dim;
 	printf("PARSEC Benchmark Suite\n");
@@ -665,8 +666,8 @@ int main(int argc, char **argv) {
 	n = atoi(argv[4]);
 	chunksize = atoi(argv[5]);
 	clustersize = atoi(argv[6]);
-	strcpy(infilename, argv[7]);
-	strcpy(outfilename, argv[8]);
+	std::string infilename(argv[7]);
+	std::string outfilename(argv[8]);
 	nproc = atoi(argv[9]);
 
 	srand48(SEED);
@@ -674,7 +675,7 @@ int main(int argc, char **argv) {
 	if (n > 0) {
 		stream = new SimStream(n);
 	} else {
-		stream = new FileStream(infilename);
+		stream = new FileStream(infilename.c_str());
 	}
 
 	double t1 = rad::mysecond();
@@ -689,13 +690,14 @@ int main(int argc, char **argv) {
 	isCoordChanged = false;
 
 	Points pts;
+
 	long *centerIDs;
 	std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim, chunksize,
-			clustersize, outfilename);
+			clustersize, const_cast<char*>(outfilename.c_str()));
 
 	double t2 = rad::mysecond();
 
-	outcenterIDs(&pts, centerIDs, outfilename);
+	outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
 
 	if (centerIDs) {
 		free(centerIDs);

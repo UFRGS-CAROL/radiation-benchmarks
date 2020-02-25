@@ -93,7 +93,7 @@ private:
 
 class FileStream: public PStream {
 public:
-	FileStream(char* filename) {
+	FileStream(const char* filename) {
 		fp = fopen(filename, "rb");
 		if (fp == NULL) {
 			fprintf(stderr, "error opening file %s\n.", filename);
