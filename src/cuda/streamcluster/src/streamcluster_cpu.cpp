@@ -13,14 +13,15 @@
 
  ***********************************************/
 
+#include <vector>
+#include <tuple>
+
 #include "streamcluster.h"
+#include "cuda_utils.h"
 
-using namespace std;
+//using namespace std;
 
-#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function
-#define CACHE_LINE 512				// cache line in byte// GLOBAL
-static bool *switch_membership;		//whether to switch membership in pgain
-static bool *is_center;				//whether a point is a center
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a center
 static int *center_table;			//index table of centers
 static int nproc; 					//# of threads
 bool isCoordChanged;
@@ -33,17 +34,10 @@ double alloc_t;
 double kernel_t;
 double free_t;
 
-
 void inttofile(int data, char *filename) {
 	FILE *fp = fopen(filename, "w");
 	fprintf(fp, "%d ", data);
 	fclose(fp);
-}
-
-double gettime() {
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return t.tv_sec + t.tv_usec * 1e-6;
 }
 
 int isIdentical(float *i, float *j, int D) {
@@ -64,18 +58,6 @@ int isIdentical(float *i, float *j, int D) {
 		return 0;
 
 }
-
-///* comparator for floating point numbers */
-//static int floatcomp(const void *i, const void *j) {
-//	float a, b;
-//	a = *(float *) (i);
-//	b = *(float *) (j);
-//	if (a > b)
-//		return (1);
-//	if (a < b)
-//		return (-1);
-//	return (0);
-//}
 
 /* shuffle points into random order */
 void shuffle(Points *points) {
@@ -337,7 +319,6 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 	if (pid == nproc - 1)
 		k2 = points->num;
 
-
 	float myhiz = 0;
 	for (long kk = k1; kk < k2; kk++) {
 		myhiz += dist(points->p[kk], points->p[0], ptDimension)
@@ -554,7 +535,7 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 
 	for (int i = 0; i < centers->num; i++) {
 		if (is_a_median[i]) {
-			fprintf(fp, "%u\n", centerIDs[i]);
+			fprintf(fp, "%ld\n", centerIDs[i]);
 			fprintf(fp, "%lf\n", centers->p[i].weight);
 			for (int k = 0; k < centers->dim; k++) {
 				fprintf(fp, "%lf ", centers->p[i].coord[k]);
@@ -565,8 +546,8 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-void streamCluster(PStream* stream, long kmin, long kmax, int dim,
-		long chunksize, long centersize, char* outfile) {
+std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
+		int dim, long chunksize, long centersize, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
 	float* centerBlock = (float*) malloc(centersize * dim * sizeof(float));
 	long* centerIDs = (long*) malloc(centersize * dim * sizeof(long));
@@ -599,7 +580,7 @@ void streamCluster(PStream* stream, long kmin, long kmax, int dim,
 	while (1) {
 
 		size_t numRead = stream->read(block, dim, chunksize);
-		fprintf(stderr, "read %d points\n", numRead);
+		fprintf(stderr, "read %lu points\n", numRead);
 
 		if (stream->ferror()
 				|| numRead < (unsigned int) chunksize && !stream->feof()) {
@@ -648,7 +629,8 @@ void streamCluster(PStream* stream, long kmin, long kmax, int dim,
 
 	localSearch(&centers, kmin, kmax, &kfinal);
 	contcenters(&centers);
-	outcenterIDs(&centers, centerIDs, outfile);
+//	outcenterIDs(&centers, centerIDs, outfile);
+	return {centers, centerIDs};
 }
 
 int main(int argc, char **argv) {
@@ -696,7 +678,7 @@ int main(int argc, char **argv) {
 		stream = new FileStream(infilename);
 	}
 
-	double t1 = gettime();
+	double t1 = rad::mysecond();
 
 	serial_t = 0.0;
 	cpu_to_gpu_t = 0.0;
@@ -707,12 +689,25 @@ int main(int argc, char **argv) {
 
 	isCoordChanged = false;
 
-	streamCluster(stream, kmin, kmax, dim, chunksize, clustersize, outfilename);
+	Points pts;
+	long *centerIDs;
+	std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim, chunksize,
+			clustersize, outfilename);
 
-//	freeDevMem();
-//	freeHostMem();
+	double t2 = rad::mysecond();
 
-	double t2 = gettime();
+	outcenterIDs(&pts, centerIDs, outfilename);
+
+
+	if (centerIDs) {
+		free(centerIDs);
+	}
+
+	if (pts.p) {
+		if (pts.p->coord)
+			free(pts.p->coord);
+		free(pts.p);
+	}
 
 	printf("time = %lfs\n", t2 - t1);
 

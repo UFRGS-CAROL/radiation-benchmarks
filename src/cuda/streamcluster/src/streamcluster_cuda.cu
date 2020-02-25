@@ -21,29 +21,7 @@
 #include "cuda_utils.h"
 #include "streamcluster.h"
 
-//using namespace std;
-
-//// AUTO-ERROR CHECK FOR ALL CUDA FUNCTIONS
-//#define CUDA_SAFE_CALL( call) do {										\
-//   cudaError err = call;												\
-//   if( cudaSuccess != err) {											\
-//       fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",	\
-//               __FILE__, __LINE__, cudaGetErrorString( err) );			\
-//   exit(EXIT_FAILURE);													\
-//   } } while (0)
-
-#define THREADS_PER_BLOCK 1024 //512#define MAXBLOCKS 65536//#define CUDATIME
-//// host memory
-//float *work_mem_h;
-//float *coord_h;
-//
-//// device memory
-//float *work_mem_d;
-//float *coord_d;
-//int *center_table_d;
-//bool *switch_membership_d;
-//Point *p;
-
+#define THREADS_PER_BLOCK 1024 //512#define MAXBLOCKS 65536
 //=======================================
 // Euclidean Distance
 //=======================================
@@ -83,41 +61,6 @@ __global__ void kernel_compute_cost(int num, int dim, long x, Point *p, int K,
 		}
 	}
 }
-//
-////=======================================
-//// Allocate Device Memory
-////=======================================
-//void allocDevMem(int num, int dim) {
-//	rad::checkFrameworkErrors(cudaMalloc((void** ) &center_table_d, num * sizeof(int)));
-//	rad::checkFrameworkErrors(
-//			cudaMalloc((void** ) &switch_membership_d, num * sizeof(bool)));
-//	rad::checkFrameworkErrors(cudaMalloc((void** ) &p, num * sizeof(Point)));
-//	rad::checkFrameworkErrors(cudaMalloc((void** ) &coord_d, num * dim * sizeof(float)));
-//}
-//
-////=======================================
-//// Allocate Host Memory
-////=======================================
-//void allocHostMem(int num, int dim) {
-//	coord_h = (float*) malloc(num * dim * sizeof(float));
-//}
-//
-////=======================================
-//// Free Device Memory
-////=======================================
-//void freeDevMem() {
-//	rad::checkFrameworkErrors(cudaFree(center_table_d));
-//	rad::checkFrameworkErrors(cudaFree(switch_membership_d));
-//	rad::checkFrameworkErrors(cudaFree(p));
-//	rad::checkFrameworkErrors(cudaFree(coord_d));
-//}
-//
-////=======================================
-//// Free Host Memory
-////=======================================
-//void freeHostMem() {
-//	free(coord_h);
-//}
 
 //=======================================
 // pgain Entry - CUDA SETUP + CUDA CALL

@@ -28,12 +28,6 @@
 
 #include <cuda.h>
 
-#ifdef ENABLE_PARSEC_HOOKS
-#include <hooks.h>
-#endif
-
-using namespace std;
-
 /* this structure represents a point */
 /* these will be passed around to avoid copying coordinates */
 typedef struct {
@@ -124,25 +118,23 @@ private:
 };
 
 /* function prototypes */
-double gettime();
-int isIdentical(float*, float*, int);
-//static int floatcomp(const void*, const void*);
-void shuffle(Points*);
-void intshuffle(int*, int);
-float waste(float);
+//int isIdentical(float*, float*, int);
+//void shuffle(Points*);
+//void intshuffle(int*, int);
+//float waste(float);
 float dist(Point, Point, int);
-float pspeedy(Points*, float, long, int, pthread_barrier_t*);
-float pgain_old(long, Points*, float, long int*, int, pthread_barrier_t*);
-float pFL(Points*, int*, int, float, long*, float, long, float, int,
-		pthread_barrier_t*);
-int selectfeasible_fast(Points*, int**, int, int, pthread_barrier_t*);
-float pkmedian(Points*, long, long, long*, int, pthread_barrier_t*);
-int contcenters(Points*);
-void copycenters(Points*, Points*, long*, long);
-void* localSearchSub(void*);
-void localSearch(Points*, long, long, long*);
-void outcenterIDs(Points*, long*, char*);
-void streamCluster(PStream*, long, long, int, long, long, char*);
+//float pspeedy(Points*, float, long, int, pthread_barrier_t*);
+//float pgain_old(long, Points*, float, long int*, int, pthread_barrier_t*);
+//float pFL(Points*, int*, int, float, long*, float, long, float, int,
+//		pthread_barrier_t*);
+//int selectfeasible_fast(Points*, int**, int, int, pthread_barrier_t*);
+//float pkmedian(Points*, long, long, long*, int, pthread_barrier_t*);
+//int contcenters(Points*);
+//void copycenters(Points*, Points*, long*, long);
+//void* localSearchSub(void*);
+//void localSearch(Points*, long, long, long*);
+//void outcenterIDs(Points*, long*, char*);
+//void streamCluster(PStream*, long, long, int, long, long, char*);
 float pgain(long, Points*, float, long int*, int, bool*, int*, bool*, bool,
 		double*, double*, double*, double*, double*, double*);
 
