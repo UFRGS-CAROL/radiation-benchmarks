@@ -35,7 +35,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->sm_count = dev_prop.multiProcessorCount;
 
 	if (argc < 10) {
-		std::string error = "usage: ./" + std::string(argv[0]);
+		std::string error = "usage: " + std::string(argv[0]);
 		error +=
 				" --k1 <k1> --k2 <k2> --d <d> --n <n> --chunksize <chunksize> "
 				"--clustersize <clsize> --input <input file> --gold <gold>\n";
@@ -48,7 +48,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 		error += "  input:      Input file (if n<=0)\n";
 		error += "  gold:       Output file\n";
 		error += "  iterations: are radiation test iterations\n";
-		error += "--generate, --debug and --verbose are optional";
+		error += "--generate, --debug and --verbose are optional\n";
 
 		error +=
 				"if n > 0 and --generate is not given, points will be"

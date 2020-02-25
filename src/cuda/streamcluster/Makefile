@@ -5,7 +5,8 @@ LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
 GOLD=./gold.data
-INPUT= ../../../data/bfs/graph1MW_6.txt
+INPUT=./input.data
+DIMSIZE=1024
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -67,9 +68,15 @@ clean:
 	
 
 generate:
-	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
+	./$(EXEC) --k1 10 --k2 10 --d $(DIMSIZE) --n 65536 \
+			  --chunksize 65536 --clustersize 1000 \
+			  --input $(INPUT) --gold $(GOLD) --generate --verbose
+
 	
 test:
-	./$(EXEC) 10 20 256 65536 65536 1000 none output.txt 1
+	./$(EXEC) --k1 10 --k2 10 --d $(DIMSIZE) --n 65536 \
+			  --chunksize 65536 --clustersize 1000 \
+			  --input $(INPUT) --gold $(GOLD) \
+			  --generate --verbose --iterations 10
 
 	
