@@ -544,14 +544,6 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-void freePoints(Points& pts){
-	if (pts.p) {
-		if (pts.p->coord)
-			free(pts.p->coord);
-		free(pts.p);
-	}
-}
-
 std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 		int dim, long chunksize, long centersize, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
@@ -638,8 +630,6 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 //	outcenterIDs(&centers, centerIDs, outfile);
 	if (block)
 		free(block);
-
-	freePoints(points);
 	return {centers, centerIDs};
 }
 
@@ -713,7 +703,11 @@ int main(int argc, char **argv) {
 		free(centerIDs);
 	}
 
-	freePoints(pts);
+	if (pts.p) {
+		if (pts.p->coord)
+			free(pts.p->coord);
+		free(pts.p);
+	}
 
 	if (switch_membership)
 		free(switch_membership);		//whether to switch membership in pgain
