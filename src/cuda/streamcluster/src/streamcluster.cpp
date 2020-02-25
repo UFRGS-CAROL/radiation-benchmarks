@@ -1,79 +1,41 @@
-//Copyright (c) 2006-2009 Princeton University
-//All rights reserved.
+/***********************************************
+ streamcluster.cpp
+ : original source code of streamcluster with minor
+ modification regarding function calls
 
-//Redistribution and use in source and binary forms, with or without
-//modification, are permitted provided that the following conditions are met:
-//    * Redistributions of source code must retain the above copyright
-//      notice, this list of conditions and the following disclaimer.
-//    * Redistributions in binary form must reproduce the above copyright
-//      notice, this list of conditions and the following disclaimer in the
-//      documentation and/or other materials provided with the distribution.
-//    * Neither the name of Princeton University nor the
-//      names of its contributors may be used to endorse or promote products
-//      derived from this software without specific prior written permission.
+ - original code from PARSEC Benchmark Suite
+ - parallelization with CUDA API has been applied by
 
-//THIS SOFTWARE IS PROVIDED BY PRINCETON UNIVERSITY ``AS IS'' AND ANY
-//EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//DISCLAIMED. IN NO EVENT SHALL PRINCETON UNIVERSITY BE LIABLE FOR ANY
-//DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ Sang-Ha (a.k.a Shawn) Lee - sl4ge@virginia.edu
+ University of Virginia
+ Department of Electrical and Computer Engineering
+ Department of Computer Science
 
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <sys/resource.h>
-#include <limits.h>
+ ***********************************************/
 
-#ifdef ENABLE_PARSEC_HOOKS
-#include <hooks.h>
-#endif
+#include "streamcluster.h"
 
 using namespace std;
 
-#define MAXNAMESIZE 1024 // max filename length#define SEED 1
-/* increase this to reduce probability of random error */
-/* increasing it also ups running time of "speedy" part of the code */
-/* SP = 1 seems to be fine */
-#define SP 1 // number of repetitions of speedy must be >=1
-/* higher ITER --> more likely to get correct # of centers */
-/* higher ITER also scales the running time almost linearly */
-#define ITER 3 // iterate ITER* k log k times; ITER >= 1
-//#define PRINTINFO //comment this out to disable output
-#define PROFILE // comment this out to disable instrumentation code//#define ENABLE_THREADS  // comment this out to disable threads
-//#define INSERT_WASTE //uncomment this to insert waste computation into dist function
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1
+#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define PRINTINFO 				// Enables printing output
+#define PROFILE 					// Enables timing info//#define ENABLE_THREADS			// Enables parallel execution
+//#define INSERT_WASTE				// Enables waste computation in dist function
+#define CACHE_LINE 512				// cache line in byte
+// GLOBAL
+static bool *switch_membership;		//whether to switch membership in pgain
+static bool *is_center;				//whether a point is a center
+static int *center_table;			//index table of centers
+static int nproc; 					//# of threads
+bool isCoordChanged;
 
-#define CACHE_LINE 512 // cache line in byte
-/* this structure represents a point */
-/* these will be passed around to avoid copying coordinates */
-typedef struct {
-	float weight;
-	float *coord;
-	long assign; /* number of point where this one is assigned */
-	float cost; /* cost of that assignment, weight*distance */
-} Point;
-
-/* this is the array of points */
-typedef struct {
-	long num; /* number of points; may not be N if this is a sample */
-	int dim; /* dimensionality */
-	Point *p; /* the array itself */
-} Points;
-
-static bool *switch_membership; //whether to switch membership in pgain
-static bool* is_center; //whether a point is a center
-static int* center_table; //index table of centers
-
-static int nproc; //# of threads
+// GPU Timing Info
+double serial_t;
+double cpu_to_gpu_t;
+double gpu_to_cpu_t;
+double alloc_t;
+double kernel_t;
+double free_t;
 
 // instrumentation code
 #ifdef PROFILE
@@ -86,15 +48,21 @@ double time_gain_dist;
 double time_gain_init;
 #endif 
 
+void inttofile(int data, char *filename) {
+	FILE *fp = fopen(filename, "w");
+	fprintf(fp, "%d ", data);
+	fclose(fp);
+}
+
 double gettime() {
 	struct timeval t;
 	gettimeofday(&t, NULL);
-	return (double) t.tv_sec + t.tv_usec * 1e-6;
+	return t.tv_sec + t.tv_usec * 1e-6;
 }
 
-int isIdentical(float *i, float *j, int D)
+int isIdentical(float *i, float *j, int D) {
 // tells whether two points of D dimensions are identical
-		{
+
 	int a = 0;
 	int equal = 1;
 
@@ -162,7 +130,7 @@ void intshuffle(int *intarray, int length) {
 }
 
 #ifdef INSERT_WASTE
-double waste(double s )
+float waste(float s )
 {
 	for( int i =0; i< 4; i++ ) {
 		s += pow(s,0.78);
@@ -178,7 +146,7 @@ float dist(Point p1, Point p2, int dim) {
 	for (i = 0; i < dim; i++)
 		result += (p1.coord[i] - p2.coord[i]) * (p1.coord[i] - p2.coord[i]);
 #ifdef INSERT_WASTE
-	double s = waste(result);
+	float s = waste(result);
 	result += s;
 	result -= s;
 #endif
@@ -202,10 +170,10 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 	if (pid == nproc - 1)
 		k2 = points->num;
 
-	static double totalcost;
+	static float totalcost;
 
 	static bool open = false;
-	static double* costs; //cost for each thread.
+	static float* costs; //cost for each thread.
 	static int i;
 
 #ifdef ENABLE_THREADS
@@ -228,7 +196,7 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 
 	if (pid == 0) {
 		*kcenter = 1;
-		costs = (double*) malloc(sizeof(double) * nproc);
+		costs = (float*) malloc(sizeof(float) * nproc);
 	}
 
 	if (pid != 0) { // we are not the master threads. we wait until a center is opened.
@@ -296,7 +264,7 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 	pthread_barrier_wait(barrier);
 #endif
 	open = false;
-	double mytotal = 0;
+	float mytotal = 0;
 	for (int k = k1; k < k2; k++) {
 		mytotal += points->p[k].cost;
 	}
@@ -334,255 +302,6 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 	return (totalcost);
 }
 
-/* For a given point x, find the cost of the following operation:
- * -- open a facility at x if there isn't already one there,
- * -- for points y such that the assignment distance of y exceeds dist(y, x),
- *    make y a member of x,
- * -- for facilities y such that reassigning y and all its members to x 
- *    would save cost, realize this closing and reassignment.
- * 
- * If the cost of this operation is negative (i.e., if this entire operation
- * saves cost), perform this operation and return the amount of cost saved;
- * otherwise, do nothing.
- */
-
-/* numcenters will be updated to reflect the new number of centers */
-/* z is the facility cost, x is the number of this point in the array 
- points */
-
-double pgain(long x, Points *points, double z, long int *numcenters, int pid,
-		pthread_barrier_t* barrier) {
-	//  printf("pgain pthread %d begin\n",pid);
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-#ifdef PROFILE
-	double t0 = gettime();
-#endif
-
-	//my block
-	long bsize = points->num / nproc;
-	long k1 = bsize * pid;
-	long k2 = k1 + bsize;
-	if (pid == nproc - 1)
-		k2 = points->num;
-
-	int i;
-	int number_of_centers_to_close = 0;
-
-	static double *work_mem;
-	static double gl_cost_of_opening_x;
-	static int gl_number_of_centers_to_close;
-
-	//each thread takes a block of working_mem.
-	int stride = *numcenters + 2;
-	//make stride a multiple of CACHE_LINE
-	int cl = CACHE_LINE / sizeof(double);
-	if (stride % cl != 0) {
-		stride = cl * (stride / cl + 1);
-	}
-	int K = stride - 2; // K==*numcenters
-
-	//my own cost of opening x
-	double cost_of_opening_x = 0;
-
-	if (pid == 0) {
-		work_mem = (double*) malloc(stride * (nproc + 1) * sizeof(double));
-		gl_cost_of_opening_x = 0;
-		gl_number_of_centers_to_close = 0;
-	}
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-	/*For each center, we have a *lower* field that indicates
-	 how much we will save by closing the center.
-	 Each thread has its own copy of the *lower* fields as an array.
-	 We first build a table to index the positions of the *lower* fields.
-	 */
-
-	int count = 0;
-	for (int i = k1; i < k2; i++) {
-		if (is_center[i]) {
-			center_table[i] = count++;
-		}
-	}
-	work_mem[pid * stride] = count;
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-
-	if (pid == 0) {
-		int accum = 0;
-		for (int p = 0; p < nproc; p++) {
-			int tmp = (int) work_mem[p * stride];
-			work_mem[p * stride] = accum;
-			accum += tmp;
-		}
-	}
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-
-	for (int i = k1; i < k2; i++) {
-		if (is_center[i]) {
-			center_table[i] += (int) work_mem[pid * stride];
-		}
-	}
-
-	//now we finish building the table. clear the working memory.
-	memset(switch_membership + k1, 0, (k2 - k1) * sizeof(bool));
-	memset(work_mem + pid * stride, 0, stride * sizeof(double));
-	if (pid == 0)
-		memset(work_mem + nproc * stride, 0, stride * sizeof(double));
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-#ifdef PROFILE
-	double t1 = gettime();
-	if (pid == 0)
-		time_gain_init += t1 - t0;
-#endif
-	//my *lower* fields
-	double* lower = &work_mem[pid * stride];
-	//global *lower* fields
-	double* gl_lower = &work_mem[nproc * stride];
-
-	for (i = k1; i < k2; i++) {
-		float x_cost = dist(points->p[i], points->p[x], points->dim)
-				* points->p[i].weight;
-		float current_cost = points->p[i].cost;
-
-		if (x_cost < current_cost) {
-
-			// point i would save cost just by switching to x
-			// (note that i cannot be a median,
-			// or else dist(p[i], p[x]) would be 0)
-
-			switch_membership[i] = 1;
-			cost_of_opening_x += x_cost - current_cost;
-
-		} else {
-
-			// cost of assigning i to x is at least current assignment cost of i
-
-			// consider the savings that i's **current** median would realize
-			// if we reassigned that median and all its members to x;
-			// note we've already accounted for the fact that the median
-			// would save z by closing; now we have to subtract from the savings
-			// the extra cost of reassigning that median and its members
-			int assign = points->p[i].assign;
-			lower[center_table[assign]] += current_cost - x_cost;
-		}
-	}
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-
-#ifdef PROFILE
-	double t2 = gettime();
-	if (pid == 0) {
-		time_gain_dist += t2 - t1;
-	}
-#endif
-
-	// at this time, we can calculate the cost of opening a center
-	// at x; if it is negative, we'll go through with opening it
-
-	for (int i = k1; i < k2; i++) {
-		if (is_center[i]) {
-			double low = z;
-			//aggregate from all threads
-			for (int p = 0; p < nproc; p++) {
-				low += work_mem[center_table[i] + p * stride];
-			}
-			gl_lower[center_table[i]] = low;
-			if (low > 0) {
-				// i is a median, and
-				// if we were to open x (which we still may not) we'd close i
-
-				// note, we'll ignore the following quantity unless we do open x
-				++number_of_centers_to_close;
-				cost_of_opening_x -= low;
-			}
-		}
-	}
-	//use the rest of working memory to store the following
-	work_mem[pid * stride + K] = number_of_centers_to_close;
-	work_mem[pid * stride + K + 1] = cost_of_opening_x;
-
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-	//  printf("thread %d cost complete\n",pid);
-
-	if (pid == 0) {
-		gl_cost_of_opening_x = z;
-		//aggregate
-		for (int p = 0; p < nproc; p++) {
-			gl_number_of_centers_to_close += (int) work_mem[p * stride + K];
-			gl_cost_of_opening_x += work_mem[p * stride + K + 1];
-		}
-	}
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-	// Now, check whether opening x would save cost; if so, do it, and
-	// otherwise do nothing
-
-	if (gl_cost_of_opening_x < 0) {
-		//  we'd save money by opening x; we'll do it
-		for (int i = k1; i < k2; i++) {
-			bool close_center = gl_lower[center_table[points->p[i].assign]] > 0;
-			if (switch_membership[i] || close_center) {
-				// Either i's median (which may be i itself) is closing,
-				// or i is closer to x than to its current median
-				points->p[i].cost = points->p[i].weight
-						* dist(points->p[i], points->p[x], points->dim);
-				points->p[i].assign = x;
-			}
-		}
-		for (int i = k1; i < k2; i++) {
-			if (is_center[i] && gl_lower[center_table[i]] > 0) {
-				is_center[i] = false;
-			}
-		}
-		if (x >= k1 && x < k2) {
-			is_center[x] = true;
-		}
-		//    pthread_barrier_wait(barrier);
-
-		if (pid == 0) {
-			*numcenters = *numcenters + 1 - gl_number_of_centers_to_close;
-		}
-	} else {
-		if (pid == 0)
-			gl_cost_of_opening_x = 0;  // the value we'll return
-	}
-#ifdef ENABLE_THREADS
-	pthread_barrier_wait(barrier);
-#endif
-	if (pid == 0) {
-		free(work_mem);
-		//    free(is_center);
-		//    free(switch_membership);
-		//    free(proc_cost_of_opening_x);
-		//    free(proc_number_of_centers_to_close);
-	}
-
-#ifdef PROFILE
-	double t3 = gettime();
-	if (pid == 0)
-		time_gain += t3 - t0;
-#endif
-
-	return -gl_cost_of_opening_x;
-}
-
 /* facility location on the points using local search */
 /* z is the facility cost, returns the total cost and # of centers */
 /* assumes we are seeded with a reasonable solution */
@@ -591,13 +310,14 @@ double pgain(long x, Points *points, double z, long int *numcenters, int pid,
 /* feasible is an array of numfeasible points which may be centers */
 
 float pFL(Points *points, int *feasible, int numfeasible, float z, long *k,
-		double cost, long iter, float e, int pid, pthread_barrier_t* barrier) {
+		int kmax, float cost, long iter, float e, int pid,
+		pthread_barrier_t* barrier) {
 #ifdef ENABLE_THREADS
 	pthread_barrier_wait(barrier);
 #endif
 	long i;
 	long x;
-	double change;
+	float change;
 	long numberOfPoints;
 
 	change = cost;
@@ -617,7 +337,9 @@ float pFL(Points *points, int *feasible, int numfeasible, float z, long *k,
 
 		for (i = 0; i < iter; i++) {
 			x = i % numfeasible;
-			change += pgain(feasible[x], points, z, k, pid, barrier);
+			change += pgain(feasible[x], points, z, k, kmax, is_center,
+					center_table, switch_membership, isCoordChanged, &serial_t,
+					&cpu_to_gpu_t, &gpu_to_cpu_t, &alloc_t, &kernel_t, &free_t);
 		}
 
 		cost -= change;
@@ -641,8 +363,8 @@ int selectfeasible_fast(Points *points, int **feasible, int kmin, int pid,
 #endif
 
 	int numfeasible = points->num;
-	if (numfeasible > (ITER * kmin * log((double) kmin)))
-		numfeasible = (int) (ITER * kmin * log((double) kmin));
+	if (numfeasible > (ITER * kmin * log((float) kmin)))
+		numfeasible = (int) (ITER * kmin * log((float) kmin));
 	*feasible = (int *) malloc(numfeasible * sizeof(int));
 
 	float* accumweight;
@@ -712,17 +434,17 @@ int selectfeasible_fast(Points *points, int **feasible, int kmin, int pid,
 float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 		pthread_barrier_t* barrier) {
 	int i;
-	double cost;
-	double lastcost;
-	double hiz, loz, z;
+	float cost;
+	float lastcost;
+	float hiz, loz, z;
 
 	static long k;
 	static int *feasible;
 	static int numfeasible;
-	static double* hizs;
+	static float* hizs;
 
 	if (pid == 0)
-		hizs = (double*) calloc(nproc, sizeof(double));
+		hizs = (float*) calloc(nproc, sizeof(float));
 	hiz = loz = 0.0;
 	long numberOfPoints = points->num;
 	long ptDimension = points->dim;
@@ -746,7 +468,7 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 	pthread_barrier_wait(barrier);
 #endif
 
-	double myhiz = 0;
+	float myhiz = 0;
 	for (long kk = k1; kk < k2; kk++) {
 		myhiz += dist(points->p[kk], points->p[0], ptDimension)
 				* points->p[kk].weight;
@@ -834,6 +556,7 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 #endif
 
 	while (1) {
+
 #ifdef PRINTINFO
 		if( pid==0 )
 		{
@@ -844,8 +567,8 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 		/* first get a rough estimate on the FL solution */
 		//    pthread_barrier_wait(barrier);
 		lastcost = cost;
-		cost = pFL(points, feasible, numfeasible, z, &k, cost,
-				(long) (ITER * kmax * log((double) kmax)), 0.1, pid, barrier);
+		cost = pFL(points, feasible, numfeasible, z, &k, kmax, cost,
+				(long) (ITER * kmax * log((float) kmax)), 0.1, pid, barrier);
 
 		/* if number of centers seems good, try a more accurate FL */
 		if (((k <= (1.1) * kmax) && (k >= (0.9) * kmin))
@@ -859,8 +582,9 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 #endif
 			/* may need to run a little longer here before halting without
 			 improvement */
-			cost = pFL(points, feasible, numfeasible, z, &k, cost,
-					(long) (ITER * kmax * log((double) kmax)), 0.001, pid,
+
+			cost = pFL(points, feasible, numfeasible, z, &k, kmax, cost,
+					(long) (ITER * kmax * log((float) kmax)), 0.001, pid,
 					barrier);
 		}
 
@@ -953,17 +677,7 @@ void copycenters(Points *points, Points* centers, long* centerIDs,
 	free(is_a_median);
 }
 
-struct pkmedian_arg_t {
-	Points* points;
-	long kmin;
-	long kmax;
-	long* kfinal;
-	int pid;
-	pthread_barrier_t* barrier;
-};
-
 void* localSearchSub(void* arg_) {
-
 	pkmedian_arg_t* arg = (pkmedian_arg_t*) arg_;
 	pkmedian(arg->points, arg->kmin, arg->kmax, arg->kfinal, arg->pid,
 			arg->barrier);
@@ -1016,70 +730,6 @@ void localSearch(Points* points, long kmin, long kmax, long* kfinal) {
 #endif
 
 }
-
-class PStream {
-public:
-	virtual size_t read(float* dest, int dim, int num) = 0;
-	virtual int ferror() = 0;
-	virtual int feof() = 0;
-	virtual ~PStream() {
-	}
-};
-
-//synthetic stream
-class SimStream: public PStream {
-public:
-	SimStream(long n_) {
-		n = n_;
-	}
-	size_t read(float* dest, int dim, int num) {
-		size_t count = 0;
-		for (int i = 0; i < num && n > 0; i++) {
-			for (int k = 0; k < dim; k++) {
-				dest[i * dim + k] = lrand48() / (float) INT_MAX;
-			}
-			n--;
-			count++;
-		}
-		return count;
-	}
-	int ferror() {
-		return 0;
-	}
-	int feof() {
-		return n <= 0;
-	}
-	~SimStream() {
-	}
-private:
-	long n;
-};
-
-class FileStream: public PStream {
-public:
-	FileStream(char* filename) {
-		fp = fopen(filename, "rb");
-		if (fp == NULL) {
-			fprintf(stderr, "error opening file %s\n.", filename);
-			exit(1);
-		}
-	}
-	size_t read(float* dest, int dim, int num) {
-		return std::fread(dest, sizeof(float) * dim, num, fp);
-	}
-	int ferror() {
-		return std::ferror(fp);
-	}
-	int feof() {
-		return std::feof(fp);
-	}
-	~FileStream() {
-		printf("closing file stream\n");
-		fclose(fp);
-	}
-private:
-	FILE* fp;
-};
 
 void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	FILE* fp = fopen(outfile, "w");
@@ -1159,7 +809,10 @@ void streamCluster(PStream* stream, long kmin, long kmax, int dim,
 		localSearch(&points, kmin, kmax, &kfinal);
 
 		fprintf(stderr, "finish local search\n");
+
 		contcenters(&points);
+		isCoordChanged = true;
+
 		if (kfinal + centers.num > centersize) {
 			//here we don't handle the situation where # of centers gets too large.
 			fprintf(stderr, "oops! no more space for centers\n");
@@ -1201,7 +854,6 @@ int main(int argc, char **argv) {
 	char *infilename = new char[MAXNAMESIZE];
 	long kmin, kmax, n, chunksize, clustersize;
 	int dim;
-
 #ifdef PARSEC_VERSION
 #define __PARSEC_STRING(x) #x
 #define __PARSEC_XSTRING(x) __PARSEC_STRING(x)
@@ -1257,24 +909,47 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_PARSEC_HOOKS
 	__parsec_roi_begin();
 #endif
+
+	serial_t = 0.0;
+	cpu_to_gpu_t = 0.0;
+	gpu_to_cpu_t = 0.0;
+	alloc_t = 0.0;
+	free_t = 0.0;
+	kernel_t = 0.0;
+
+	isCoordChanged = false;
+
 	streamCluster(stream, kmin, kmax, dim, chunksize, clustersize, outfilename);
+
+	freeDevMem();
+	freeHostMem();
+
 #ifdef ENABLE_PARSEC_HOOKS
 	__parsec_roi_end();
 #endif
 
 	double t2 = gettime();
 
-	printf("time = %lf\n", t2 - t1);
+	printf("time = %lfs\n", t2 - t1);
 
 	delete stream;
+
 #ifdef PROFILE
-	printf("time pgain = %lf\n", time_gain);
-	printf("time pgain_dist = %lf\n", time_gain_dist);
-	printf("time pgain_init = %lf\n", time_gain_init);
-	printf("time pselect = %lf\n", time_select_feasible);
-	printf("time pspeedy = %lf\n", time_speedy);
-	printf("time pshuffle = %lf\n", time_shuffle);
-	printf("time localSearch = %lf\n", time_local_search);
+	printf("time pgain = %lfs\n", time_gain);
+	printf("time pgain_dist = %lfs\n", time_gain_dist);
+	printf("time pgain_init = %lfs\n", time_gain_init);
+	printf("time pselect = %lfs\n", time_select_feasible);
+	printf("time pspeedy = %lfs\n", time_speedy);
+	printf("time pshuffle = %lfs\n", time_shuffle);
+	printf("time localSearch = %lfs\n", time_local_search);
+	printf("\n\n");
+	printf("====CUDA Timing info (pgain)====\n");
+	printf("time serial = %lfs\n", serial_t / 1000);
+	printf("time CPU to GPU memory copy = %lfs\n", cpu_to_gpu_t / 1000);
+	printf("time GPU to CPU memory copy back = %lfs\n", gpu_to_cpu_t / 1000);
+	printf("time GPU malloc = %lfs\n", alloc_t / 1000);
+	printf("time GPU free = %lfs\n", free_t / 1000);
+	printf("time kernel = %lfs\n", kernel_t / 1000);
 #endif
 
 #ifdef ENABLE_PARSEC_HOOKS
