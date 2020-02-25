@@ -45,7 +45,6 @@
 //bool *switch_membership_d;
 //Point *p;
 
-static int iter = 0;		// counter for total# of iteration
 
 //=======================================
 // Euclidean Distance
@@ -134,6 +133,8 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	// host memory
 //	float *coord_h;
 
+	static int iter = 0;		// counter for total# of iteration
+
 	int stride = *numcenters + 1;			// size of each work_mem segment
 	int K = *numcenters;				// number of centers
 	int num = points->num;				// number of points
@@ -144,7 +145,7 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	// ALLOCATE HOST MEMORY + DATA PREPARATION
 	//=========================================
 //	float *work_mem_h = (float*) malloc(stride * (nThread + 1) * sizeof(float));
-	std::vector<float> work_mem_h(stride * (nThread + 1));
+	static std::vector<float> work_mem_h(stride * (nThread + 1));
 
 	// Only on the first iteration
 	//	if (iter == 0) {
