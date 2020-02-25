@@ -147,6 +147,24 @@ public:
 		this->free_data();
 		this->alloc_data(size);
 	}
+
+	template<typename Iterator>
+	void fill_n(Iterator begin, size_t n) {
+		if ((this->data_ + n) <= (this->data_ + this->v_size)) {
+			checkFrameworkErrors(
+					cudaMemcpy(this->data_, begin, sizeof(T) * n,
+							cudaMemcpyHostToDevice));
+		}
+	}
+
+	template<typename Iterator>
+	void get_n(Iterator begin, size_t n) {
+		if ((this->data_ + n) <= (this->data_ + this->v_size)) {
+			checkFrameworkErrors(
+					cudaMemcpy(begin, this->data_, sizeof(T) * n,
+							cudaMemcpyDeviceToHost));
+		}
+	}
 };
 
 }
