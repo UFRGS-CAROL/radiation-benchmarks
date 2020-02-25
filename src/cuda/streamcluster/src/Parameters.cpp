@@ -53,7 +53,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 		error +=
 				"if n > 0 and --generate is not given, points will be"
 				" randomly generated instead of reading from infile.\n";
-		throw_line()
+		throw_line(error);
 	}
 }
 
