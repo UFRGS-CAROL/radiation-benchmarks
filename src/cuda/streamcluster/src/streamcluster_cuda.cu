@@ -33,7 +33,6 @@
 //   } } while (0)
 
 #define THREADS_PER_BLOCK 1024 //512#define MAXBLOCKS 65536//#define CUDATIME
-
 //// host memory
 //float *work_mem_h;
 //float *coord_h;
@@ -44,7 +43,6 @@
 //int *center_table_d;
 //bool *switch_membership_d;
 //Point *p;
-
 
 //=======================================
 // Euclidean Distance
@@ -129,10 +127,6 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 		bool isCoordChanged, double *serial_t, double *cpu_to_gpu_t,
 		double *gpu_to_cpu_t, double *alloc_t, double *kernel_t,
 		double *free_t) {
-//	cudaError_t error;
-	// host memory
-//	float *coord_h;
-
 	static int iter = 0;		// counter for total# of iteration
 
 	int stride = *numcenters + 1;			// size of each work_mem segment
@@ -144,14 +138,9 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	//=========================================
 	// ALLOCATE HOST MEMORY + DATA PREPARATION
 	//=========================================
-//	float *work_mem_h = (float*) malloc(stride * (nThread + 1) * sizeof(float));
 	static std::vector<float> work_mem_h(stride * (nThread + 1));
 
 	// Only on the first iteration
-	//	if (iter == 0) {
-//		allocHostMem(num, dim);
-//		coord_h = (float*) malloc(num * dim * sizeof(float));
-//	}
 	static std::vector<float> coord_h(num * dim);
 
 	// build center-index table
@@ -175,25 +164,10 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	//=======================================
 	// ALLOCATE GPU MEMORY
 	//=======================================
-//	rad::checkFrameworkErrors(
-//			cudaMalloc((void** ) &work_mem_d,
-//					stride * (nThread + 1) * sizeof(float)));
 	rad::DeviceVector<float> work_mem_d(stride * (nThread + 1));
 
 	// Only on the first iteration
 	// device memory
-//	float *work_mem_d;
-//	float *coord_d;
-//	int *center_table_d;
-//	bool *switch_membership_d;
-//	Point *p;
-//	if (iter == 0) {
-//		allocDevMem(num, dim);
-	//	rad::checkFrameworkErrors(cudaMalloc((void** ) &center_table_d, num * sizeof(int)));
-	//	rad::checkFrameworkErrors(cudaMalloc((void** ) &switch_membership_d, num * sizeof(bool)));
-	//	rad::checkFrameworkErrors(cudaMalloc((void** ) &p, num * sizeof(Point)));
-	//	rad::checkFrameworkErrors(cudaMalloc((void** ) &coord_d, num * dim * sizeof(float)));
-//	}
 	static rad::DeviceVector<int> center_table_d(num);
 	static rad::DeviceVector<bool> switch_membership_d(num);
 	static rad::DeviceVector<Point> p(num);
@@ -204,26 +178,13 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	//=======================================
 	// Only if first iteration OR coord has changed
 	if (isCoordChanged || iter == 0) {
-//		rad::checkFrameworkErrors(
-//				cudaMemcpy(coord_d, coord_h, num * dim * sizeof(float),
-//						cudaMemcpyHostToDevice));
 		coord_d = coord_h;
 	}
-//	rad::checkFrameworkErrors(
-//			cudaMemcpy(center_table_d, center_table, num * sizeof(int),
-//					cudaMemcpyHostToDevice));
+
 	center_table_d.fill_n(center_table, num);
 
-//	rad::checkFrameworkErrors(
-//			cudaMemcpy(p, points->p, num * sizeof(Point),
-//					cudaMemcpyHostToDevice));
 	p.fill_n(points->p, num);
 
-//	rad::checkFrameworkErrors(
-//			cudaMemset((void*) switch_membership_d, 0, num * sizeof(bool)));
-//	rad::checkFrameworkErrors(
-//			cudaMemset((void*) work_mem_d, 0,
-//					stride * (nThread + 1) * sizeof(float)));
 	switch_membership_d.clear();
 	work_mem_d.clear();
 
@@ -252,23 +213,10 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 			);
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaGetLastError());
-	// error check
-//	error = cudaGetLastError();
-//	if (error != cudaSuccess) {
-//		printf("kernel error: %s\n", cudaGetErrorString(error));
-//		exit(EXIT_FAILURE);
-//	}
 
 	//=======================================
 	// GPU-TO-CPU MEMORY COPY
 	//=======================================
-//	rad::checkFrameworkErrors(
-//			cudaMemcpy(work_mem_h, work_mem_d,
-//					stride * (nThread + 1) * sizeof(float),
-//					cudaMemcpyDeviceToHost));
-//	rad::checkFrameworkErrors(
-//			cudaMemcpy(switch_membership, switch_membership_d,
-//					num * sizeof(bool), cudaMemcpyDeviceToHost));
 	work_mem_d.to_vector(work_mem_h);
 	switch_membership_d.get_n(switch_membership, num);
 
@@ -320,16 +268,6 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 	} else {
 		gl_cost_of_opening_x = 0;
 	}
-
-	//=======================================
-	// DEALLOCATE HOST MEMORY
-	//=======================================
-//	free(work_mem_h);
-
-	//=======================================
-	// DEALLOCATE GPU MEMORY
-	//=======================================
-//	rad::checkFrameworkErrors(cudaFree(work_mem_d));
 
 	iter++;
 	return -gl_cost_of_opening_x;
