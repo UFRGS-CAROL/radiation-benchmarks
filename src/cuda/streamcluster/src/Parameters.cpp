@@ -57,12 +57,13 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
-	os << "Testing CFD on " << p.device << std::endl;
+	os << "Testing StreamCluster on " << p.device << std::endl;
 	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Generate: " << p.generate << std::endl;
 	os << "Kmin: " << p.kmin << std::endl;
+	os << "Kmax: " << p.kmax << std::endl;
 	os << "Dim: " << p.dim << std::endl;
 	os << "N: " << p.n << std::endl;
 	os << "Chunksize: " << p.chunksize << std::endl;

@@ -68,13 +68,13 @@ clean:
 	
 
 generate:
-	./$(EXEC) --k1 10 --k2 10 --d $(DIMSIZE) --n 65536 \
+	./$(EXEC) --k1 10 --k2 20 --d $(DIMSIZE) --n 65536 \
 			  --chunksize 65536 --clustersize 1000 \
 			  --input $(INPUT) --gold $(GOLD) --generate --verbose
 
 	
 test:
-	./$(EXEC) --k1 10 --k2 10 --d $(DIMSIZE) --n 65536 \
+	./$(EXEC) --k1 10 --k2 20 --d $(DIMSIZE) --n 65536 \
 			  --chunksize 65536 --clustersize 1000 \
 			  --input $(INPUT) --gold $(GOLD) \
 			  --generate --verbose --iterations 10
