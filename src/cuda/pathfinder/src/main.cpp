@@ -104,10 +104,17 @@ void run(int argc, char** argv) {
 	int blockCols = parameters.cols / smallBlockCol
 			+ ((parameters.cols % smallBlockCol == 0) ? 0 : 1);
 
-	printf(
-			"pyramidHeight: %d\ngridSize: [%d]\nborder:[%d]\nblockSize: %d\nblockGrid:[%d]\ntargetBlock:[%d]\n",
-			parameters.pyramid_height, parameters.cols, borderCols, BLOCK_SIZE,
-			blockCols, smallBlockCol);
+	if (parameters.verbose) {
+		std::cout << parameters << std::endl;
+		std::cout << "pyramidHeight: " << parameters.pyramid_height
+				<< std::endl;
+		std::cout << "gridSize: [" << parameters.cols << "]" << std::endl;
+		std::cout << "border:[" << borderCols << "]" << std::endl;
+		std::cout << "blockSize: " << BLOCK_SIZE << std::endl;
+		std::cout << "blockGrid:[" << blockCols << "]" << std::endl;
+		std::cout << "targetBlock:[" << smallBlockCol << "]" << std::endl;
+
+	}
 
 	//int *gpuWall, *gpuResult[2];
 	rad::DeviceVector<int> gpuWall;
