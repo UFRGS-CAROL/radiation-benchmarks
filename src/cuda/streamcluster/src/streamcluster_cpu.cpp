@@ -21,6 +21,7 @@
 #include "cuda_utils.h"
 
 #include "Parameters.h"
+
 #define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;// GPU Timing Info
 double serial_t;
 double cpu_to_gpu_t;
@@ -541,7 +542,7 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-std::tuple<Points*, long*> streamCluster(PStream* stream, long kmin, long kmax,
+std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 		int dim, long chunksize, long centersize, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
 	float* centerBlock = (float*) malloc(centersize * dim * sizeof(float));
@@ -624,14 +625,14 @@ std::tuple<Points*, long*> streamCluster(PStream* stream, long kmin, long kmax,
 
 	localSearch(&centers, kmin, kmax, &kfinal);
 	contcenters(&centers);
-//	outcenterIDs(&centers, centerIDs, outfile);
+	outcenterIDs(&centers, centerIDs, outfile);
 	if (block)
 		free(block);
 	if (points.p) {
 		free(points.p);
 	}
 
-	return {&centers, centerIDs};
+	return {centers, centerIDs};
 }
 
 int main(int argc, char **argv) {
@@ -679,7 +680,7 @@ int main(int argc, char **argv) {
 
 		isCoordChanged = false;
 
-		Points* pts;
+		Points pts;
 
 		long *centerIDs;
 		std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim,
@@ -687,16 +688,16 @@ int main(int argc, char **argv) {
 
 		double t2 = rad::mysecond();
 
-		outcenterIDs(pts, centerIDs, const_cast<char*>(outfilename.c_str()));
+//		outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
 
 		if (centerIDs) {
 			free(centerIDs);
 		}
 
-		if (pts->p) {
-			if (pts->p->coord)
-				free(pts->p->coord);
-			free(pts->p);
+		if (pts.p) {
+			if (pts.p->coord)
+				free(pts.p->coord);
+			free(pts.p);
 		}
 
 		if (switch_membership)
