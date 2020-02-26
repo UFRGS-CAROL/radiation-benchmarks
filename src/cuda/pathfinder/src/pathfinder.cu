@@ -21,7 +21,7 @@ extern int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols,
 void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
 		int pyramid_height, int rows, int cols) {
 
-//	data = new int[rows * cols];
+//	data = new int[rows * cols];	data.resize(rows * cols);
 	wall.resize(rows);
 
 	for (int n = 0; n < rows; n++) {
