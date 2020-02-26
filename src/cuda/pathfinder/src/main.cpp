@@ -66,42 +66,29 @@ size_t compare_output(matrix_hst<int>& output, vector<int>& gold,
 	// acc errors
 	size_t errors = 0;
 
-//	static std::vector<bool> equal_array(stream_number, false);
-//	//first check if output is ok
-//	//by not doing it the comparison time increases 20%
-//#pragma omp parallel for default(shared)
-//	for (auto i = 0; i < stream_number; i++) {
-//		equal_array[i] = (output[i] != gold);
-//	}
-//
-//	auto falses = std::count(equal_array.begin(), equal_array.end(), false);
-//
-//	if (falses != equal_array.size())
-	{
 #pragma omp parallel for default(shared)
-		for (auto stream = 0; stream < stream_number; stream++) {
-			for (auto solution = 0; solution < size_of_solution; solution++) {
-				auto g = gold[solution];
-				auto f = output[stream][solution];
-				if (g != f) {
-					auto e = std::to_string(g);
-					auto r = std::to_string(f);
-					auto stream_str = std::to_string(stream);
-					auto solution_str = std::to_string(solution);
+	for (auto stream = 0; stream < stream_number; stream++) {
+		for (auto solution = 0; solution < size_of_solution; solution++) {
+			auto g = gold[solution];
+			auto f = output[stream][solution];
+			if (g != f) {
+				auto e = std::to_string(g);
+				auto r = std::to_string(f);
+				auto stream_str = std::to_string(stream);
+				auto solution_str = std::to_string(solution);
 
-					std::string error_detail = "Stream:" + stream_str;
-					error_detail += " solution_n: " + solution_str;
-					error_detail += " e: " + e;
-					error_detail += " r: " + r;
+				std::string error_detail = "Stream:" + stream_str;
+				error_detail += " solution_n: " + solution_str;
+				error_detail += " e: " + e;
+				error_detail += " r: " + r;
 #pragma omp critical
-					{
-						std::cout << error_detail << std::endl;
-						log.log_error_detail(error_detail);
-						errors++;
-					}
+				{
+					std::cout << error_detail << std::endl;
+					log.log_error_detail(error_detail);
+					errors++;
 				}
-
 			}
+
 		}
 	}
 
