@@ -22,8 +22,7 @@
 
 #include "Parameters.h"
 
-#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic int nproc; 					//# of threadsbool isCoordChanged;// GPU Timing Info
-double serial_t;
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic const int nproc  = 1; 					//# of threadsbool isCoordChanged;// GPU Timing Infodouble serial_t;
 double cpu_to_gpu_t;
 double gpu_to_cpu_t;
 double alloc_t;
@@ -638,27 +637,25 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 int main(int argc, char **argv) {
 //	char *outfilename = new char[MAXNAMESIZE];
 //	char *infilename = new char[MAXNAMESIZE];
-	long kmin, kmax, n, chunksize, clustersize;
-	int dim;
+//	long kmin, kmax, n, chunksize, clustersize;
+//	int dim;
 
 	Parameters parameters(argc, argv);
-	if(parameters.verbose){
+	if (parameters.verbose) {
 
 	}
 	std::cout << "PARSEC Benchmark Suite\n";
 	fflush(NULL);
 
-
-
-	kmin = atoi(argv[1]);
-	kmax = atoi(argv[2]);
-	dim = atoi(argv[3]);
-	n = atoi(argv[4]);
-	chunksize = atoi(argv[5]);
-	clustersize = atoi(argv[6]);
-	std::string infilename(argv[7]);
-	std::string outfilename(argv[8]);
-	nproc = atoi(argv[9]);
+	long kmin = parameters.kmin; //atoi(argv[1]);
+	long kmax = parameters.kmax; //atoi(argv[2]);
+	int dim = parameters.dim; //atoi(argv[3]);
+	long n = parameters.n; //atoi(argv[4]);
+	long chunksize = parameters.chunksize; //atoi(argv[5]);
+	long clustersize = parameters.clustersize; // atoi(argv[6]);
+	std::string infilename = parameters.input; //(argv[7]);
+	std::string outfilename = parameters.gold; //(argv[8]);
+//	nproc = atoi(argv[9]);
 
 	srand48(SEED);
 	PStream* stream;
@@ -668,47 +665,43 @@ int main(int argc, char **argv) {
 		stream = new FileStream(infilename);
 	}
 
-	for (auto i = 0; i < 10; i++) {
-		double t1 = rad::mysecond();
+	double t1 = rad::mysecond();
 
-		serial_t = 0.0;
-		cpu_to_gpu_t = 0.0;
-		gpu_to_cpu_t = 0.0;
-		alloc_t = 0.0;
-		free_t = 0.0;
-		kernel_t = 0.0;
+	serial_t = 0.0;
+	cpu_to_gpu_t = 0.0;
+	gpu_to_cpu_t = 0.0;
+	alloc_t = 0.0;
+	free_t = 0.0;
+	kernel_t = 0.0;
 
-		isCoordChanged = false;
+	isCoordChanged = false;
 
-		Points pts;
+	Points pts;
 
-		long *centerIDs;
-		std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim,
-				chunksize, clustersize, const_cast<char*>(outfilename.c_str()));
+	long *centerIDs;
+	std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim, chunksize,
+			clustersize, const_cast<char*>(outfilename.c_str()));
 
-		double t2 = rad::mysecond();
+	double t2 = rad::mysecond();
 
 //		outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
 
-		if (centerIDs) {
-			free(centerIDs);
-		}
-
-		if (pts.p) {
-			if (pts.p->coord)
-				free(pts.p->coord);
-			free(pts.p);
-		}
-
-		if (switch_membership)
-			free(switch_membership);	//whether to switch membership in pgain
-		if (is_center)
-			free(is_center);				//whether a point is a center
-		if (center_table)
-			free(center_table);			//index table of centers
-
-		std::cout << "Iteration " << i << " time = " << t2 - t1 << std::endl;
+	if (centerIDs) {
+		free(centerIDs);
 	}
+
+	if (pts.p) {
+		if (pts.p->coord)
+			free(pts.p->coord);
+		free(pts.p);
+	}
+
+	if (switch_membership)
+		free(switch_membership);	//whether to switch membership in pgain
+	if (is_center)
+		free(is_center);				//whether a point is a center
+	if (center_table)
+		free(center_table);			//index table of centers
 
 	delete stream;
 
