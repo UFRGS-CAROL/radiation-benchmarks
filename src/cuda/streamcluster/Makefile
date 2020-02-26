@@ -66,7 +66,8 @@ mkdir:
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-
+	
+#       ./$(EXEC) 10 20 1024 65536 65536 1000 none output.txt 1  
 generate:
 	./$(EXEC) --k1 10 --k2 20 --d $(DIMSIZE) --n 65536 \
 			  --chunksize 65536 --clustersize 1000 \
