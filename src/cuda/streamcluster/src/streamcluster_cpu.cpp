@@ -672,6 +672,7 @@ int main(int argc, char **argv) {
 	std::string infilename = parameters.input; //(argv[7]);
 	std::string outfilename = parameters.gold; //(argv[8]);
 //	nproc = atoi(argv[9]);
+	double t1 = rad::mysecond();
 
 	srand48(SEED);
 	PStream* stream;
@@ -681,7 +682,6 @@ int main(int argc, char **argv) {
 		stream = new FileStream(infilename);
 	}
 
-	double t1 = rad::mysecond();
 
 	serial_t = 0.0;
 	cpu_to_gpu_t = 0.0;
@@ -695,7 +695,6 @@ int main(int argc, char **argv) {
 	streamCluster(stream, kmin, kmax, dim, chunksize, clustersize,
 			const_cast<char*>(outfilename.c_str()));
 
-	double t2 = rad::mysecond();
 
 	if (switch_membership)
 		free(switch_membership);	//whether to switch membership in pgain
@@ -705,6 +704,8 @@ int main(int argc, char **argv) {
 		free(center_table);			//index table of centers
 
 	delete stream;
+	double t2 = rad::mysecond();
 
+	std::cout << "Overall time " << t2 - t1 << " Kernel time " << serial_t << std::endl;
 	return 0;
 }

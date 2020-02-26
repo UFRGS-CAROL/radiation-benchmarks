@@ -143,6 +143,7 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 			/ (float) num_blocks_y);
 	dim3 grid_size(num_blocks_x, num_blocks_y, 1);
 
+	*serial_t = rad::mysecond();
 	kernel_compute_cost<<<grid_size, THREADS_PER_BLOCK>>>(num,// in:	# of data
 			dim,					// in:	dimension of point coordinates
 			x,						// in:	point to open a center at
@@ -156,7 +157,7 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 			);
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaGetLastError());
-
+	*serial_t = rad::mysecond() - *serial_t;
 	//=======================================
 	// GPU-TO-CPU MEMORY COPY
 	//=======================================
