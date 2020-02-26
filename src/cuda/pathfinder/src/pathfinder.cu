@@ -3,47 +3,38 @@
 #include <time.h>
 #include <assert.h>
 
+#include <vector>
 
 #include "common.h"
+#include "Parameters.h"
+#include "device_vector.h"
 
-int rows, cols;
-int* data;
-int** wall;
-int* result;
-int pyramid_height;
+template<typename T>
+using matrix = std::vector<std::vector<T>>;
+
+template<typename T>
+using vector = std::vector<T>;
 
 extern int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols,
 		int pyramid_height, int blockCols, int borderCols);
 
-void init(int argc, char** argv) {
-	if (argc == 4) {
+void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
+		int pyramid_height, int rows, int cols) {
 
-		cols = atoi(argv[1]);
+//	data = new int[rows * cols];
+	wall.resize(rows);
 
-		rows = atoi(argv[2]);
-
-		pyramid_height = atoi(argv[3]);
-	} else {
-		printf("Usage: dynproc row_len col_len pyramid_height\n");
-		exit(0);
+	for (int n = 0; n < rows; n++) {
+		wall[n] = data.data() + cols * n;
 	}
-	data = new int[rows * cols];
 
-	wall = new int*[rows];
-
-	for (int n = 0; n < rows; n++)
-
-		wall[n] = data + cols * n;
-
-	result = new int[cols];
+//	result = new int[cols];
+	result.resize(cols);
 
 	int seed = M_SEED;
-
 	srand(seed);
-
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-
 			wall[i][j] = rand() % 10;
 		}
 	}
@@ -61,25 +52,21 @@ void init(int argc, char** argv) {
 #endif
 }
 
-void fatal(char *s) {
-	fprintf(stderr, "error: %s\n", s);
-
-}
-
-
-int main(int argc, char** argv) {
-	int num_devices;
-	cudaGetDeviceCount(&num_devices);
-	if (num_devices > 1)
-		cudaSetDevice(DEVICE);
-
-	run(argc, argv);
-
-	return EXIT_SUCCESS;
-}
-
 void run(int argc, char** argv) {
-	init(argc, argv);
+	int pyramid_height, cols, rows;
+	if (argc == 4) {
+		cols = atoi(argv[1]);
+		rows = atoi(argv[2]);
+		pyramid_height = atoi(argv[3]);
+	} else {
+		throw_line("Usage: dynproc row_len col_len pyramid_height\n");
+	}
+
+	vector<int*> wall;
+	vector<int> data;
+	vector<int> result;
+
+	init(wall, data, result, pyramid_height, rows, cols);
 
 	/* --------------- pyramid parameters --------------- */
 	int borderCols = (pyramid_height) * HALO;
@@ -92,21 +79,34 @@ void run(int argc, char** argv) {
 			pyramid_height, cols, borderCols, BLOCK_SIZE, blockCols,
 			smallBlockCol);
 
-	int *gpuWall, *gpuResult[2];
+	//int *gpuWall, *gpuResult[2];
+	rad::DeviceVector<int> gpuWall;
+	rad::DeviceVector<int> gpuResult[2];
+
 	int size = rows * cols;
+//	cudaMalloc((void**) &gpuResult[0], sizeof(int) * cols);
+//	cudaMalloc((void**) &gpuResult[1], sizeof(int) * cols);
+	gpuResult[0].resize(cols);
+	gpuResult[1].resize(cols);
 
-	cudaMalloc((void**) &gpuResult[0], sizeof(int) * cols);
-	cudaMalloc((void**) &gpuResult[1], sizeof(int) * cols);
-	cudaMemcpy(gpuResult[0], data, sizeof(int) * cols, cudaMemcpyHostToDevice);
-	cudaMalloc((void**) &gpuWall, sizeof(int) * (size - cols));
-	cudaMemcpy(gpuWall, data + cols, sizeof(int) * (size - cols),
-			cudaMemcpyHostToDevice);
+//	cudaMemcpy(gpuResult[0], data, sizeof(int) * cols, cudaMemcpyHostToDevice);
+	gpuResult[0].fill_n(data.begin(), cols);
 
-	int final_ret = calc_path(gpuWall, gpuResult, rows, cols, pyramid_height,
-			blockCols, borderCols);
+//	cudaMalloc((void**) &gpuWall, sizeof(int) * (size - cols));
+	gpuWall.resize(size - cols);
+//	cudaMemcpy(gpuWall, data + cols, sizeof(int) * (size - cols),
+//			cudaMemcpyHostToDevice);
 
-	cudaMemcpy(result, gpuResult[final_ret], sizeof(int) * cols,
-			cudaMemcpyDeviceToHost);
+	gpuWall.fill_n(data.begin() + cols, (size - cols));
+
+	int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
+
+	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, rows, cols,
+			pyramid_height, blockCols, borderCols);
+
+//	cudaMemcpy(result, gpuResult[final_ret], sizeof(int) * cols,
+//			cudaMemcpyDeviceToHost);
+	gpuResult[final_ret].to_vector(result);
 
 #ifdef BENCH_PRINT
 
@@ -124,13 +124,13 @@ void run(int argc, char** argv) {
 
 #endif
 
-	cudaFree(gpuWall);
-	cudaFree(gpuResult[0]);
-	cudaFree(gpuResult[1]);
-
-	delete[] data;
-	delete[] wall;
-	delete[] result;
+//	cudaFree(gpuWall);
+//	cudaFree(gpuResult[0]);
+//	cudaFree(gpuResult[1]);
+//
+//	delete[] data;
+//	delete[] wall;
+//	delete[] result;
 
 }
 
