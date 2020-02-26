@@ -189,11 +189,11 @@ float pgain(long x, Points *points, float z, long int *numcenters, int kmax,
 
 	//if opening a center at x saves cost (i.e. cost is negative) do so; otherwise, do nothing
 	if (gl_cost_of_opening_x < 0) {
+#pragma omp parallel for default(shared)
 		for (int i = 0; i < num; i++) {
 			bool close_center = gl_lower[center_table[points->p[i].assign]] > 0;
 			if (switch_membership[i] || close_center) {
-				points->p[i].cost = dist(points->p[i], points->p[x], dim)
-						* points->p[i].weight;
+				points->p[i].cost = dist(points->p[i], points->p[x], dim) * points->p[i].weight;
 				points->p[i].assign = x;
 			}
 		}

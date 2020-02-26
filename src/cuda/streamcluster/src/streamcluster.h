@@ -15,16 +15,17 @@
 #ifndef STREAMCLUSTER_CUDA_H
 #define STREAMCLUSTER_CUDA_H
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <iostream>
-#include <fstream>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <sys/resource.h>
-#include <limits.h>
+//#include <fstream>
+//#include <stdlib.h>
+//#include <sys/time.h>
+//#include <string.h>
+//#include <assert.h>
+//#include <math.h>
+//#include <sys/resource.h>
+#include <climits>
+#include <omp.h>
 
 #include <cuda.h>
 
