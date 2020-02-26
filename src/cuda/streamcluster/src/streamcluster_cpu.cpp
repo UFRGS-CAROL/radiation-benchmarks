@@ -541,7 +541,7 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
+void streamCluster(PStream* stream, long kmin, long kmax,
 		int dim, long chunksize, long centersize, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
 	float* centerBlock = (float*) malloc(centersize * dim * sizeof(float));
@@ -631,7 +631,20 @@ std::tuple<Points, long*> streamCluster(PStream* stream, long kmin, long kmax,
 		free(points.p);
 	}
 
-	return {centers, centerIDs};
+	if (centerIDs) {
+		free(centerIDs);
+	}
+
+	if (centers.p) {
+		for (int i = 0; i < centersize; i++) {
+			if (centers.p[i].coord)
+				free(centers.p[i].coord);
+		}
+		free(centers.p);
+	}
+
+
+//	return {centers, centerIDs};
 }
 
 int main(int argc, char **argv) {
@@ -676,25 +689,10 @@ int main(int argc, char **argv) {
 
 	isCoordChanged = false;
 
-	Points pts;
-
-	long *centerIDs;
-	std::tie(pts, centerIDs) = streamCluster(stream, kmin, kmax, dim, chunksize,
+	streamCluster(stream, kmin, kmax, dim, chunksize,
 			clustersize, const_cast<char*>(outfilename.c_str()));
 
 	double t2 = rad::mysecond();
-
-//		outcenterIDs(&pts, centerIDs, const_cast<char*>(outfilename.c_str()));
-
-	if (centerIDs) {
-		free(centerIDs);
-	}
-
-	if (pts.p) {
-		if (pts.p->coord)
-			free(pts.p->coord);
-		free(pts.p);
-	}
 
 	if (switch_membership)
 		free(switch_membership);	//whether to switch membership in pgain
