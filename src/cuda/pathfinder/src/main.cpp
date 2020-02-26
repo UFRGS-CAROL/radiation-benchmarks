@@ -192,7 +192,9 @@ void run(int argc, char** argv) {
 		gpuResult[1].clear();
 		set_time = rad::mysecond() - set_time;
 
+		//Kernel processing
 		auto kernel_time = rad::mysecond();
+		log.start_iteration();
 		int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
 		int final_ret = calc_path(gpuWall.data(), gpuResult_ptr,
 				parameters.rows, parameters.cols, parameters.pyramid_height,
@@ -202,8 +204,12 @@ void run(int argc, char** argv) {
 		;
 		rad::checkFrameworkErrors(cudaGetLastError());
 
+		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 
+		/*
+		 * SETUP things
+		 */
 		auto copy_time = rad::mysecond();
 		gpuResult[final_ret].to_vector(result);
 		copy_time = rad::mysecond() - copy_time;
