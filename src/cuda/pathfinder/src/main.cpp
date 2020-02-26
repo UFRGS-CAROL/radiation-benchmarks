@@ -14,6 +14,8 @@
 #include "common.h"
 #include "Parameters.h"
 #include "device_vector.h"
+#include "cuda_utils.h"
+#include "generic_log.h"
 
 template<typename T>
 using matrix = std::vector<std::vector<T>>;
@@ -79,9 +81,57 @@ void read_input(vector<int*>& wall, vector<int>& data, vector<int>& result,
 	}
 
 }
+size_t compare_output(vector<int>& output, vector<int>& gold, rad::Log& log) {
+	auto stream_number = output.size();
+	auto no_of_nodes = gold.size();
+	// acc errors
+	size_t errors = 0;
+	/*
+	 static std::vector<bool> equal_array(stream_number, false);
+	 //first check if output is ok
+	 //by not doing it the comparison time increases 20%
+	 #pragma omp parallel for default(shared)
+	 for (auto i = 0; i < stream_number; i++) {
+	 equal_array[i] = (output[i] != gold);
+	 }
+
+	 auto falses = std::count(equal_array.begin(), equal_array.end(), false);
+
+	 if (falses != equal_array.size()) {
+	 #pragma omp parallel for default(shared)
+	 for (auto stream = 0; stream < stream_number; stream++) {
+	 for (auto node = 0; node < no_of_nodes; node++) {
+	 auto g = gold[node];
+	 auto f = output[stream][node];
+	 if (g != f) {
+	 auto cost_e = std::to_string(g);
+	 auto cost_r = std::to_string(f);
+	 auto stream_str = std::to_string(stream);
+	 auto node_str = std::to_string(node);
+
+	 std::string error_detail = "Stream:" + stream_str;
+	 error_detail += " Node: " + node_str;
+	 error_detail += " cost_e: " + cost_e;
+	 error_detail += " cost_r: " + cost_r;
+	 #pragma omp critical
+	 {
+	 std::cout << error_detail << std::endl;
+	 log.log_error_detail(error_detail);
+	 errors++;
+	 }
+	 }
+
+	 }
+	 }
+	 }
+	 */
+	log.update_errors();
+	return errors;
+}
 
 void run(int argc, char** argv) {
 	Parameters parameters(argc, argv);
+	rad::Log log;
 
 	vector<int*> wall;
 	vector<int> data;
@@ -121,29 +171,54 @@ void run(int argc, char** argv) {
 	rad::DeviceVector<int> gpuResult[2];
 
 	int size = parameters.rows * parameters.cols;
-//	cudaMalloc((void**) &gpuResult[0], sizeof(int) * cols);
-//	cudaMalloc((void**) &gpuResult[1], sizeof(int) * cols);
 	gpuResult[0].resize(parameters.cols);
 	gpuResult[1].resize(parameters.cols);
 
-//	cudaMemcpy(gpuResult[0], data, sizeof(int) * cols, cudaMemcpyHostToDevice);
-	gpuResult[0].fill_n(data.begin(), parameters.cols);
-
-//	cudaMalloc((void**) &gpuWall, sizeof(int) * (size - cols));
 	gpuWall.resize(size - parameters.cols);
-//	cudaMemcpy(gpuWall, data + cols, sizeof(int) * (size - cols),
-//			cudaMemcpyHostToDevice);
-
 	gpuWall.fill_n(data.begin() + parameters.cols, (size - parameters.cols));
 
-	int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
+	for (size_t iteration; iteration < parameters.iterations; iteration++) {
+		//reset the memory on gpu to default before restarting
+		auto set_time = rad::mysecond();
+		gpuResult[0].fill_n(data.begin(), parameters.cols);
+		gpuResult[1].clear();
+		set_time = rad::mysecond() - set_time;
 
-	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, parameters.rows,
-			parameters.cols, parameters.pyramid_height, blockCols, borderCols);
+		auto kernel_time = rad::mysecond();
+		int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
+		int final_ret = calc_path(gpuWall.data(), gpuResult_ptr,
+				parameters.rows, parameters.cols, parameters.pyramid_height,
+				blockCols, borderCols);
 
-//	cudaMemcpy(result, gpuResult[final_ret], sizeof(int) * cols,
-//			cudaMemcpyDeviceToHost);
-	gpuResult[final_ret].to_vector(result);
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
+		rad::checkFrameworkErrors(cudaGetLastError());
+
+		kernel_time = rad::mysecond() - kernel_time;
+
+		auto copy_time = rad::mysecond();
+		gpuResult[final_ret].to_vector(result);
+		copy_time = rad::mysecond() - copy_time;
+
+		auto compare_time = rad::mysecond();
+		auto errors = compare_output(result, gold, log);
+		compare_time = rad::mysecond() - compare_time;
+
+		if (parameters.verbose) {
+			auto wasted_time = copy_time + set_time + compare_time;
+			auto overall_time = wasted_time + kernel_time;
+			std::cout << "Iteration " << iteration << " - ERRORS: " << errors
+					<< std::endl;
+			std::cout << "Overall time " << overall_time;
+			std::cout << " Set time " << set_time;
+			std::cout << " Kernel time " << kernel_time;
+			std::cout << " Compare time " << compare_time;
+			std::cout << " Copy time " << copy_time << std::endl;
+			std::cout << "Wasted time " << wasted_time << " ("
+					<< int(wasted_time / overall_time * 100.0f) << "%)\n"
+					<< std::endl;
+		}
+	}
 
 	if (parameters.generate) {
 		std::cout << "Saving the output at " << output_file << std::endl;
