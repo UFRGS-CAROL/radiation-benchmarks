@@ -124,6 +124,10 @@ void run(int argc, char** argv) {
 	} else {
 		read_input(wall, data, gold, parameters.pyramid_height, parameters.rows,
 				parameters.cols, output_file);
+
+		if(parameters.debug){
+			data[rand() % data.size()] = rand();
+		}
 	}
 
 	/* --------------- pyramid parameters --------------- */
@@ -219,7 +223,9 @@ void run(int argc, char** argv) {
 		copy_time = rad::mysecond() - copy_time;
 
 		auto compare_time = rad::mysecond();
-		auto errors = compare_output(all_results, gold, log);
+		size_t errors = 0;
+		if(!parameters.generate)
+			errors = compare_output(all_results, gold, log);
 		compare_time = rad::mysecond() - compare_time;
 
 		if (parameters.verbose) {
