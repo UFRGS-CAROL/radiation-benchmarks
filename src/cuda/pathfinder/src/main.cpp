@@ -117,7 +117,7 @@ void run(int argc, char** argv) {
 //			cudaMemcpyDeviceToHost);
 	gpuResult[final_ret].to_vector(result);
 
-	std::ofstream of(output_file);
+	std::ofstream of(output_file, std::ios::app);
 	if (of.good()) {
 
 		for (int i = 0; i < parameters.cols; i++)
