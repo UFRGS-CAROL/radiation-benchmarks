@@ -233,7 +233,7 @@ void run(int argc, char** argv) {
 			std::cout << " Compare time " << compare_time;
 			std::cout << " Copy time " << copy_time << std::endl;
 			std::cout << "Wasted time " << wasted_time << " ("
-					<< int(wasted_time / overall_time * 100.0f) << "%)\n"
+					<< ceil(wasted_time / overall_time * 100.0f) << "%)\n"
 					<< std::endl;
 		}
 	}
