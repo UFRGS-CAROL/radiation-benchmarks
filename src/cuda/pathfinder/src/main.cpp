@@ -125,8 +125,12 @@ void run(int argc, char** argv) {
 		read_input(wall, data, gold, parameters.pyramid_height, parameters.rows,
 				parameters.cols, output_file);
 
-		if(parameters.debug){
-			data[rand() % data.size()] = rand();
+		if (parameters.debug) {
+			auto pos = rand() % data.size();
+			auto val_before = data[pos];
+			data[pos] = rand() / (val_before + 1);
+			std::cout << "data[" << pos << "] was " << val_before
+					<< " changed to " << data[pos] << std::endl;
 		}
 	}
 
@@ -199,9 +203,10 @@ void run(int argc, char** argv) {
 					gpu_result_streams[stream][1].data() //1
 					};
 
-			streams_final_ret[stream] = calc_path(gpu_wall.data(), gpuResult_ptr,
-					parameters.rows, parameters.cols, parameters.pyramid_height,
-					blockCols, borderCols, streams_vec[stream]);
+			streams_final_ret[stream] = calc_path(gpu_wall.data(),
+					gpuResult_ptr, parameters.rows, parameters.cols,
+					parameters.pyramid_height, blockCols, borderCols,
+					streams_vec[stream]);
 
 		}
 
@@ -218,13 +223,14 @@ void run(int argc, char** argv) {
 		auto copy_time = rad::mysecond();
 		for (auto stream = 0; stream < streams; stream++) {
 			auto final_ret = streams_final_ret[stream];
-			gpu_result_streams[stream][final_ret].to_vector(all_results[stream]);
+			gpu_result_streams[stream][final_ret].to_vector(
+					all_results[stream]);
 		}
 		copy_time = rad::mysecond() - copy_time;
 
 		auto compare_time = rad::mysecond();
 		size_t errors = 0;
-		if(!parameters.generate)
+		if (!parameters.generate)
 			errors = compare_output(all_results, gold, log);
 		compare_time = rad::mysecond() - compare_time;
 

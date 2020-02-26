@@ -50,6 +50,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Rows: " << p.rows << std::endl;
 	os << "Cols: " << p.cols << std::endl;
 	os << "Pyramid height: " << p.pyramid_height << std::endl;
+	os << "Debug: " << p.debug << std::endl;
 	os << "Generate: " << p.generate << std::endl;
 	os << "SM count = " << p.sm_count << std::endl;
 	os << "Verbose: " << p.verbose;
