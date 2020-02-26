@@ -32,12 +32,12 @@ struct Parameters {
 	size_t iterations;
 
 
-	size_t kmin;
-	size_t kmax;
-	size_t dim;
-	size_t n;
-	size_t chunksize;
-	size_t clustersize;
+	long kmin;
+	long kmax;
+	int dim;
+	long n;
+	long chunksize;
+	long clustersize;
 	std::string input;
 	std::string gold;
 
