@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <assert.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <time.h>
+//#include <assert.h>
 
 #include <vector>
+#include <fstream>
+#include <string>
 
 #include "common.h"
 #include "Parameters.h"
@@ -19,9 +21,10 @@ extern int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols,
 		int pyramid_height, int blockCols, int borderCols);
 
 void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
-		int pyramid_height, int rows, int cols) {
+		int pyramid_height, int rows, int cols,
+		std::string output_file) {
 
-//	data = new int[rows * cols];	data.resize(rows * cols);
+//	data = new int[rows * cols];
 	wall.resize(rows);
 
 	for (int n = 0; n < rows; n++) {
@@ -39,17 +42,20 @@ void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
 		}
 	}
 
-#ifdef BENCH_PRINT
+	std::ofstream of(output_file);
+	if (of.good()) {
+		for (int i = 0; i < rows; i++) {
 
-	for (int i = 0; i < rows; i++) {
-
-		for (int j = 0; j < cols; j++) {
-			printf("%d ", wall[i][j]);
+			for (int j = 0; j < cols; j++) {
+//			printf("%d ", wall[i][j]);
+				of << wall[i][j] << " ";
+			}
+//		printf("\n");
+			of << std::endl;
 		}
-		printf("\n");
+	} else {
+		throw_line("Could not open file " + output_file);
 	}
-
-#endif
 }
 
 void run(int argc, char** argv) {
@@ -58,8 +64,10 @@ void run(int argc, char** argv) {
 	vector<int*> wall;
 	vector<int> data;
 	vector<int> result;
+	std::string output_file = "result.txt";
 
-	init(wall, data, result, parameters.pyramid_height, parameters.rows, parameters.cols);
+	init(wall, data, result, parameters.pyramid_height, parameters.rows,
+			parameters.cols, output_file);
 
 	/* --------------- pyramid parameters --------------- */
 	int borderCols = (parameters.pyramid_height) * HALO;
@@ -69,8 +77,8 @@ void run(int argc, char** argv) {
 
 	printf(
 			"pyramidHeight: %d\ngridSize: [%d]\nborder:[%d]\nblockSize: %d\nblockGrid:[%d]\ntargetBlock:[%d]\n",
-			parameters.pyramid_height, parameters.cols, borderCols, BLOCK_SIZE, blockCols,
-			smallBlockCol);
+			parameters.pyramid_height, parameters.cols, borderCols, BLOCK_SIZE,
+			blockCols, smallBlockCol);
 
 	//int *gpuWall, *gpuResult[2];
 	rad::DeviceVector<int> gpuWall;
@@ -94,36 +102,32 @@ void run(int argc, char** argv) {
 
 	int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
 
-	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, parameters.rows, parameters.cols,
-			parameters.pyramid_height, blockCols, borderCols);
+	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, parameters.rows,
+			parameters.cols, parameters.pyramid_height, blockCols, borderCols);
 
 //	cudaMemcpy(result, gpuResult[final_ret], sizeof(int) * cols,
 //			cudaMemcpyDeviceToHost);
 	gpuResult[final_ret].to_vector(result);
 
-#ifdef BENCH_PRINT
+	std::ofstream of(output_file);
+	if (of.good()) {
 
-	for (int i = 0; i < parameters.cols; i++)
+		for (int i = 0; i < parameters.cols; i++)
+			of << data[i] << " ";
+//		printf("%d ", data[i]);
 
-		printf("%d ", data[i]);
+//	printf("\n");
+		of << std::endl;
 
-	printf("\n");
+		for (int i = 0; i < parameters.cols; i++)
+//		printf("%d ", result[i]);
+			of << result[i] << " ";
 
-	for (int i = 0; i < parameters.cols; i++)
-
-		printf("%d ", result[i]);
-
-	printf("\n");
-
-#endif
-
-//	cudaFree(gpuWall);
-//	cudaFree(gpuResult[0]);
-//	cudaFree(gpuResult[1]);
-//
-//	delete[] data;
-//	delete[] wall;
-//	delete[] result;
+//	printf("\n");
+		of << std::endl;
+	} else {
+		throw_line("Could not open file " + output_file);
+	}
 
 }
 
