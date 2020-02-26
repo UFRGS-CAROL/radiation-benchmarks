@@ -1,5 +1,3 @@
-
-
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include "common.h"
@@ -23,13 +21,11 @@ using matrix = std::vector<std::vector<T>>;
 template<typename T>
 using vector = std::vector<T>;
 
-
 extern int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols,
 		int pyramid_height, int blockCols, int borderCols);
 
-void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
-		int pyramid_height, int rows, int cols,
-		std::string output_file) {
+void generate_input(vector<int*>& wall, vector<int>& data, vector<int>& result,
+		int pyramid_height, int rows, int cols, std::string output_file) {
 
 //	data = new int[rows * cols];
 	data.resize(rows * cols);
@@ -50,20 +46,38 @@ void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
 		}
 	}
 
-	std::ofstream of(output_file);
+	std::ofstream of(output_file, std::ios::binary);
 	if (of.good()) {
-		for (int i = 0; i < rows; i++) {
-
-			for (int j = 0; j < cols; j++) {
-//			printf("%d ", wall[i][j]);
-				of << wall[i][j] << " ";
-			}
-//		printf("\n");
-			of << std::endl;
-		}
+		of.write(reinterpret_cast<char*>(data.data()),
+				rows * cols * sizeof(int));
+		of.close();
 	} else {
 		throw_line("Could not open file " + output_file);
 	}
+}
+
+void read_input(vector<int*>& wall, vector<int>& data, vector<int>& result,
+		vector<int>& gold, int pyramid_height, int rows, int cols,
+		std::string input_file) {
+	data.resize(rows * cols);
+	wall.resize(rows);
+	result.resize(cols);
+	gold.resize(cols);
+
+	std::ifstream ifp(input_file, std::ios::binary);
+	if (ifp.good()) {
+		ifp.read(reinterpret_cast<char*>(data.data()),
+				rows * cols * sizeof(int));
+		ifp.read(reinterpret_cast<char*>(gold.data()), cols * sizeof(int));
+		ifp.close();
+	} else {
+		throw_line("Could not open file " + input_file);
+	}
+
+	for (int n = 0; n < rows; n++) {
+		wall[n] = data.data() + cols * n;
+	}
+
 }
 
 void run(int argc, char** argv) {
@@ -72,10 +86,17 @@ void run(int argc, char** argv) {
 	vector<int*> wall;
 	vector<int> data;
 	vector<int> result;
-	std::string output_file = "result.txt";
+	vector<int> gold;
 
-	init(wall, data, result, parameters.pyramid_height, parameters.rows,
-			parameters.cols, output_file);
+	std::string& output_file = parameters.gold;
+
+	if (parameters.generate) {
+		generate_input(wall, data, result, parameters.pyramid_height,
+				parameters.rows, parameters.cols, output_file);
+	} else {
+		read_input(wall, data, result, gold, parameters.pyramid_height,
+				parameters.rows, parameters.cols, output_file);
+	}
 
 	/* --------------- pyramid parameters --------------- */
 	int borderCols = (parameters.pyramid_height) * HALO;
@@ -117,29 +138,19 @@ void run(int argc, char** argv) {
 //			cudaMemcpyDeviceToHost);
 	gpuResult[final_ret].to_vector(result);
 
-	std::ofstream of(output_file, std::ios::app);
-	if (of.good()) {
-
-		for (int i = 0; i < parameters.cols; i++)
-			of << data[i] << " ";
-//		printf("%d ", data[i]);
-
-//	printf("\n");
-		of << std::endl;
-
-		for (int i = 0; i < parameters.cols; i++)
-//		printf("%d ", result[i]);
-			of << result[i] << " ";
-
-//	printf("\n");
-		of << std::endl;
-	} else {
-		throw_line("Could not open file " + output_file);
+	if (parameters.generate) {
+		std::cout << "Saving the output at " << output_file << std::endl;
+		std::ofstream of(output_file, std::ios::binary | std::ios::app);
+		if (of.good()) {
+			of.write(reinterpret_cast<char*>(result.data()),
+					parameters.cols * sizeof(int));
+			of.close();
+		} else {
+			throw_line("Could not open file " + output_file);
+		}
 	}
 
 }
-
-
 
 int main(int argc, char** argv) {
 	int num_devices;

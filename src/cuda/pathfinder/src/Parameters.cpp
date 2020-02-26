@@ -15,7 +15,6 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->debug = rad::find_arg(argc, argv, "--debug");
 	this->generate = rad::find_arg(argc, argv, "--generate");
-	this->input = rad::find_char_arg(argc, argv, "--input", "./input");
 	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
 	this->rows = rad::find_int_arg(argc, argv, "--rows", 1024);
 	this->cols = rad::find_int_arg(argc, argv, "--cols", 1024);
@@ -35,7 +34,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 		std::string error =
 				"Usage: " + std::string(argv[0])
-						+ " --rows <rows> --cols <cols> --pyramid_height <pyramid_height>"
+						+ " --rows <rows> --cols <cols> --pyramid_height <pyramid_height> --gold <save input and gold in a file>"
 								" --generate --iterations <iterations> --verbose --debug\n";
 		error += "--generate, --verbose and --debug are not mandatory\n";
 		throw_line(error);
@@ -46,7 +45,6 @@ Parameters::Parameters(int argc, char* argv[]) {
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
 	os << "Testing PathFinder on " << p.device << std::endl;
-	os << "Input path: " << p.input << std::endl;
 	os << "Gold path: " << p.gold << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Rows: " << p.rows << std::endl;

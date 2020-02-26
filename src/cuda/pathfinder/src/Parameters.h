@@ -27,7 +27,6 @@ static inline void __throw_line(std::string err, std::string line, std::string f
 
 struct Parameters {
 	std::string device;
-	std::string input;
 	std::string gold;
 
 	size_t sm_count;
