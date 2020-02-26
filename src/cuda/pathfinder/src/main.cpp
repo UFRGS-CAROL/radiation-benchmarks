@@ -185,7 +185,7 @@ void run(int argc, char** argv) {
 	gpuWall.resize(size - parameters.cols);
 	gpuWall.fill_n(data.begin() + parameters.cols, (size - parameters.cols));
 
-	for (size_t iteration; iteration < parameters.iterations; iteration++) {
+	for (size_t iteration = 0; iteration < parameters.iterations; iteration++) {
 		//reset the memory on gpu to default before restarting
 		auto set_time = rad::mysecond();
 		gpuResult[0].fill_n(data.begin(), parameters.cols);
