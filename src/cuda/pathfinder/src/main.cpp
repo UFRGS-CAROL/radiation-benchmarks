@@ -126,11 +126,11 @@ void run(int argc, char** argv) {
 				parameters.cols, output_file);
 
 		if (parameters.debug) {
-			auto pos = rand() % data.size();
-			auto val_before = data[pos];
-			data[pos] = rand() / (val_before + 1);
-			std::cout << "data[" << pos << "] was " << val_before
-					<< " changed to " << data[pos] << std::endl;
+			auto pos = rand() % gold.size();
+			auto val_before = gold[pos];
+			gold[pos] = rand() / (val_before + 1);
+			std::cout << "gold[" << pos << "] was " << val_before
+					<< " changed to " << gold[pos] << std::endl;
 		}
 	}
 
