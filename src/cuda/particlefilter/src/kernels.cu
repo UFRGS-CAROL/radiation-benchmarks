@@ -21,7 +21,7 @@ __device__ float_t calcLikelihoodSum(unsigned char * I, int * ind, int numOnes,
 	int x;
 	for (x = 0; x < numOnes; x++)
 		likelihoodSum += (powf((float_t) (I[ind[index * numOnes + x]] - 100), 2)
-				- powf((float_t) (I[ind[index * numOnes + x]] - 228), 2)) / 50.0;
+				- powf((float_t) (I[ind[index * numOnes + x]] - 228), 2)) / 50.0f;
 	return likelihoodSum;
 }
 
@@ -58,7 +58,7 @@ __device__ float_t d_randu(int * seed, int index) {
 
 __device__ float_t d_randn(int * seed, int index) {
 	//Box-Muller algortihm
-	float_t pi = 3.14159265358979323846;
+	float_t pi = 3.14159265358979323846f;
 	float_t u = d_randu(seed, index);
 	float_t v = d_randu(seed, index);
 	float_t cosine = cosf(2 * pi * v);
@@ -249,8 +249,8 @@ __global__ void likelihood_kernel(float_t * arrayX, float_t * arrayY,
 
 		weights[i] = 1 / ((float_t) (Nparticles)); //Donnie - moved this line from end of find_index_kernel to prevent all weights from being reset before calculating position on final iteration.
 
-		arrayX[i] = arrayX[i] + 1.0 + 5.0 * d_randn(seed, i);
-		arrayY[i] = arrayY[i] - 2.0 + 2.0 * d_randn(seed, i);
+		arrayX[i] = arrayX[i] + 1.0f + 5.0f * d_randn(seed, i);
+		arrayY[i] = arrayY[i] - 2.0f + 2.0f * d_randn(seed, i);
 
 	}
 
