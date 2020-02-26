@@ -187,7 +187,7 @@ void run(int argc, char** argv) {
 		auto kernel_time = rad::mysecond();
 		log.start_iteration();
 
-#pragma omp parallel for default(shared)
+//#pragma omp parallel for default(shared)
 		for (auto stream = 0; stream < streams; stream++) {
 			int *gpuResult_ptr[2] = {
 			//split streams input
