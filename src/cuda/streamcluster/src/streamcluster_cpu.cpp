@@ -636,10 +636,8 @@ void streamCluster(PStream* stream, long kmin, long kmax,
 	}
 
 	if (centers.p) {
-		for (int i = 0; i < centersize; i++) {
-			if (centers.p[i].coord)
-				free(centers.p[i].coord);
-		}
+			if (centers.p->coord)
+				free(centers.p->coord);
 		free(centers.p);
 	}
 
