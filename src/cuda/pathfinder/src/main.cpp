@@ -125,6 +125,10 @@ size_t compare_output(vector<int>& output, vector<int>& gold, rad::Log& log) {
 	 }
 	 }
 	 */
+	if(std::equal(gold.begin(), gold.end(), output.begin())){
+		errors++;
+	}
+
 	log.update_errors();
 	return errors;
 }
