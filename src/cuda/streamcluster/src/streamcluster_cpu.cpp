@@ -14,7 +14,7 @@
  ***********************************************/
 
 #include <vector>
-#include <tuple>
+#include <numeric>
 #include <string>
 
 #include "streamcluster.h"
@@ -22,8 +22,7 @@
 
 #include "Parameters.h"
 
-#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic const int nproc  = 1; 					//# of threadsbool isCoordChanged;// GPU Timing Infodouble serial_t;
-double cpu_to_gpu_t;
+#define MAXNAMESIZE 1024 			// max filename length#define SEED 1#define SP 1 						// number of repetitions of speedy must be >=1#define ITER 3 						// iterate ITER* k log k times; ITER >= 1//#define INSERT_WASTE				// Enables waste computation in dist function#define CACHE_LINE 512				// cache line in byte// GLOBALstatic bool *switch_membership;		//whether to switch membership in pgainstatic bool *is_center;				//whether a point is a centerstatic int *center_table;			//index table of centersstatic const int nproc  = 1; 					//# of threadsbool isCoordChanged;// GPU Timing Infodouble serial_t;double cpu_to_gpu_t;
 double gpu_to_cpu_t;
 double alloc_t;
 double kernel_t;
@@ -119,6 +118,7 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 	static int i;
 
 	/* create center at first point, send it to itself */
+#pragma omp parallel for default(shared)
 	for (int k = k1; k < k2; k++) {
 		float distance = dist(points->p[k], points->p[0], points->dim);
 		points->p[k].cost = distance * points->p[k].weight;
@@ -134,6 +134,7 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 		while (1) {
 			if (i >= points->num)
 				break;
+#pragma omp parallel for default(shared)
 			for (int k = k1; k < k2; k++) {
 				float distance = dist(points->p[i], points->p[k], points->dim);
 				if (distance * points->p[k].weight < points->p[k].cost) {
@@ -149,6 +150,7 @@ float pspeedy(Points *points, float z, long *kcenter, int pid,
 			if (to_open) {
 				(*kcenter)++;
 				open = true;
+#pragma omp parallel for default(shared)
 				for (int k = k1; k < k2; k++) {
 					float distance = dist(points->p[i], points->p[k],
 							points->dim);
@@ -315,10 +317,15 @@ float pkmedian(Points *points, long kmin, long kmax, long* kfinal, int pid,
 		k2 = points->num;
 
 	float myhiz = 0;
+	static std::vector<float> myhiz_vec(k2 - k1, 0.0f);
+#pragma omp parallel for default(shared)
 	for (long kk = k1; kk < k2; kk++) {
-		myhiz += dist(points->p[kk], points->p[0], ptDimension)
+		myhiz_vec[kk - k1] = dist(points->p[kk], points->p[0], ptDimension)
 				* points->p[kk].weight;
 	}
+
+	myhiz = std::accumulate(myhiz_vec.begin(), myhiz_vec.end(), 0.0f);
+
 	hizs[pid] = myhiz;
 
 	for (int i = 0; i < nproc; i++) {
@@ -541,8 +548,8 @@ void outcenterIDs(Points* centers, long* centerIDs, char* outfile) {
 	fclose(fp);
 }
 
-void streamCluster(PStream* stream, long kmin, long kmax,
-		int dim, long chunksize, long centersize, char* outfile) {
+void streamCluster(PStream* stream, long kmin, long kmax, int dim,
+		long chunksize, long centersize, char* outfile) {
 	float* block = (float*) malloc(chunksize * dim * sizeof(float));
 	float* centerBlock = (float*) malloc(centersize * dim * sizeof(float));
 	long* centerIDs = (long*) malloc(centersize * dim * sizeof(long));
@@ -636,13 +643,11 @@ void streamCluster(PStream* stream, long kmin, long kmax,
 	}
 
 	if (centers.p) {
-			if (centers.p->coord)
-				free(centers.p->coord);
+		if (centers.p->coord)
+			free(centers.p->coord);
 		free(centers.p);
 	}
 
-
-//	return {centers, centerIDs};
 }
 
 int main(int argc, char **argv) {
@@ -687,8 +692,8 @@ int main(int argc, char **argv) {
 
 	isCoordChanged = false;
 
-	streamCluster(stream, kmin, kmax, dim, chunksize,
-			clustersize, const_cast<char*>(outfilename.c_str()));
+	streamCluster(stream, kmin, kmax, dim, chunksize, clustersize,
+			const_cast<char*>(outfilename.c_str()));
 
 	double t2 = rad::mysecond();
 
