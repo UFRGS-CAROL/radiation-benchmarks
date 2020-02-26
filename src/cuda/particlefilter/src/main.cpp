@@ -11,6 +11,7 @@
 //#include <sys/time.h>
 
 #include <ctime>
+#include <vector>
 
 #include <climits>
 
@@ -18,9 +19,9 @@
 #include "common.h"
 
 extern long long get_time();
-extern void videoSequence(unsigned char * I, int IszX, int IszY, int Nfr, int * seed) ;
-extern void particleFilter(unsigned char * I, int IszX, int IszY, int Nfr, int * seed,
-		int Nparticles) ;
+extern void videoSequence(std::vector<unsigned char>& I, int IszX, int IszY, int Nfr, std::vector<int>& seed) ;
+extern void particleFilter(std::vector<unsigned char>& I, int IszX, int IszY, int Nfr,
+		std::vector<int>& seed, int Nparticles) ;
 extern float_t elapsed_time(long long start_time, long long end_time);
 
 int main(int argc, char * argv[]) {
@@ -84,13 +85,17 @@ int main(int argc, char * argv[]) {
 		return 0;
 	}
 	//establish seed
-	int * seed = (int *) malloc(sizeof(int) * Nparticles);
+//	int * seed = (int *) malloc(sizeof(int) * Nparticles);
+	std::vector<int> seed(Nparticles);
+
 	int i;
 	for (i = 0; i < Nparticles; i++)
 		seed[i] = time(0) * i;
 	//malloc matrix
-	unsigned char * I = (unsigned char *) malloc(
-			sizeof(unsigned char) * IszX * IszY * Nfr);
+//	unsigned char * I = (unsigned char *) malloc(
+//			sizeof(unsigned char) * IszX * IszY * Nfr);
+	std::vector<unsigned char> I(IszX * IszY * Nfr);
+
 	long long start = get_time();
 	//call video sequence
 	videoSequence(I, IszX, IszY, Nfr, seed);
@@ -103,7 +108,7 @@ int main(int argc, char * argv[]) {
 			elapsed_time(endVideoSequence, endParticleFilter));
 	printf("ENTIRE PROGRAM TOOK %f\n", elapsed_time(start, endParticleFilter));
 
-	free(seed);
-	free(I);
+//	free(seed);
+//	free(I);
 	return 0;
 }
