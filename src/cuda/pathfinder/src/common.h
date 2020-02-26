@@ -23,7 +23,33 @@
 #define MIN(a, b) ((a)<=(b) ? (a) : (b))
 
 
-void run(int argc, char** argv);
+#include "device_vector.h"
+#include "cuda_utils.h"
 
+struct cuda_stream {
+	cudaStream_t stream;
+	cuda_stream() {
+		rad::checkFrameworkErrors(cudaStreamCreate(&(this->stream)));
+	}
+	~cuda_stream() {
+		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
+	}
+	cudaStream_t operator*(){
+		return this->stream;
+	}
+};
+
+
+template<typename T>
+using vector = std::vector<T>;
+
+template<typename T>
+using matrix_hst = vector<vector<T>>;
+
+template<typename T>
+using matrix_dev = vector<rad::DeviceVector<T>>;
+
+int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols,
+		int pyramid_height, int blockCols, int borderCols, cuda_stream& stream);
 
 #endif /* COMMON_H_ */
