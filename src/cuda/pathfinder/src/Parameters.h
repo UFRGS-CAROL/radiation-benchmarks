@@ -32,6 +32,9 @@ struct Parameters {
 
 	size_t sm_count;
 	size_t iterations;
+	int32_t cols;
+	int32_t rows;
+	int32_t pyramid_height;
 
 	bool verbose;
 	bool debug;

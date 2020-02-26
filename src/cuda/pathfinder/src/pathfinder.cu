@@ -53,56 +53,49 @@ void init(vector<int*>& wall, vector<int>& data, vector<int>& result,
 }
 
 void run(int argc, char** argv) {
-	int pyramid_height, cols, rows;
-	if (argc == 4) {
-		cols = atoi(argv[1]);
-		rows = atoi(argv[2]);
-		pyramid_height = atoi(argv[3]);
-	} else {
-		throw_line("Usage: dynproc row_len col_len pyramid_height\n");
-	}
+	Parameters parameters(argc, argv);
 
 	vector<int*> wall;
 	vector<int> data;
 	vector<int> result;
 
-	init(wall, data, result, pyramid_height, rows, cols);
+	init(wall, data, result, parameters.pyramid_height, parameters.rows, parameters.cols);
 
 	/* --------------- pyramid parameters --------------- */
-	int borderCols = (pyramid_height) * HALO;
-	int smallBlockCol = BLOCK_SIZE - (pyramid_height) * HALO * 2;
-	int blockCols = cols / smallBlockCol
-			+ ((cols % smallBlockCol == 0) ? 0 : 1);
+	int borderCols = (parameters.pyramid_height) * HALO;
+	int smallBlockCol = BLOCK_SIZE - (parameters.pyramid_height) * HALO * 2;
+	int blockCols = parameters.cols / smallBlockCol
+			+ ((parameters.cols % smallBlockCol == 0) ? 0 : 1);
 
 	printf(
 			"pyramidHeight: %d\ngridSize: [%d]\nborder:[%d]\nblockSize: %d\nblockGrid:[%d]\ntargetBlock:[%d]\n",
-			pyramid_height, cols, borderCols, BLOCK_SIZE, blockCols,
+			parameters.pyramid_height, parameters.cols, borderCols, BLOCK_SIZE, blockCols,
 			smallBlockCol);
 
 	//int *gpuWall, *gpuResult[2];
 	rad::DeviceVector<int> gpuWall;
 	rad::DeviceVector<int> gpuResult[2];
 
-	int size = rows * cols;
+	int size = parameters.rows * parameters.cols;
 //	cudaMalloc((void**) &gpuResult[0], sizeof(int) * cols);
 //	cudaMalloc((void**) &gpuResult[1], sizeof(int) * cols);
-	gpuResult[0].resize(cols);
-	gpuResult[1].resize(cols);
+	gpuResult[0].resize(parameters.cols);
+	gpuResult[1].resize(parameters.cols);
 
 //	cudaMemcpy(gpuResult[0], data, sizeof(int) * cols, cudaMemcpyHostToDevice);
-	gpuResult[0].fill_n(data.begin(), cols);
+	gpuResult[0].fill_n(data.begin(), parameters.cols);
 
 //	cudaMalloc((void**) &gpuWall, sizeof(int) * (size - cols));
-	gpuWall.resize(size - cols);
+	gpuWall.resize(size - parameters.cols);
 //	cudaMemcpy(gpuWall, data + cols, sizeof(int) * (size - cols),
 //			cudaMemcpyHostToDevice);
 
-	gpuWall.fill_n(data.begin() + cols, (size - cols));
+	gpuWall.fill_n(data.begin() + parameters.cols, (size - parameters.cols));
 
 	int *gpuResult_ptr[2] = { gpuResult[0].data(), gpuResult[1].data() };
 
-	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, rows, cols,
-			pyramid_height, blockCols, borderCols);
+	int final_ret = calc_path(gpuWall.data(), gpuResult_ptr, parameters.rows, parameters.cols,
+			parameters.pyramid_height, blockCols, borderCols);
 
 //	cudaMemcpy(result, gpuResult[final_ret], sizeof(int) * cols,
 //			cudaMemcpyDeviceToHost);
@@ -110,13 +103,13 @@ void run(int argc, char** argv) {
 
 #ifdef BENCH_PRINT
 
-	for (int i = 0; i < cols; i++)
+	for (int i = 0; i < parameters.cols; i++)
 
 		printf("%d ", data[i]);
 
 	printf("\n");
 
-	for (int i = 0; i < cols; i++)
+	for (int i = 0; i < parameters.cols; i++)
 
 		printf("%d ", result[i]);
 
