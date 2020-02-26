@@ -20,8 +20,8 @@ __device__ float_t calcLikelihoodSum(unsigned char * I, int * ind, int numOnes,
 	float_t likelihoodSum = 0.0;
 	int x;
 	for (x = 0; x < numOnes; x++)
-		likelihoodSum += (pow((float_t) (I[ind[index * numOnes + x]] - 100), 2)
-				- pow((float_t) (I[ind[index * numOnes + x]] - 228), 2)) / 50.0;
+		likelihoodSum += (powf((float_t) (I[ind[index * numOnes + x]] - 100), 2)
+				- powf((float_t) (I[ind[index * numOnes + x]] - 228), 2)) / 50.0;
 	return likelihoodSum;
 }
 
@@ -53,7 +53,7 @@ __device__ float_t d_randu(int * seed, int index) {
 	int num = A * seed[index] + C;
 	seed[index] = num % M;
 
-	return fabs(seed[index] / ((float_t) M));
+	return fabsf(seed[index] / ((float_t) M));
 }
 
 __device__ float_t d_randn(int * seed, int index) {
@@ -61,8 +61,8 @@ __device__ float_t d_randn(int * seed, int index) {
 	float_t pi = 3.14159265358979323846;
 	float_t u = d_randu(seed, index);
 	float_t v = d_randu(seed, index);
-	float_t cosine = cos(2 * pi * v);
-	float_t rt = -2 * log(u);
+	float_t cosine = cosf(2 * pi * v);
+	float_t rt = -2 * logf(u);
 	return sqrt(rt) * cosine;
 }
 
@@ -78,7 +78,7 @@ __device__ float_t updateWeights(float_t * weights, float_t * likelihood,
 	int x;
 	float_t sum = 0;
 	for (x = 0; x < Nparticles; x++) {
-		weights[x] = weights[x] * exp(likelihood[x]);
+		weights[x] = weights[x] * expf(likelihood[x]);
 		sum += weights[x];
 	}
 	return sum;
@@ -270,7 +270,7 @@ __global__ void likelihood_kernel(float_t * arrayX, float_t * arrayY,
 
 		likelihood[i] = likelihood[i] / countOnes;
 
-		weights[i] = weights[i] * exp(likelihood[i]); //Donnie Newell - added the missing exponential function call
+		weights[i] = weights[i] * expf(likelihood[i]); //Donnie Newell - added the missing exponential function call
 
 	}
 
