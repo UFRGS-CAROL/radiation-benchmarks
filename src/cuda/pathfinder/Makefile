@@ -7,6 +7,7 @@ ITERATIONS=10
 GOLD=./gold.data
 INPUT=./input.data
 SIZE=1024
+PYRAMID_HEIGHT=1
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -22,7 +23,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ= pathfinder.o main.o Parameters.o kernel.o
+OBJ= main.o Parameters.o kernel.o
 
 
 ifeq ($(DEBUG), 1) 
@@ -68,9 +69,8 @@ clean:
 	
 
 generate:
-	./$(EXEC) $(SIZE) $(SIZE) 1 > result.txt
-	
+	./$(EXEC) --rows $(SIZE) --cols $(SIZE) --pyramid_height $(PYRAMID_HEIGHT) --generate --verbose
 test:
-	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
+	./$(EXEC) --rows $(SIZE) --cols $(SIZE) --pyramid_height $(PYRAMID_HEIGHT) --verbose
 
 	
