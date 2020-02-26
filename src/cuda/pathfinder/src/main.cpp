@@ -131,7 +131,6 @@ size_t compare_output(vector<int>& output, vector<int>& gold, rad::Log& log) {
 
 void run(int argc, char** argv) {
 	Parameters parameters(argc, argv);
-	rad::Log log;
 
 	vector<int*> wall;
 	vector<int> data;
@@ -165,6 +164,15 @@ void run(int argc, char** argv) {
 		std::cout << "targetBlock:[" << smallBlockCol << "]" << std::endl;
 
 	}
+
+	auto streams = 1;
+	std::string test_info = "rows:" + std::to_string(parameters.rows);
+	test_info += " cols:" + std::to_string(parameters.cols);
+	test_info += " pyramid_height:" + std::to_string(parameters.pyramid_height);
+	test_info += " streams:" + std::to_string(streams);
+
+	rad::Log log("cudaPATHFINDER", test_info);
+
 
 	//int *gpuWall, *gpuResult[2];
 	rad::DeviceVector<int> gpuWall;
