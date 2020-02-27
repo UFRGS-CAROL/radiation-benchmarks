@@ -10,7 +10,11 @@ BUILDPROFILER=0
 
 OPENBLAS=1
 
-RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
+HOMEDIR=/home/fernando
+#RADIATIONDIR=$(HOME)/radiation-benchmarks/
+RADIATIONDIR=$(HOME)/git_pesquisa/radiation-benchmarks/
+
+CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
 ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
@@ -33,7 +37,7 @@ OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
 LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 COMMON= -Iinclude/ -Isrc/
-CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings -Werror -fPIC 
+CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC 
 
 NVCCFLAGS= -std=c++11
 #-disable-warnings 
@@ -98,6 +102,7 @@ endif
 ifeq ($(OPENGEMM), 1)
 COMMON += -DOPENGEMM 
 NVCCFLAGS += -DOPENGEMM
+COMMON+= -I$(CUTLASSDIR)
 endif
 
 ifeq ($(OPENBLAS), 1)
