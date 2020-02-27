@@ -76,18 +76,4 @@ real_t z;
 
 #define REAL_RAND_MAX FLT_MAX
 
-//#ifdef __NVCC__
-//__device__ __forceinline__ real_t_device exp_real(real_t_device x);
-//__device__ __forceinline__ real_t_device floor_real(real_t_device x);
-//__device__ __forceinline__ real_t_device pow_real(real_t_device x,
-//		real_t_device y);
-//__device__ __forceinline__ real_t_device sqrt_real(real_t_device x);
-//__device__ __forceinline__ real_t_device fabs_real(real_t_device x);
-//__device__ __forceinline__ real_t_device log_real(real_t_device x);
-//__device__ __forceinline__ real_t_device atomic_add_real(real_t_device *x,
-//		real_t_device val);
-//__device__ __forceinline__ real_t_device cos_real(real_t_device x);
-//__device__ __forceinline__ real_t_device sin_real(real_t_device x);
-//#endif
-
 #endif /* TYPE_H_ */

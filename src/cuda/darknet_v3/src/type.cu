@@ -19,48 +19,12 @@ extern void hgemm(int b_operation, int a_operation, int N, int M, int K,
 		half* c_gpu, int ldc);
 #endif
 
+typedef half real_t_fp16;
+
 extern "C" void check_error(cudaError_t status);
 extern "C" dim3 cuda_gridsize(size_t n);
 //extern void check_error(cudaError_t status);
 
-typedef half real_t_fp16;
-
-//void check_error(cudaError_t status) {
-//	//cudaDeviceSynchronize();
-//	cudaError_t status2 = cudaGetLastError();
-//	if (status != cudaSuccess) {
-//		const char *s = cudaGetErrorString(status);
-//		char buffer[256];
-//		printf("CUDA Error: %s\n", s);
-//		assert(0);
-//		snprintf(buffer, 256, "CUDA Error: %s", s);
-//		error(buffer);
-//	}
-//	if (status2 != cudaSuccess) {
-//		const char *s = cudaGetErrorString(status);
-//		char buffer[256];
-//		printf("CUDA Error Prev: %s\n", s);
-//		assert(0);
-//		snprintf(buffer, 256, "CUDA Error Prev: %s", s);
-//		error(buffer);
-//	}
-//}
-
-//{
-//	unsigned k = (n - 1) / BLOCK + 1;
-//	unsigned x = k;
-//	unsigned y = 1;
-//	unsigned z = 1;
-//
-//	if (x > 65535) {
-//		x = ceil(sqrt(k));
-//		y = (n - 1) / (x * BLOCK) + 1;
-//	}
-//
-//	dim3 d = { x, y, z };
-//	//printf("%ld %ld %ld %ld\n", n, x, y, x*y*BLOCK);
-//	return d;
-//}
 
 __global__ void cuda_f32_to_f16(real_t *X, size_t N, real_t_fp16 *Y) {
 	size_t i = (blockIdx.x + blockIdx.y * gridDim.x) * blockDim.x + threadIdx.x;
@@ -106,19 +70,21 @@ void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N,
 		check_error(cudaPeekAtLastError());
 	}
 
+#if __CUDA_ARCH__ > 600
+	real_t_fp16 alpha = real_t_fp16(ALPHA);
+	real_t_fp16 beta = real_t_fp16(BETA);
 #ifndef OPENGEMM
+
 	cudaError_t status = (cudaError_t) cublasHgemm(handle,
 			(TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N),
 			N, M, K, &alpha, b, ldb, a, lda, &beta, c, ldc);
 	check_error(status);
 #else
-#if __CUDA_ARCH__ > 600
-	real_t_fp16 alpha = real_t_fp16(ALPHA);
-	real_t_fp16 beta = real_t_fp16(BETA);
 	hgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &alpha, b, ldb,
 			a, lda, &beta, c, ldc);
 #endif
 #endif
+
 //	printf("Executed the hgemm\n");
 	cuda_f16_to_f32<<<cuda_gridsize(siz_c), BLOCK, 0, st>>>(c, siz_c, C_gpu);
 	check_error(cudaPeekAtLastError());

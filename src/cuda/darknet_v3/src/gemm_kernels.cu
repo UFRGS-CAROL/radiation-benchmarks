@@ -9,42 +9,6 @@
 #define BLOCK_SIZE 32
 
 extern "C" void check_error(cudaError_t status);
-//{
-//	//cudaDeviceSynchronize();
-//	cudaError_t status2 = cudaGetLastError();
-//	if (status != cudaSuccess) {
-//		const char *s = cudaGetErrorString(status);
-//		char buffer[256];
-//		printf("CUDA Error: %s\n", s);
-//		snprintf(buffer, 256, "CUDA Error: %s", s);
-//		printf("%s", buffer);
-//		exit(1);
-//	}
-//	if (status2 != cudaSuccess) {
-//		const char *s = cudaGetErrorString(status);
-//		char buffer[256];
-//		printf("CUDA Error Prev: %s\n", s);
-//		snprintf(buffer, 256, "CUDA Error Prev: %s", s);
-//		printf("%s", buffer);
-//		exit(1);
-//	}
-//}
-
-//__global__ void MatrixMulKernel(half *d_A0, half *d_B0, half *d_C0, int n,
-//		int m, int k) {
-//	int tx = blockIdx.x * blockDim.x + threadIdx.x;
-//	int ty = blockIdx.y * blockDim.y + threadIdx.y;
-//
-//	if (m < ty || n < tx)
-//		return;
-//
-//	half acc = 0.0;
-//	for (int i = 0; i < k; i++) {
-//		acc = __hfma(d_A0[ty * m + i], d_B0[i * n + tx], acc);
-//	}
-//
-//	d_C0[ty * m + tx] = acc;
-//}
 
 template<class tested_type>
 __global__ void MatrixMulKernel(tested_type *a, tested_type *b,
@@ -77,7 +41,7 @@ void hgemm(int b_operation, int a_operation, int N, int M, int K,
 	dim3 grid(gridsize_n, gridsize_m);
 
 //	printf("M %d N %d K %d lda %d, ldb %d, ldc %d, x %d y %d\n", M, N, K, lda, ldb, ldc, grid.x, grid.y);
-	MatrixMulKernel<half> <<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
+	MatrixMulKernel<<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
 	check_error(cudaError_t(cudaPeekAtLastError()));
 }
 #endif
