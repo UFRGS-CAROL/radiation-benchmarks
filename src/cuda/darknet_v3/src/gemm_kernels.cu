@@ -8,7 +8,12 @@
 
 #define BLOCK_SIZE 32
 
-extern "C" void check_error(cudaError_t status);
+//extern "C" void check_error(cudaError_t status);
+
+extern "C"{
+#include "cuda.h"
+}
+
 
 template<class tested_type>
 __global__ void MatrixMulKernel(tested_type *a, tested_type *b, tested_type *c,

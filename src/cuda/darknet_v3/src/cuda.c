@@ -28,7 +28,7 @@ int cuda_get_device() {
 	return n;
 }
 
-void check_error(cudaError_t status) {
+void check_error_(cudaError_t status, const char* file, int line) {
 	//cudaDeviceSynchronize();
 	cudaError_t status2 = cudaGetLastError();
 
@@ -40,6 +40,7 @@ void check_error(cudaError_t status) {
 #endif
 
 	if (status != cudaSuccess) {
+		printf("Error at %s:%d\n", file, line);
 		const char *s = cudaGetErrorString(status);
 		char buffer[256];
 		printf("CUDA Error: %s\n", s);
@@ -48,6 +49,7 @@ void check_error(cudaError_t status) {
 		error(buffer);
 	}
 	if (status2 != cudaSuccess) {
+		printf("Error at %s:%d\n", file, line);
 		const char *s = cudaGetErrorString(status);
 		char buffer[256];
 		printf("CUDA Error Prev: %s\n", s);

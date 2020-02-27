@@ -12,6 +12,10 @@
 
 #include <assert.h>
 
+extern "C"{
+#include "cuda.h"
+}
+
 #if __CUDA_ARCH__ > 600
 
 extern void hgemm(int b_operation, int a_operation, int N, int M, int K,
@@ -21,8 +25,8 @@ extern void hgemm(int b_operation, int a_operation, int N, int M, int K,
 
 typedef half real_t_fp16;
 
-extern "C" void check_error(cudaError_t status);
-extern "C" dim3 cuda_gridsize(size_t n);
+//extern "C" void check_error(cudaError_t status);
+//extern "C" dim3 cuda_gridsize(size_t n);
 //extern void check_error(cudaError_t status);
 
 

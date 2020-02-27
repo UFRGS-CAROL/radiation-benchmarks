@@ -5,7 +5,10 @@
 
 #ifdef GPU
 
-void check_error(cudaError_t status);
+void check_error_(cudaError_t status, const char* file, int line);
+
+#define check_error(err) check_error_(err, __FILE__, __LINE__);
+
 cublasHandle_t blas_handle(unsigned char use_tensor_cores);
 int *cuda_make_int_array(int *x, size_t n);
 void cuda_random(real_t *x_gpu, size_t n);
