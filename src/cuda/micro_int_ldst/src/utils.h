@@ -28,9 +28,9 @@
 		//MUL
 		{ "V100", 1024ull * 1024ull * 1024ull },
 		//FMA
-		{ "Tesla K20c", 1024ull * 1024ull * 512ull },
+		{ "Tesla K20c", 1024ull * 1024ull * 256ull },
 
-		{ "Tesla K40c", 1024ull * 1024ull * 512ull },
+		{ "Tesla K40c", 1024ull * 1024ull * 256ull },
 };
 
 
