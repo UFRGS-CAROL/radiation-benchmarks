@@ -8,7 +8,7 @@
 
 #define BLOCK_SIZE 32
 
-extern void check_error(cudaError_t status);
+extern "C" void check_error(cudaError_t status);
 //{
 //	//cudaDeviceSynchronize();
 //	cudaError_t status2 = cudaGetLastError();
@@ -47,8 +47,8 @@ extern void check_error(cudaError_t status);
 //}
 
 template<class tested_type>
-__global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_B0,
-		tested_type *d_C0, int N, int M, int K, int lda, int ldb, int ldc) {
+__global__ void MatrixMulKernel(tested_type *a, tested_type *b,
+		tested_type *c, int N, int M, int K, int lda, int ldb, int ldc) {
 
 	//N
 	int tx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -60,10 +60,10 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_B0,
 	}
 	tested_type acc = 0.0;
 	for (int k = 0; k < K; k++) {
-		acc = d_A0[ty * lda + k] * d_B0[k * ldb + tx] + acc;
+		acc = a[ty * lda + k] * b[k * ldb + tx] + acc;
 	}
 
-	d_C0[ty * ldc + tx] = acc;
+	c[ty * ldc + tx] = acc;
 }
 
 #if __CUDA_ARCH__ > 600
@@ -80,6 +80,7 @@ void hgemm(int b_operation, int a_operation, int N, int M, int K,
 	MatrixMulKernel<half> <<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
 	check_error(cudaError_t(cudaPeekAtLastError()));
 }
+#endif
 
 void sgemm(int b_operation, int a_operation, int N, int M, int K,
 		float *alpha, float* b_gpu, int ldb, float* a_gpu, int lda, float* beta,
@@ -90,10 +91,10 @@ void sgemm(int b_operation, int a_operation, int N, int M, int K,
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(gridsize_n, gridsize_m);
 
-	MatrixMulKernel<float> <<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
+	MatrixMulKernel<<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
 	check_error(cudaError_t(cudaPeekAtLastError()));
 }
-#endif
+
 
 void dgemm(int b_operation, int a_operation, int N, int M, int K,
 		double *alpha, double* b_gpu, int ldb, double* a_gpu, int lda,
@@ -104,6 +105,6 @@ void dgemm(int b_operation, int a_operation, int N, int M, int K,
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(gridsize_n, gridsize_m);
 
-	MatrixMulKernel<double> <<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
+	MatrixMulKernel<<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
 	check_error(cudaError_t(cudaPeekAtLastError()));
 }
