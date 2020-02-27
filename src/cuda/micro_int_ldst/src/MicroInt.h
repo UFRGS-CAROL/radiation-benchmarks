@@ -44,7 +44,8 @@ struct MicroInt {
 
 		if (this->parameters.micro == LDST) {
 			//Array size is the amount of memory that will be evaluated
-			this->array_size = GPU_DDR_TEST_SIZE / sizeof(int_t);
+			this->array_size = this->parameters.memory_size_to_use
+					/ sizeof(int_t);
 			this->parameters.operation_num = MEM_OPERATION_NUM;
 			this->grid_size = this->array_size
 					/ (this->parameters.operation_num * this->block_size);

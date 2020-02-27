@@ -22,8 +22,17 @@
 
 //The amount of memory that will be used
 //in the LDST test
-//Default is 1GB
-#define GPU_DDR_TEST_SIZE (1024ull * 1024ull * 1024ull)
+ static std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
+//ADD
+		{ "TITAN V", 1024ull * 1024ull * 1024ull },
+		//MUL
+		{ "V100", 1024ull * 1024ull * 1024ull },
+		//FMA
+		{ "K20c", 1024ull * 1024ull * 512ull },
+
+		{ "K40c", 1024ull * 1024ull * 512ull },
+};
+
 
 //Max number of load/stores performed
 //each time

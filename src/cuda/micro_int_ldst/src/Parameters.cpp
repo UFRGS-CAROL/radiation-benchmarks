@@ -18,9 +18,9 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->operation_num = rad::find_int_arg(argc, argv, "--opnum", LOOPING_UNROLL);
 	this->micro = mic[this->instruction_str];
 
-
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
+	this->memory_size_to_use = gpu_ddr_by_gpu[this->device];
 
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
@@ -45,7 +45,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Amount of memory that will be used = ";
 
 	if (p.micro == LDST) {
-		os << GPU_DDR_TEST_SIZE / mb;
+		os << p.memory_size_to_use / mb;
 	} else {
 		os
 				<< float(

@@ -25,6 +25,7 @@ struct Parameters {
 	size_t iterations;
 	size_t global_gpu_memory_bytes;
 	size_t operation_num;
+	size_t memory_size_to_use;
 
 	bool verbose;
 
