@@ -5,21 +5,17 @@ OPENMP=1
 DEBUG?=0
 REAL_TYPE?=float
 LOGS?=1
-OPENGEMM?=0
+OPENGEMM?=1
 BUILDPROFILER=0
 
 OPENBLAS=1
 
-RADIATIONDIR=/home/carol/radiation-benchmarks/
-
-ARCH= -gencode arch=compute_35,code=sm_35
-#-gencode arch=compute_60,code=sm_60 \
-#      -gencode arch=compute_61,code=sm_61 \
-#      -gencode arch=compute_62,code=[sm_62,compute_62] \
-#      -gencode arch=compute_70,code=[sm_70,compute_70] 
+RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
 
 # This is what I use, uncomment if you know your arch and want to specify
-# ARCH= -gencode arch=compute_52,code=compute_52
+ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
+#ARCH+=-gencode arch=compute_60,code=[sm_60,compute_60] 
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] 
 
 VPATH=./src/:./examples
 SLIB=libdarknet.so
