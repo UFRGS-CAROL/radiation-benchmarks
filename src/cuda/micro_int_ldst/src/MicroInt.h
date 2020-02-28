@@ -130,7 +130,6 @@ struct MicroInt {
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t slice;
-		std::cout << "NUM OF SLICES " << slices << std::endl;
 #pragma omp parallel for shared(error_vector, slice)
 		for (slice = 0; slice < slices; slice++) {
 			auto i_ptr = slice * gold_size;
