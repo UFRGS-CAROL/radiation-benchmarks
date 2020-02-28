@@ -20,6 +20,7 @@
 //#include "log_helper.h"
 //#endif
 #include "generic_log.h"
+#include "cuda_utils.h"
 
 // The timestamp is updated on every log_helper function call.
 
@@ -86,15 +87,8 @@ typedef struct parameters_t {
 	int generate;
 } parameters;
 
-void run(int argc, char** argv);
-int check_output_errors(parameters *setup_parameters, int streamIdx);
-
-double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	int i = gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
+//void run(int argc, char** argv);
+//int check_output_errors(parameters *setup_parameters, int streamIdx);
 
 void fatal(parameters *params, const char *s) {
 	fprintf(stderr, "error: %s\n", s);
@@ -516,13 +510,56 @@ void getParams(int argc, char** argv, parameters *params) {
 	}
 }
 
-int main(int argc, char** argv) {
-	printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
-	run(argc, argv);
+// Returns true if no errors are found. False if otherwise.
+int check_output_errors(parameters *setup_parameters, int streamIdx, rad::Log& log) {
+	int host_errors = 0;
 
-	return EXIT_SUCCESS;
+#pragma omp parallel for shared(host_errors)
+	for (int i = 0; i < setup_parameters->grid_rows; i++) {
+		for (int j = 0; j < setup_parameters->grid_cols; j++) {
+			int index = i * setup_parameters->grid_rows + j;
+
+			auto valGold = setup_parameters->gold_temperature[index];
+			auto valOutput = setup_parameters->out_temperature[index];
+
+
+			if (valGold != valOutput) {
+#pragma omp critical
+				{
+					char error_detail[150];
+					snprintf(error_detail, 150,
+							"stream: %d, p: [%d, %d], r: %1.20e, e: %1.20e",
+							streamIdx, i, j,
+							(double)valOutput, (double)valGold);
+					if (setup_parameters->verbose && (host_errors < 10))
+						printf("%s\n", error_detail);
+//#ifdef LOGS
+					if (!setup_parameters->generate){
+//						log_error_detail(error_detail);
+						log.log_error_detail(std::string(error_detail));
+
+					}
+//#endif
+					host_errors++;
+
+				}
+			}
+		}
+	}
+
+//#ifdef LOGS
+	if (!setup_parameters->generate) {
+//		log_error_count(host_errors);
+		log.update_errors();
+	}
+//#endif
+	if ((host_errors != 0) && (!setup_parameters->verbose)) printf("#");
+	if ((host_errors != 0) && (setup_parameters->verbose)) printf("Output errors: %d\n", host_errors);
+
+	return (host_errors == 0);
 }
+
 
 void run(int argc, char** argv) {
 	//int streamIdx;
@@ -567,14 +604,16 @@ void run(int argc, char** argv) {
 //#ifdef LOGS
 //	if (!(setupParams->generate)) start_log_file(test_name, test_info);
 //#endif
-	rad::Log log(std::string(test_name), std::string(test_info));
+	auto t_name = std::string(test_name);
+	auto t_info = std::string(test_info);
+	rad::Log log(t_name, t_info);
 	std::cout << log << std::endl;
 	printf("\n=================================\n%s\n%s\n=================================\n\n", test_name, test_info);
 
-	timestamp = mysecond();
+	timestamp = rad::mysecond();
 	readInput(setupParams);
 	if (setupParams->verbose)
-		printf("readInput time: %.4fs\n", mysecond() - timestamp);
+		printf("readInput time: %.4fs\n", rad::mysecond() - timestamp);
 	fflush (stdout);
 
 	cudaStream_t *streams = (cudaStream_t *) malloc((setupParams->nstreams) * sizeof(cudaStream_t));
@@ -604,11 +643,11 @@ void run(int argc, char** argv) {
 	for (int loop1 = 0; loop1 < (setupParams->setup_loops); loop1++) {
 		if (setupParams->verbose) 
 			printf("======== Iteration #%06u ========\n", loop1);
-		globaltime = mysecond();
+		globaltime = rad::mysecond();
 
 		// ============ PREPARE ============
 		int ret[setupParams->nstreams];
-		timestamp = mysecond();
+		timestamp = rad::mysecond();
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
 
 			// Setup inputs (Power and Temperature)
@@ -621,13 +660,14 @@ void run(int argc, char** argv) {
 
 		}
 		if (setupParams->verbose)
-			printf("GPU prepare time: %.4fs\n", mysecond() - timestamp);
+			printf("GPU prepare time: %.4fs\n", rad::mysecond() - timestamp);
 
 		// ============ COMPUTE ============
-		double kernel_time = mysecond();
-#ifdef LOGS
-		if (!(setupParams->generate)) start_iteration();
-#endif
+		double kernel_time = rad::mysecond();
+//#ifdef LOGS
+//		if (!(setupParams->generate)) start_iteration();
+//#endif
+		log.start_iteration();
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 				streamIdx++) {
@@ -643,10 +683,11 @@ void run(int argc, char** argv) {
 				streamIdx++) {
 			cudaStreamSynchronize(streams[streamIdx]);
 		}
-#ifdef LOGS
-		if (!(setupParams->generate)) end_iteration();
-#endif
-		kernel_time = mysecond() - kernel_time;
+//#ifdef LOGS
+//		if (!(setupParams->generate)) end_iteration();
+//#endif
+		log.end_iteration();
+		kernel_time = rad::mysecond() - kernel_time;
 
 		// ============ MEASURE PERFORMANCE ============
 		if (setupParams->verbose) {
@@ -663,7 +704,7 @@ void run(int argc, char** argv) {
 		flops = 0;
 
 		// ============ VALIDATE OUTPUT ============
-		timestamp = mysecond();
+		timestamp = rad::mysecond();
 		int kernel_errors = 0;
 		if (setupParams->generate) {
 			cudaMemcpy(setupParams->out_temperature, MatrixTemp[0][ret[0]],
@@ -677,16 +718,16 @@ void run(int argc, char** argv) {
 						MatrixTemp[streamIdx][ret[streamIdx]],
 						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 
-				check_output_errors(setupParams, streamIdx);
+				check_output_errors(setupParams, streamIdx, log);
 			}
 		}
 
 		if (setupParams->verbose)
-			printf("Gold check time: %.4fs\n", mysecond() - timestamp);
+			printf("Gold check time: %.4fs\n", rad::mysecond() - timestamp);
 		if ((kernel_errors != 0) && !(setupParams->verbose))
 			printf(".");
 		
-		double iteration_time = mysecond() - globaltime;
+		double iteration_time = rad::mysecond() - globaltime;
 		if (setupParams->verbose)
 			printf("Iteration time: %.4fs (%3.1f%% Device)\n", iteration_time, (kernel_time / iteration_time) * 100.0);
 		if (setupParams->verbose)
@@ -703,56 +744,17 @@ void run(int argc, char** argv) {
 		cudaStreamDestroy(streams[streamIdx]);
 	}
 
-#ifdef LOGS
-	if (!(setupParams->generate)) end_log_file();
-#endif
+//#ifdef LOGS
+//	if (!(setupParams->generate)) end_log_file();
+//#endif
 }
 
-// Returns true if no errors are found. False if otherwise.
-int check_output_errors(parameters *setup_parameters, int streamIdx, rad::Log& log) {
-	int host_errors = 0;
 
-#pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < setup_parameters->grid_rows; i++) {
-		for (int j = 0; j < setup_parameters->grid_cols; j++) {
-			int index = i * setup_parameters->grid_rows + j;
-			
-			auto valGold = setup_parameters->gold_temperature[index];
-			auto valOutput = setup_parameters->out_temperature[index];
 
-			
-			if (valGold != valOutput) {
-#pragma omp critical
-				{
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"stream: %d, p: [%d, %d], r: %1.20e, e: %1.20e",
-							streamIdx, i, j, 
-							(double)valOutput, (double)valGold);
-					if (setup_parameters->verbose && (host_errors < 10))
-						printf("%s\n", error_detail);
-//#ifdef LOGS
-					if (!setup_parameters->generate){
-//						log_error_detail(error_detail);
-						log.log_error_detail(std::string(error_detail));
+int main(int argc, char** argv) {
+	printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
-					}
-//#endif
-					host_errors++;
+	run(argc, argv);
 
-				}
-			}
-		}
-	}
-
-//#ifdef LOGS
-	if (!setup_parameters->generate) {
-//		log_error_count(host_errors);
-		log.update_errors();
-	}
-//#endif
-	if ((host_errors != 0) && (!setup_parameters->verbose)) printf("#");
-	if ((host_errors != 0) && (setup_parameters->verbose)) printf("Output errors: %d\n", host_errors);
-
-	return (host_errors == 0);
+	return EXIT_SUCCESS;
 }
