@@ -671,7 +671,9 @@ void run(int argc, char** argv) {
 //#ifdef LOGS
 //		if (!(setupParams->generate)) start_iteration();
 //#endif
-		log->start_iteration();
+		if(!setupParams->generate){
+			log->start_iteration();
+		}
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 				streamIdx++) {
@@ -690,7 +692,10 @@ void run(int argc, char** argv) {
 //#ifdef LOGS
 //		if (!(setupParams->generate)) end_iteration();
 //#endif
-		log->end_iteration();
+		if(!setupParams->generate){
+			log->end_iteration();
+		}
+
 		kernel_time = rad::mysecond() - kernel_time;
 
 		// ============ MEASURE PERFORMANCE ============
