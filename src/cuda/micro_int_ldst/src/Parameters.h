@@ -28,6 +28,7 @@ struct Parameters {
 	size_t memory_size_to_use;
 
 	bool verbose;
+	bool debug;
 
 	Parameters(int argc, char* argv[]);
 

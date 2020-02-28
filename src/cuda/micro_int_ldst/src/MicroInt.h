@@ -99,6 +99,10 @@ struct MicroInt {
 			this->input_host = this->gold_host;
 		}
 
+		if(parameters.debug){
+			this->input_host[rand() % this->input_host.size()] = 0;
+		}
+
 		this->input_device = this->input_host;
 	}
 
