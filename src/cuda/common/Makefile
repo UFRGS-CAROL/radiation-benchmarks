@@ -19,16 +19,18 @@ LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnv
 INCLUDE= -I$(CUDAPATH)/include -I./include
 
 JTX2OBJ= jtx1pow.o jtx1rate.o jtx1temp.o
-OBJ= $(JTX2OBJ) JTX2Inst.o NVMLWrapper.o
+OBJ= NVMLWrapper.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard ./include/*.h ./src/include/*.h) Makefile
 
-LIBS=JTX2Inst.so NVMLWrapper.so
+LIBS= NVMLWrapper.so
+
 
 all: clean $(OBJS) $(LIBS)
 
-JTX2Inst.so: JTX2Inst.o mklib
+
+JTX2Inst.so: JTX2Inst.o $(JTX2OBJ) mklib
 	ar $(MODE) -o $(LIB)/libJTX2Inst.so JTX2Inst.o $(JTX2OBJ)
 	rm -f libJTX2Inst.o $(JTX2OBJ)
 
