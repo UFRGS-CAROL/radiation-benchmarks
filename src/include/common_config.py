@@ -44,7 +44,7 @@ def discover_board():
     :return: the board model and the hostname
     """
     hostname = gethostname()
-    for test_board, test_command in POSSIBLE_BOARDS_BRANDS.iteritems():
+    for test_board, test_command in POSSIBLE_BOARDS_BRANDS.items():
         if os.system(test_command + " 2> /tmp/config") == 0:
             return test_board, hostname
     return None, None
