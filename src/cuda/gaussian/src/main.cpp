@@ -130,7 +130,8 @@ int main(int argc, char *argv[]) {
 		if (parameters.debug) {
 			for (int i = 0; i < 10; i++) {
 				gold_final_vector[i] = gold_final_vector[i] - 12;
-				gold_final_vector[gold_final_vector.size() - i - 1] = gold_final_vector[i]  -12;
+				gold_final_vector[gold_final_vector.size() - i - 1] =
+						gold_final_vector[i] - 12;
 			}
 		}
 	}
@@ -164,9 +165,11 @@ int main(int argc, char *argv[]) {
 		BackSub(final_vector, a_copy_host, b_copy_host, parameters.size);
 		host_time = rad::mysecond() - host_time;
 
+		size_t errors = 0;
 		auto check_time = rad::mysecond();
-		auto errors = check_and_log(final_vector, gold_final_vector, log,
-				parameters.verbose);
+		if (!parameters.generate)
+			errors = check_and_log(final_vector, gold_final_vector, log,
+					parameters.verbose);
 		check_time = rad::mysecond() - check_time;
 
 		if (parameters.verbose) {
