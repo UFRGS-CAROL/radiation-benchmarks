@@ -16,9 +16,11 @@
 #include "helper_cuda.h"
 #include "helper_string.h"
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
+//#ifdef LOGS
+//#include "log_helper.h"
+//#endif
+#include "generic_log.h"
+
 // The timestamp is updated on every log_helper function call.
 
 #ifndef DEFAULT_SIM_TIME
@@ -562,9 +564,11 @@ void run(int argc, char** argv) {
 	char test_name[90];
 	snprintf(test_info, 150, "streams:%d precision:%s size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, test_precision_description, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
 	snprintf(test_name, 90, "cuda_hotspot_%s", test_precision_description);
-#ifdef LOGS
-	if (!(setupParams->generate)) start_log_file(test_name, test_info);
-#endif
+//#ifdef LOGS
+//	if (!(setupParams->generate)) start_log_file(test_name, test_info);
+//#endif
+	rad::Log log(std::string(test_name), std::string(test_info));
+	std::cout << log << std::endl;
 	printf("\n=================================\n%s\n%s\n=================================\n\n", test_name, test_info);
 
 	timestamp = mysecond();
@@ -705,7 +709,7 @@ void run(int argc, char** argv) {
 }
 
 // Returns true if no errors are found. False if otherwise.
-int check_output_errors(parameters *setup_parameters, int streamIdx) {
+int check_output_errors(parameters *setup_parameters, int streamIdx, rad::Log& log) {
 	int host_errors = 0;
 
 #pragma omp parallel for shared(host_errors)
@@ -713,8 +717,8 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 		for (int j = 0; j < setup_parameters->grid_cols; j++) {
 			int index = i * setup_parameters->grid_rows + j;
 			
-			register tested_type_host valGold = setup_parameters->gold_temperature[index];
-			register tested_type_host valOutput = setup_parameters->out_temperature[index];
+			auto valGold = setup_parameters->gold_temperature[index];
+			auto valOutput = setup_parameters->out_temperature[index];
 
 			
 			if (valGold != valOutput) {
@@ -727,10 +731,13 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 							(double)valOutput, (double)valGold);
 					if (setup_parameters->verbose && (host_errors < 10))
 						printf("%s\n", error_detail);
-#ifdef LOGS
-					if (!setup_parameters->generate)
-						log_error_detail(error_detail);
-#endif
+//#ifdef LOGS
+					if (!setup_parameters->generate){
+//						log_error_detail(error_detail);
+						log.log_error_detail(std::string(error_detail));
+
+					}
+//#endif
 					host_errors++;
 
 				}
@@ -738,11 +745,12 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 		}
 	}
 
-#ifdef LOGS
+//#ifdef LOGS
 	if (!setup_parameters->generate) {
-		log_error_count(host_errors);
+//		log_error_count(host_errors);
+		log.update_errors();
 	}
-#endif
+//#endif
 	if ((host_errors != 0) && (!setup_parameters->verbose)) printf("#");
 	if ((host_errors != 0) && (setup_parameters->verbose)) printf("Output errors: %d\n", host_errors);
 

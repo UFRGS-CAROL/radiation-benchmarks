@@ -1,9 +1,12 @@
+CUDAPATH=/usr/local/cuda
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 DEF_SIZE?=1024
 LOGS?=1
 USE_OMP?=0
+
+BUILDPROFILER=0
 
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -23,9 +26,9 @@ ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
 NVCC_FLAGS= $(ARCH) -O3 -std=c++11
-INCLUDE= -I/usr/local/cuda/include
-LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
+INCLUDE= -I$(CUDAPATH)/include -I../common/include
+LIBRARY= -L$(CUDAPATH)/lib64/
+CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
 
 TARGET=cuda_hotspot_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_hotspot.cu
@@ -48,6 +51,12 @@ ifeq ($(DEBUG), 1)
 NVCC_FLAGS+= -g -G
 endif
 
+ifeq ($(BUILDPROFILER), 1)
+NVCC_FLAGS+= -DBUILDPROFILER
+LIBRARY+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+endif
+
+
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 TEST_SIM_TIME=1000
@@ -65,7 +74,12 @@ clean:
 	rm -rf $(TARGET) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -generate -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) -sim_time=$(TEST_SIM_TIME) -verbose -iterations=1
+	./$(TARGET) -generate -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
+				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
+				-sim_time=$(TEST_SIM_TIME) -verbose -iterations=1
 
 test: $(TARGET) generate
-	./$(TARGET) -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) -sim_time=$(TEST_SIM_TIME) -iterations=10 -verbose
+	./$(TARGET) -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
+				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
+				-sim_time=$(TEST_SIM_TIME) -iterations=10 -verbose
+				
