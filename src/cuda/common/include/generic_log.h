@@ -34,7 +34,7 @@ struct Log {
 	bool was_info_updated;
 
 #ifdef BUILDPROFILER
-	std::shared_ptr<rad::Profiler> profiler_thread;
+	std::shared_ptr<Profiler> profiler_thread;
 #endif
 
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
@@ -67,11 +67,10 @@ struct Log {
 		 * must build libraries before build with this macro
 		 */
 #ifdef BUILDPROFILER
-
 		std::string log_file_name(get_log_file_name());
-		std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::NVMLWrapper>(0, log_file_name);
+		std::shared_ptr<Profiler> profiler_thread = std::make_shared<NVMLWrapper>(0, log_file_name);
 
-//START PROFILER THREAD
+		//START PROFILER THREAD
 		profiler_thread->start_profile();
 #endif
 #endif
@@ -89,6 +88,7 @@ struct Log {
 #ifdef BUILDPROFILER
 		profiler_thread->end_profile();
 #endif
+
 #endif
 	}
 
