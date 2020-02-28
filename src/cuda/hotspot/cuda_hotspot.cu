@@ -594,12 +594,11 @@ void run(int argc, char** argv) {
 //#endif
 	auto t_name = std::string(test_name);
 	auto t_info = std::string(test_info);
-	std::shared_ptr<rad::Log> log;
-//	if(!setupParams->generate){
-	log = std::make_shared<rad::Log>(t_name, t_info);
-//	}
-//	rad::Log log(t_name, t_info);
-//	std::cout << log << std::endl;
+	rad::Log log(t_name, t_info);
+	if(setupParams->verbose){
+		std::cout << log << std::endl;
+
+	}
 	printf(
 			"\n=================================\n%s\n%s\n=================================\n\n",
 			test_name, test_info);
@@ -665,7 +664,7 @@ void run(int argc, char** argv) {
 //#ifdef LOGS
 //		if (!(setupParams->generate)) start_iteration();
 //#endif
-		log->start_iteration();
+		log.start_iteration();
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 				streamIdx++) {
@@ -682,7 +681,7 @@ void run(int argc, char** argv) {
 //#ifdef LOGS
 //		if (!(setupParams->generate)) end_iteration();
 //#endif
-		log->end_iteration();
+		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 
 		// ============ MEASURE PERFORMANCE ============
@@ -715,7 +714,7 @@ void run(int argc, char** argv) {
 						MatrixTemp[streamIdx][ret[streamIdx]],
 						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 
-				check_output_errors(setupParams, streamIdx, *log);
+				check_output_errors(setupParams, streamIdx, log);
 			}
 		}
 
