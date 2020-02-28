@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import configparser
 import sys
 
@@ -33,6 +33,7 @@ def config(board, debug):
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
+                "make -C ../common ",
                 "make BUILDPROFILER={} LOGS=1".format(BUILDPROFILER),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
 
