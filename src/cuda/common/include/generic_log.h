@@ -10,7 +10,15 @@
 
 #ifdef LOGS
 #include "log_helper.h"
-#endif
+
+
+#ifdef BUILDPROFILER
+#include <memory>
+#include "NVMLWrapper.h"
+
+#endif //NVML profiler
+
+#endif //log helper
 
 #include <string>
 #include <iostream>
@@ -26,10 +34,27 @@ struct Log {
 	bool was_error_updated;
 	bool was_info_updated;
 
+#ifdef BUILDPROFILER
+	std::shared_ptr<rad::Profiler> profiler_thread;
+#endif
+
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
 		file_name = get_log_file_name();
+
+/**
+ * Profiler macros to define profiler thread
+ * must build libraries before build with this macro
+ */
+#ifdef BUILDPROFILER
+
+	std::string log_file_name(file_name);
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::NVMLWrapper>(0, log_file_name);
+
+//START PROFILER THREAD
+	profiler_thread->start_profile();
+#endif
 #endif
 		os << "LOGFILENAME: " << file_name << std::endl;
 		os << "Error: " << d.error << std::endl;
@@ -39,10 +64,7 @@ struct Log {
 		return os;
 	}
 
-	Log(const Log& l) :
-			error(l.error), info(l.info), was_error_updated(
-					l.was_error_updated), was_info_updated(l.was_info_updated) {
-	}
+
 
 	Log() :
 			error(0), info(0), was_error_updated(false), was_info_updated(false) {
@@ -67,6 +89,10 @@ struct Log {
 
 #ifdef LOGS
 		::end_log_file();
+
+#ifdef BUILDPROFILER
+	profiler_thread->end_profile();
+#endif
 #endif
 	}
 
@@ -128,6 +154,15 @@ struct Log {
 		::set_iter_interval_print(print_interval);
 #endif
 	}
+
+private:
+	//Hide copy constructor to avoid copies
+	//pass only as reference to the function/method
+	Log(const Log& l) :
+		error(l.error), info(l.info), was_error_updated(
+					l.was_error_updated), was_info_updated(l.was_info_updated) {
+	}
+
 };
 
 }

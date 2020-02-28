@@ -18,20 +18,9 @@
 #include "cuda_utils.h"
 #include "generic_log.h"
 
-//GET ECC DATA
-#ifdef BUILDPROFILER
-#include "NVMLWrapper.h"
-#endif
-
 template<typename int_t>
 void setup_execute(Parameters& test_parameter, MicroInt<int_t>& micro_obj) {
 
-	// SETUP THE NVWL THREAD
-#ifdef BUILDPROFILER
-	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
-	//TODO
-	//Do the same of the other benchmarks
-#endif
 	for (size_t iteration = 0; iteration < test_parameter.iterations;
 			iteration++) {
 
