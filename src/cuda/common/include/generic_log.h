@@ -33,8 +33,10 @@ struct Log {
 	bool was_error_updated;
 	bool was_info_updated;
 
+#ifdef LOGS
 #ifdef BUILDPROFILER
 	std::shared_ptr<Profiler> profiler_thread;
+#endif
 #endif
 
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
@@ -68,7 +70,7 @@ struct Log {
 		 */
 #ifdef BUILDPROFILER
 		std::string log_file_name(get_log_file_name());
-		std::shared_ptr<Profiler> profiler_thread = std::make_shared<NVMLWrapper>(0, log_file_name);
+		this->profiler_thread = std::make_shared<NVMLWrapper>(0, log_file_name);
 
 		//START PROFILER THREAD
 		profiler_thread->start_profile();
@@ -86,7 +88,7 @@ struct Log {
 		::end_log_file();
 
 #ifdef BUILDPROFILER
-		profiler_thread->end_profile();
+		this->profiler_thread->end_profile();
 #endif
 
 #endif
