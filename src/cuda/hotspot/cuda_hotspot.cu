@@ -384,7 +384,7 @@ int compute_tran_temp(tested_type_host *MatrixPower,
 				time_elapsed);
 		flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 	}
-	cudaStreamSynchronize(stream);
+//	cudaStreamSynchronize(stream);
 	return dst;
 }
 
@@ -676,8 +676,9 @@ void run(int argc, char** argv) {
 		}
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 				streamIdx++) {
-			cudaStreamSynchronize(streams[streamIdx]);
+			rad::checkFrameworkErrors( cudaStreamSynchronize(streams[streamIdx]));
 		}
+		rad::checkFrameworkErrors(cudaGetLastError());
 //#ifdef LOGS
 //		if (!(setupParams->generate)) end_iteration();
 //#endif
