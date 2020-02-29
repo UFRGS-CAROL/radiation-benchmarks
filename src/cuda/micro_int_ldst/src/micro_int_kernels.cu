@@ -137,7 +137,7 @@ void MicroInt<int32_t>::execute_micro() {
  check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
 
  unsigned long long herrors = 0;
- rad::checkFrameworkErrors(cudaPeekAtLastError());
+ rad::checkFrameworkErrors(cudaGetLastError());
  rad::checkFrameworkErrors(cudaDeviceSynchronize());
  rad::checkFrameworkErrors(
  cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));

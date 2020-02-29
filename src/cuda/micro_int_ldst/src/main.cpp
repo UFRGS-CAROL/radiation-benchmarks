@@ -29,7 +29,7 @@ void setup_execute(Parameters& test_parameter, MicroInt<int_t>& micro_obj) {
 		micro_obj.log->start_iteration();
 		micro_obj.execute_micro();
 
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaGetLastError());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 		//end iteration
