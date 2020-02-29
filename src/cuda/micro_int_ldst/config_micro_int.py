@@ -26,7 +26,7 @@ def config(board, debug):
 
     bin_path = install_dir + "bin"
     src_benchmark = install_dir + "src/cuda/micro_int_ldst"
-    data_path = install_dir + "data/micro_mp_hard"
+    data_path = install_dir + "data/micro_int_ldst"
 
     generate = ["sudo mkdir -p " + bin_path,
                 "sudo mkdir -p " + data_path,

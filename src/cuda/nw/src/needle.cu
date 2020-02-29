@@ -18,9 +18,10 @@
 // includes, kernels
 #include "needle.h"
 //================== log include
-#ifdef LOGS
-#include "log_helper.h"
-#endif
+//#ifdef LOGS
+//#include "log_helper.h"
+//#endif
+#include "include/generic_log.h"
 //====================================
 
 #define GCHK_BLOCK_SIZE 32
@@ -201,14 +202,20 @@ void runTest(int argc, char** argv) {
 	 FILE* log_file;
 	 */
 	//================== Init logs
-#ifdef LOGS
-//"max_rows:%d max_cols:%d penalty:%d"
-	std::string test_info = "";
+//#ifdef LOGS
+////"max_rows:%d max_cols:%d penalty:%d"
+//	std::string test_info = "";
+//	test_info += "max_rows:" + std::to_string(max_rows) + " ";
+//	test_info += "max_cols:" + std::to_string(max_cols) + " ";
+//	test_info += "penalty:" + std::to_string(penalty);
+//	start_log_file(CONST_CAST("cudaNW"), CONST_CAST(test_info.c_str()));
+//#endif
+	std::string test_info = "", test_name = "cudaNW";
 	test_info += "max_rows:" + std::to_string(max_rows) + " ";
 	test_info += "max_cols:" + std::to_string(max_cols) + " ";
 	test_info += "penalty:" + std::to_string(penalty);
-	start_log_file(CONST_CAST("cudaNW"), CONST_CAST(test_info.c_str()));
-#endif
+	rad::Log log(test_name, test_info);
+	std::cout << log << std::endl;
 	//====================================
 	KErrorsType ea = 0; //wrong integers in the current loop
 	KErrorsType t_ea = 0; //total number of wrong integers
@@ -262,9 +269,10 @@ void runTest(int argc, char** argv) {
 		int block_width = (max_cols - 1) / BLOCK_SIZE;
 
 		auto kernel_time = rad::mysecond();
-#ifdef LOGS
-		start_iteration();
-#endif
+//#ifdef LOGS
+//		start_iteration();
+//#endif
+		log.start_iteration();
 		//printf("Processing top-left matrix\n");
 		//process top-left matrix
 		for (int i = 1; i <= block_width; i++) {
@@ -282,11 +290,12 @@ void runTest(int argc, char** argv) {
 					matrix_cuda.data(), max_cols, penalty, i, block_width);
 		}
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaGetLastError());
 
-#ifdef LOGS
-		end_iteration();
-#endif
+//#ifdef LOGS
+//		end_iteration();
+//#endif
+		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 		total_time += kernel_time;
 
@@ -323,10 +332,11 @@ void runTest(int argc, char** argv) {
 							{
 								ea++;
 
-#ifdef LOGS
-								log_error_detail(CONST_CAST(error_detail.c_str()));
+//#ifdef LOGS
+//								log_error_detail(CONST_CAST(error_detail.c_str()));
 								host_errors++;
-#endif
+//#endif
+								log.log_error_detail(error_detail);
 							}
 
 						}
@@ -334,9 +344,10 @@ void runTest(int argc, char** argv) {
 				}
 				t_ea += host_errors;
 
-#ifdef LOGS
-				log_error_count(host_errors);
-#endif
+//#ifdef LOGS
+//				log_error_count(host_errors);
+//#endif
+				log.update_errors();
 			}
 
 			if (host_errors > 0 || (loop2 % 10 == 0)) {
@@ -364,9 +375,9 @@ void runTest(int argc, char** argv) {
 
 	}
 
-#ifdef LOGS
-	end_log_file();
-#endif
+//#ifdef LOGS
+//	end_log_file();
+//#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
