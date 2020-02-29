@@ -71,12 +71,12 @@ typedef struct parameters_s {
     int noinputensurance;
 } parameters_t;
 
-double mysecond() {
-    struct timeval tp;
-    struct timezone tzp;
-    int i = gettimeofday(&tp, &tzp);
-    return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
+//double mysecond() {
+//    struct timeval tp;
+//    struct timezone tzp;
+//    int i = gettimeofday(&tp, &tzp);
+//    return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+//}
 
 void fatal(const char *str) {
     printf("FATAL: %s\n", str);
@@ -415,7 +415,7 @@ double run_quicksort_cdp(parameters_t *params, cudaStream_t stream) {
             cudaMemcpy(ringbuf, &buf, sizeof(buf), cudaMemcpyHostToDevice));
 
     // Timing events...
-    timestamp = mysecond();
+    timestamp = rad::mysecond();
 #ifdef LOGS
     if (!(params->generate)) start_iteration();
 #endif
@@ -436,11 +436,11 @@ double run_quicksort_cdp(parameters_t *params, cudaStream_t stream) {
 #ifdef LOGS
     if (!(params->generate)) end_iteration();
 #endif
-    timestamp = mysecond() - timestamp;
+    timestamp = rad::mysecond() - timestamp;
 
     if (cudaPeekAtLastError() != cudaSuccess)
         printf("Launch failure: %s\n", cudaGetErrorString(cudaGetLastError()));
-
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
     // Sanity check that the stack allocator is doing the right thing
     rad::checkFrameworkErrors(
             cudaMemcpy(&buf, ringbuf, sizeof(*ringbuf),
@@ -467,7 +467,7 @@ int dataRead(parameters_t *params) {
         printf(
                 "Reading existing input %s (delete it to generate a new one) ...\n",
                 params->inputName);
-        double timer = mysecond();
+        double timer = rad::mysecond();
         auto fread_ret = fread(params->data, sizeof(unsigned), params->size,
                 finput);
         if (fread_ret != params->size) {
@@ -475,7 +475,7 @@ int dataRead(parameters_t *params) {
             exit(EXIT_FAILURE);
         }
         fclose(finput);
-        printf("Done in %.2fs\n", mysecond() - timer);
+        printf("Done in %.2fs\n", rad::mysecond() - timer);
     } else if (params->generate) { // GENERATE INPUT
         unsigned *ndata = new unsigned[INPUTSIZE];
         printf("Generating input, this will take a long time...");
@@ -684,7 +684,7 @@ int run_qsort(parameters_t *params) {
 
     int loop1; // Test loop iterator
     for (loop1 = 0; loop1 < params->iterations; loop1++) {
-        double itertimestamp = mysecond();
+        double itertimestamp = rad::mysecond();
         if (params->verbose)
             printf("================== [Iteration #%i began]\n", loop1);
 
@@ -714,7 +714,7 @@ int run_qsort(parameters_t *params) {
                         params->size * sizeof(unsigned),
                         cudaMemcpyDeviceToHost));
 
-        double timer = mysecond();
+        double timer = rad::mysecond();
         int errors = 0;
 
         if (params->generate) {        // Write gold to file
@@ -740,7 +740,7 @@ int run_qsort(parameters_t *params) {
         }
 
         if (params->verbose)
-            printf("Gold check/generate time: %.4fs\n", mysecond() - timer);
+            printf("Gold check/generate time: %.4fs\n", rad::mysecond() - timer);
 
         // Release everything and we're done
         rad::checkFrameworkErrors(cudaFree(params->scratchdata));
@@ -751,7 +751,7 @@ int run_qsort(parameters_t *params) {
             printf("Perf: %.3fM elems/sec\n", 1.0e-6f * size / ktime);
         if (params->verbose) {
             printf("Iteration %d ended (Errors: %d). Elapsed time: %.4fs\n",
-                    loop1, errors, mysecond() - itertimestamp);
+                    loop1, errors, rad::mysecond() - itertimestamp);
         } else {
             printf(".");
         }
