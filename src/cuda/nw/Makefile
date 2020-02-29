@@ -3,6 +3,8 @@ DEBUG?=0
 #for radiation setup
 LOGS?=1
 OMP?=1
+BUILDPROFILER=0
+
 
 SIZE?=8192
 #6384 #8192 #4096 
@@ -10,6 +12,8 @@ ITERATIONS=10
 INPUT=./input_$(SIZE)
 GOLD=./gold_$(SIZE)
 PENALTY=10
+
+
 
 # This is what I use, uncomment if you know your arch and want to specify
 ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -53,6 +57,12 @@ endif
 
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
+endif
+
+
+ifeq ($(BUILDPROFILER), 1)
+CFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
 
