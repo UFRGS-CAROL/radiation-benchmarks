@@ -98,7 +98,7 @@ void ForwardSubTemplate(rad::DeviceVector<real_t>& m_cuda,
 		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(),
 				b_cuda.data(), size, size - t, t);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaGetLastError());
 		;
 	}
 }
