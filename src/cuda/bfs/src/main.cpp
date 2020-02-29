@@ -248,6 +248,8 @@ int main(int argc, char** argv) {
 			rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
 		log.end_iteration();
+		//need to reset if error happens here
+		rad::checkFrameworkErrors(cudaGetLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
 

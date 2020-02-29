@@ -62,14 +62,10 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 				d_graph_edges.data(), d_graph_mask.data(),
 				d_updating_graph_mask.data(), d_graph_visited.data(),
 				d_cost.data(), no_of_nodes);
-		// check if kernel execution generated and error
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		Kernel2<<<grid, threads, 0, stream>>>(d_graph_mask.data(),
 				d_updating_graph_mask.data(), d_graph_visited.data(),
 				d_over.data(), no_of_nodes);
-		// check if kernel execution generated and error
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		d_over.to_vector(stop);
 		k++;
