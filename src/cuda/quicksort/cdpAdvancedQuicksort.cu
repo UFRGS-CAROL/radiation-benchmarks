@@ -438,9 +438,9 @@ double run_quicksort_cdp(parameters_t *params, cudaStream_t stream) {
 #endif
     timestamp = rad::mysecond() - timestamp;
 
-    if (cudaPeekAtLastError() != cudaSuccess)
+    if (cudaGetLastError() != cudaSuccess)
         printf("Launch failure: %s\n", cudaGetErrorString(cudaGetLastError()));
-    rad::checkFrameworkErrors(cudaPeekAtLastError());
+    rad::checkFrameworkErrors(cudaGetLastError());
     // Sanity check that the stack allocator is doing the right thing
     rad::checkFrameworkErrors(
             cudaMemcpy(&buf, ringbuf, sizeof(*ringbuf),
