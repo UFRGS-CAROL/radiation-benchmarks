@@ -12,18 +12,6 @@
 
 #include "log_helper.h"
 
-#ifdef BUILDPROFILER
-
-#ifdef FORJETSON
-#include "include/JTX2Inst.h"
-#define OBJTYPE JTX2Inst
-#else
-#include "include/NVMLWrapper.h"
-#define OBJTYPE NVMLWrapper
-#endif // FORJETSON
-
-#endif // BUILDPROFILER
-
 #endif // LOGHELPER
 
 #include "Parameters.h"
@@ -65,19 +53,6 @@ int main(int argc, char *argv[]) {
 	MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
 	std::cout << log << std::endl;
 
-#ifdef BUILDPROFILER
-
-	std::string log_file_name = log.get_log_file_name();
-	if(parameters.generate) {
-		log_file_name = "/tmp/generate.log";
-	}
-
-	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
-
-//START PROFILER THREAD
-	profiler_thread->start_profile();
-#endif
-
 	/**
 	 * Do the magic here
 	 */
@@ -93,10 +68,6 @@ int main(int argc, char *argv[]) {
 	default:
 		error("Precision not valid");
 	}
-
-#ifdef BUILDPROFILER
-	profiler_thread->end_profile();
-#endif
 
 	return 0;
 }
