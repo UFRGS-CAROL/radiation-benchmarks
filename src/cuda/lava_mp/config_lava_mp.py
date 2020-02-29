@@ -10,16 +10,17 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 # Size and streams
 SIZES = [[23, 2]]
-REDUNDANCY = ["dmrmixed"]
+REDUNDANCY = ["none"]
 PRECISIONS = ["float"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
+CHECK_BLOCK = []
 BUILDPROFILER = 1
 
 
 def config(board, debug):
     benchmark_bin = "cuda_lava"
-    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
+    print("Generating " + benchmark_bin + " for CUDA, board:" + str(board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
