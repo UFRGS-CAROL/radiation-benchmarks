@@ -25,7 +25,7 @@ def config(board, debug):
 
     bin_path = install_dir + "bin"
     src_benchmark = install_dir + "src/cuda/lud"
-    data_path = install_dir + "data/accl"
+    data_path = install_dir + "data/lud"
 
     generate = ["sudo mkdir -p " + bin_path,
                 "sudo mkdir -p " + data_path,
