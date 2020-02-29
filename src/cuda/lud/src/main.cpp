@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 		//================== Device computation, HMxM
 		lud_cuda(input_device_array.data(), parameters.size);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaGetLastError());
 		//====================================
 
 		if (!parameters.generate)
