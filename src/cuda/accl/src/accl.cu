@@ -257,7 +257,9 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 				devComponents.data() + i * frameCompSize,
 				devOut.data() + i * frameSpansSize, rows, cols, frameRows);
 	}
-	cudaDeviceSynchronize();
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	rad::checkFrameworkErrors(cudaGetLastError());
+
 	if (logs_active)
 		log.end_iteration();
 	/* Copy device to host*/
