@@ -131,26 +131,30 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
-	uint32_t n = gold_vector.size();
-	uint32_t numthreads = 1;
-#pragma omp parallel
-	{
-		numthreads = omp_get_max_threads();
-	}
-	uint32_t chunk = ceil(float(n) / float(numthreads));
-	static std::vector<uint32_t> reduction_array(numthreads);
+//	uint32_t n = gold_vector.size();
+//	uint32_t numthreads = 1;
+//#pragma omp parallel
+//	{
+//		numthreads = omp_get_max_threads();
+//	}
+//	uint32_t chunk = ceil(float(n) / float(numthreads));
+//	static std::vector<uint32_t> reduction_array(numthreads);
+//
+//#pragma omp parallel default(shared)
+//	for (uint32_t i = 0; i < numthreads; i++) {
+//		uint32_t slice = i * chunk;
+//		reduction_array[i] = std::equal(
+//				gold_vector.begin() + slice,
+//				gold_vector.begin() + slice + chunk,
+//				found_vector.begin() + slice);
+//	}
+//	uint32_t result = std::accumulate(reduction_array.begin(),
+//			reduction_array.end(), 0);
+//	return (result != numthreads);
+	return !std::equal(gold_vector.begin(), gold_vector.end(),
+			found_vector.begin());
 
-#pragma omp parallel default(shared)
-	for (uint32_t i = 0; i < numthreads; i++) {
-		uint32_t slice = i * chunk;
-		reduction_array[i] = std::equal(
-				gold_vector.begin() + slice,
-				gold_vector.begin() + slice + chunk,
-				found_vector.begin() + slice);
-	}
-	uint32_t result = std::accumulate(reduction_array.begin(),
-			reduction_array.end(), 0);
-	return (result != numthreads);
+//	return !memcmp(gold_vector.data(), found_vector.data(), gold.size());
 
 }
 
