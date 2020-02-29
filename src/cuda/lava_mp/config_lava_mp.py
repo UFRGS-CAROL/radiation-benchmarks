@@ -11,10 +11,9 @@ from common_config import discover_board, execute_and_write_json_to_file
 # Size and streams
 SIZES = [[23, 2]]
 REDUNDANCY = ["dmrmixed"]
-PRECISIONS = ["double"]
+PRECISIONS = ["float"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
-CHECK_BLOCK = [1, 12]
 BUILDPROFILER = 1
 
 
@@ -43,6 +42,7 @@ def config(board, debug):
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
+                "make -C ../common/",
                 "make -j 3 BUILDPROFILER={}".format(BUILDPROFILER),
                 "sudo rm -f " + data_path + "/{}*".format(DATA_PATH_BASE),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]

@@ -81,6 +81,7 @@ static std::unordered_map<std::string, PRECISION> PRE = {
 		{ "half", HALF },
 		//SINGLE
 		{ "single", SINGLE },
+		{ "float", SINGLE },
 		// DOUBLE
 		{ "double", DOUBLE }, };
 

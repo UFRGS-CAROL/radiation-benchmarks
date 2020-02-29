@@ -369,12 +369,12 @@ void setup_execution(Parameters& parameters, Log& log,
 					d_rv_gpu[stream_idx].data(), d_qv_gpu[stream_idx].data(),
 					d_fv_gpu[stream_idx].data(), stream_idx);
 
-			rad::checkFrameworkErrors (cudaPeekAtLastError());;
+			rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors (cudaPeekAtLastError());;
+			rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
 		log.end_iteration();
