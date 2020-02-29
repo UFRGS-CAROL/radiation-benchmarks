@@ -13,7 +13,7 @@
 #endif
 
 // Helper functions
-#include "helper_cuda.h"
+//#include "helper_cuda.h"
 #include "helper_string.h"
 
 //#ifdef LOGS
@@ -286,13 +286,13 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	// the valid range of the input data
 	// used to rule out computation outside the boundary.
 	int validYmin = (blkY < 0) ? -blkY : 0;
-	int validYmax =
-			(blkYmax > grid_rows - 1) ?
-					BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) : BLOCK_SIZE - 1;
+	int validYmax = (blkYmax > grid_rows - 1) ?
+	BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) :
+												BLOCK_SIZE - 1;
 	int validXmin = (blkX < 0) ? -blkX : 0;
-	int validXmax =
-			(blkXmax > grid_cols - 1) ?
-					BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) : BLOCK_SIZE - 1;
+	int validXmax = (blkXmax > grid_cols - 1) ?
+	BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) :
+												BLOCK_SIZE - 1;
 
 	int N = ty - 1;
 	int S = ty + 1;
@@ -595,7 +595,7 @@ void run(int argc, char** argv) {
 	auto t_name = std::string(test_name);
 	auto t_info = std::string(test_info);
 	rad::Log log(t_name, t_info);
-	if(setupParams->verbose){
+	if (setupParams->verbose) {
 		std::cout << log << std::endl;
 
 	}
@@ -616,17 +616,17 @@ void run(int argc, char** argv) {
 	tested_type_host *MatrixPower[setupParams->nstreams];
 
 	for (int streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
-		checkCudaErrors(
+		rad::checkFrameworkErrors(
 				cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking));
 
-		checkCudaErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void** ) &(MatrixTemp[streamIdx][0]),
 						sizeof(tested_type) * size));
-		checkCudaErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void** ) &(MatrixTemp[streamIdx][1]),
 						sizeof(tested_type) * size));
 
-		checkCudaErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void** ) &(MatrixPower[streamIdx]),
 						sizeof(tested_type) * size));
 
@@ -645,15 +645,16 @@ void run(int argc, char** argv) {
 				streamIdx++) {
 
 			// Setup inputs (Power and Temperature)
-			cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->in_temperature,
-					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
+			rad::checkFrameworkErrors(cudaMemcpy(MatrixTemp[streamIdx][0],
+							setupParams->in_temperature, sizeof(tested_type) * size,
+							cudaMemcpyHostToDevice));
 
-			cudaMemcpy(MatrixPower[streamIdx], setupParams->in_power,
-					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
+			rad::checkFrameworkErrors(cudaMemcpy(MatrixPower[streamIdx], setupParams->in_power,
+							sizeof(tested_type) * size, cudaMemcpyHostToDevice));
 
 			// Setup output (Temperature)
-			cudaMemset(MatrixTemp[streamIdx][1], 0.0,
-					sizeof(tested_type) * size);
+			rad::checkFrameworkErrors(cudaMemset(MatrixTemp[streamIdx][1], 0.0,
+							sizeof(tested_type) * size));
 
 		}
 		if (setupParams->verbose)
@@ -704,16 +705,16 @@ void run(int argc, char** argv) {
 		timestamp = rad::mysecond();
 		int kernel_errors = 0;
 		if (setupParams->generate) {
-			cudaMemcpy(setupParams->out_temperature, MatrixTemp[0][ret[0]],
-					sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
+			rad::checkFrameworkErrors(cudaMemcpy(setupParams->out_temperature, MatrixTemp[0][ret[0]],
+					sizeof(tested_type) * size, cudaMemcpyDeviceToHost));
 
 			writeOutput(setupParams);
 		} else {
 			for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 					streamIdx++) {
-				cudaMemcpy(setupParams->out_temperature,
+				rad::checkFrameworkErrors(cudaMemcpy(setupParams->out_temperature,
 						MatrixTemp[streamIdx][ret[streamIdx]],
-						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
+						sizeof(tested_type) * size, cudaMemcpyDeviceToHost));
 
 				check_output_errors(setupParams, streamIdx, log);
 			}
@@ -735,11 +736,11 @@ void run(int argc, char** argv) {
 	}
 
 	for (int streamIdx = 0; streamIdx < setupParams->nstreams; streamIdx++) {
-		cudaFree(MatrixPower[streamIdx]);
-		cudaFree(MatrixTemp[streamIdx][0]);
-		cudaFree(MatrixTemp[streamIdx][1]);
+		rad::checkFrameworkErrors(cudaFree(MatrixPower[streamIdx]));
+		rad::checkFrameworkErrors(cudaFree(MatrixTemp[streamIdx][0]));
+		rad::checkFrameworkErrors(cudaFree(MatrixTemp[streamIdx][1]));
 
-		cudaStreamDestroy(streams[streamIdx]);
+		rad::checkFrameworkErrors(cudaStreamDestroy(streams[streamIdx]));
 	}
 
 //#ifdef LOGS
