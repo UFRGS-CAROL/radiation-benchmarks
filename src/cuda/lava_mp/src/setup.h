@@ -8,12 +8,13 @@
 #ifndef SETUP_DOUBLE_H_
 #define SETUP_DOUBLE_H_
 
+#include "include/generic_log.h"
+
 
 struct Parameters;
-struct Log;
 
-void setup_double(Parameters& parameters, Log& log);
-void setup_float(Parameters& parameters, Log& log);
+void setup_double(Parameters& parameters, rad::Log& log);
+void setup_float(Parameters& parameters, rad::Log& log);
 
 
 #endif /* SETUP_DOUBLE_H_ */

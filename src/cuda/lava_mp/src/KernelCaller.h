@@ -41,7 +41,7 @@ struct KernelCaller {
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) = 0;
 
 	virtual bool cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
-			Log& log, uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors) {
+			rad::Log& log, uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors) {
 		auto val_gold = fv_cpu_GOLD[i];
 		auto val_output = fv_cpu_rt[i];
 
@@ -73,7 +73,7 @@ struct KernelCaller {
 	bool check_output_errors(bool verbose, uint32_t streamIdx,
 			std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt,
 			std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
-			Log& log) {
+			rad::Log& log) {
 		uint32_t host_errors = 0;
 		uint32_t memory_errors = 0;
 		this->sync_half_t();
@@ -94,7 +94,7 @@ struct KernelCaller {
 				std::cout << error_detail << std::endl;
 			}
 			log.log_info_detail(error_detail);
-			log.update_infos(1);
+			log.update_infos();
 		}
 
 		if(memory_errors != 0) {
@@ -103,10 +103,10 @@ struct KernelCaller {
 				std::cout << error_detail << std::endl;
 			}
 			log.log_info_detail(error_detail);
-			log.update_infos(1);
+			log.update_infos();
 		}
 
-		log.update_errors(host_errors);
+		log.update_errors();
 
 		if (host_errors != 0) {
 			std::cout << "#";
@@ -230,7 +230,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	}
 
 	bool cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt,
-	std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD, Log& log,
+	std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD, rad::Log& log,
 	uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors)
 	override {
 		auto val_gold = fv_cpu_GOLD[i];

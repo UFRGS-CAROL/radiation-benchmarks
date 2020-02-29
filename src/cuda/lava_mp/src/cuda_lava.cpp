@@ -8,15 +8,15 @@
 
 #include <iostream>
 
-#ifdef LOGS
-
-#include "log_helper.h"
-
-#endif // LOGHELPER
+//#ifdef LOGS
+//
+//#include "log_helper.h"
+//
+//#endif // LOGHELPER
 
 #include "Parameters.h"
-#include "Log.h"
-
+//#include "Log.h"
+#include "include/generic_log.h"
 #include "setup.h"
 #include "common.h"
 
@@ -47,10 +47,9 @@ int main(int argc, char *argv[]) {
 			+ "_lava";
 	std::cout << "=================================" << std::endl;
 
-	Log log(test_name, test_info);
+	rad::Log log(test_name, test_info);
 
-	log.set_max_errors_iter(
-	MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
+	log.set_max_errors_iter(MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
 	std::cout << log << std::endl;
 
 	/**

@@ -18,7 +18,7 @@
 
 #include "include/cuda_utils.h"
 #include "Parameters.h"
-#include "Log.h"
+#include "include/generic_log.h"
 #include "types.h"
 #include "common.h"
 #include "File.h"
@@ -168,7 +168,7 @@ void gpu_memory_unset(const Parameters& parameters,
 }
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
-void setup_execution(Parameters& parameters, Log& log,
+void setup_execution(Parameters& parameters, rad::Log& log,
 		KernelCaller<COUNT, half_t, real_t>& kernel_caller) {
 	//=====================================================================
 	//	CPU/MCPU VARIABLES

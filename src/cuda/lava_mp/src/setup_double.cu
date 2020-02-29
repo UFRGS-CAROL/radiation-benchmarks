@@ -13,7 +13,7 @@
 #include "KernelCaller.h"
 
 #include "Parameters.h"
-#include "Log.h"
+#include "include/generic_log.h"
 
 /**
  * Define the threshold to use on
@@ -32,7 +32,7 @@
 #define THRESHOLD_MAX 374643
 #define AT_THE_END_BLOCK NUMBER_PAR_PER_BOX + 2
 
-void setup_double(Parameters& parameters, Log& log) {
+void setup_double(Parameters& parameters, rad::Log& log) {
 	if (parameters.redundancy == NONE) {
 		UnhardenedKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);

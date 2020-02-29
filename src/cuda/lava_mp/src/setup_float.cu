@@ -13,7 +13,7 @@
 #include "KernelCaller.h"
 
 #include "Parameters.h"
-#include "Log.h"
+#include "include/generic_log.h"
 
 /**
  * Define the threshold to use on
@@ -39,7 +39,7 @@
 #define THRESHOLD_MAX 4194304
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
 
-void setup_float(Parameters& parameters, Log& log) {
+void setup_float(Parameters& parameters, rad::Log& log) {
 	if (parameters.redundancy == NONE) {
 		UnhardenedKernelCaller<float> kc;
 		setup_execution(parameters, log, kc);
