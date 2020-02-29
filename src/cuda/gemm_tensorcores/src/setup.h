@@ -13,15 +13,15 @@ struct Parameters;
 /**
  * Setup for common MxM (GEMM)
  */
-void setup_gemm_unhardened(Parameters& log);
-void setup_gemm_dmr(Parameters& log);
-void setup_gemm_cublas(Parameters& log);
+void setup_gemm_unhardened(Parameters&);
+void setup_gemm_dmr(Parameters&);
+void setup_gemm_cublas(Parameters&);
 
 /**
  * Setup for Tensor (GEMM)
  */
-void setup_gemm_tensor_cores_unhardened(Parameters& log);
-void setup_gemm_tensor_cores_dmr(Parameters& log);
+void setup_gemm_tensor_cores_unhardened(Parameters&);
+void setup_gemm_tensor_cores_dmr(Parameters&);
 
 
 

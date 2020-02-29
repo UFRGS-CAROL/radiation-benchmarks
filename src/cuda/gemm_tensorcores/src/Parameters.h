@@ -49,6 +49,8 @@ struct Parameters {
 	double alpha;
 	double beta;
 	bool use_cublas;
+	bool use_cutlass;
+
 	uint32_t check_block;
 
 private:

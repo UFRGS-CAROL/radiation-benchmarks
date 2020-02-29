@@ -11,23 +11,25 @@ void usage(char **argv) {
 }
 
 int main(int argc, char** argv) {
-	Parameters log(argc, argv);
-	if (log.verbose)
-		std::cout << log << std::endl;
+	Parameters parameters(argc, argv);
+	if (parameters.verbose)
+		std::cout << parameters << std::endl;
 
-	if (log.use_tensor_cores) {
+	if (parameters.use_tensor_cores) {
 //		if (log.dmr == "none") {
 //			setup_gemm_tensor_cores_unhardened(log);
 //		} else {
 //			setup_gemm_tensor_cores_dmr(log);
 //		}
-	} else if (log.use_cublas){
-		setup_gemm_cublas(log);
+	} else if (parameters.use_cublas){
+		setup_gemm_cublas(parameters);
+	}else if (parameters.use_cutlass){
+
 	} else {
-		if (log.dmr == "none") {
-			setup_gemm_unhardened(log);
+		if (parameters.dmr == "none") {
+			setup_gemm_unhardened(parameters);
 		} else {
-			setup_gemm_dmr(log);
+			setup_gemm_dmr(parameters);
 		}
 	}
 

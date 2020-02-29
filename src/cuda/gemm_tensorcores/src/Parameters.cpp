@@ -10,6 +10,7 @@ Parameters::Parameters(int argc, char** argv) :
 	this->alpha = rad::find_float_arg(argc, argv, "--alpha", 1);
 	this->beta = rad::find_float_arg(argc, argv, "--beta", 0);
 	this->use_cublas = rad::find_arg(argc, argv, "--use_cublas");
+	this->use_cutlass = rad::find_arg(argc, argv, "--use_cutlass");
 
 	this->generate = rad::find_arg(argc, argv, "--generate");
 
@@ -26,7 +27,6 @@ Parameters::Parameters(int argc, char** argv) :
 	this->gold_inout_path = rad::find_char_arg(argc, argv, "--gold",
 			"./gold.matrix");
 
-
 	this->precision = rad::find_char_arg(argc, argv, "--precision", "float");
 
 	this->dmr = rad::find_char_arg(argc, argv, "--dmr", "none");
@@ -39,12 +39,19 @@ Parameters::Parameters(int argc, char** argv) :
 
 	this->triplicated = rad::find_arg(argc, argv, "--triplicated");
 
-	if(this->generate){
+	if (this->generate) {
 		this->iterations = 1;
 	}
 
+	if (this->use_cublas && this->use_cutlass) {
+		std::cerr
+				<< "Warning! Using --use_cublas and --use_cutlass at same time"
+						" will override --use_cublas!\n";
+		this->use_cublas = false;
+	}
+
 	std::string test_info = std::string(" iterations: ")
-	+ std::to_string(this->iterations);
+			+ std::to_string(this->iterations);
 
 	test_info += " precision: " + this->precision;
 
@@ -61,6 +68,7 @@ Parameters::Parameters(int argc, char** argv) :
 	test_info += " alpha: " + std::to_string(this->alpha);
 	test_info += " beta: " + std::to_string(this->beta);
 	test_info += " use_cublas: " + std::to_string(this->use_cublas);
+	test_info += " use_cutlass: " + std::to_string(this->use_cutlass);
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
 //	set_iter_interval_print(10);
