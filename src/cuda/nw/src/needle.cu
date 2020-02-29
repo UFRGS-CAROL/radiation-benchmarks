@@ -151,10 +151,10 @@ bool inline badass_memcmp(std::vector<int>& gold_vector,
 //	uint32_t result = std::accumulate(reduction_array.begin(),
 //			reduction_array.end(), 0);
 //	return (result != numthreads);
-	return !std::equal(gold_vector.begin(), gold_vector.end(),
-			found_vector.begin());
+//	return !std::equal(gold_vector.begin(), gold_vector.end(),
+//			found_vector.begin());
 
-//	return !memcmp(gold_vector.data(), found_vector.data(), gold.size());
+	return !memcmp(gold_vector.data(), found_vector.data(), gold_vector.size());
 
 }
 
