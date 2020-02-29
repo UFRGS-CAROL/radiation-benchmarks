@@ -17,7 +17,7 @@ def config(board, debug):
     DATA_PATH_BASE = "mergesort"
 
     benchmark_bin = "mergesort"
-    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
+    print("Generating " + benchmark_bin + " for CUDA, board:" + str(board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -33,21 +33,15 @@ def config(board, debug):
     src_benchmark = install_dir + "src/cuda/mergesort"
 
     if not os.path.isdir(data_path):
-        os.mkdir(data_path, 0777)
-        os.chmod(data_path, 0777)
-
-    for_jetson = 0
-    lib = "NVMLWrapper.so"
-    if "X1" in board or "X2" in board:
-        for_jetson = 1
-        lib = ""
+        os.mkdir(data_path, 0o777)
+        os.chmod(data_path, 0o777)
 
     generate = ["sudo mkdir -p " + bin_path,
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
-                "make -C ../common {}".format(lib),
-                "make -j2 FORJETSON={} BUILDPROFILER={}".format(for_jetson, BUILDPROFILER),
+                "make -C ../common/",
+                "make -j2 BUILDPROFILER={}".format(BUILDPROFILER),
                 "mkdir -p " + data_path,
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -83,7 +77,7 @@ if __name__ == "__main__":
         parameter = str(sys.argv[0:][1]).upper()
         if parameter == 'DEBUG':
             debug_mode = True
-    except:
+    except IndexError:
         debug_mode = False
 
     board, hostname = discover_board()
