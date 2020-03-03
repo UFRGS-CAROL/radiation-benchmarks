@@ -33,17 +33,20 @@ def sockConnect():
         s.connect((sockServerIP, sockServerPORT))
         s.close()
     except socket.error as eDetail:
-        print "could not connect to remote server, socket error"
+        print("could not connect to remote server, socket error")
     # logMsg("socket connect error: "+str(eDetail))
 
 
 # Log messages adding timestamp before the message
 def logMsg(msg):
     now = datetime.now()
-    fp = open(logFile, 'a')
-    print >> fp, now.ctime() + ": " + str(msg)
-    fp.close()
-    print now.ctime() + ": " + str(msg)
+    # fp = open(logFile, 'a')
+    date_str = str(now.ctime()) + ": " + str(msg)
+    with open(logFile, 'a') as fp:
+        fp.write(date_str + '\n')
+
+    # fp.close()
+    print(date_str)
 
 
 # Update the timestamp file with machine current timestamp
@@ -195,8 +198,8 @@ signal.signal(signal.SIGUSR1, receive_signal)
 signal.signal(signal.SIGUSR2, receive_signal)
 
 if not os.path.isfile(confFile):
-    print >> sys.stderr, "System configuration file not found!(" + confFile + ")"
-    sys.exit(1)
+    raise FileNotFoundError("System configuration file not found!(" + confFile + ")")
+    # sys.exit(1)
 
 try:
     config = ConfigParser.RawConfigParser()
@@ -208,18 +211,18 @@ try:
     tmpDir = config.get('DEFAULT', 'tmpdir') + "/"
 
     if not os.path.isdir(logDir):
-        os.mkdir(logDir, 0777)
-        os.chmod(logDir, 0777)
+        os.mkdir(logDir, 0o777)
+        os.chmod(logDir, 0o777)
 
 except IOError as e:
-    print >> sys.stderr, "System configuration setup error: " + str(e)
-    sys.exit(1)
+    raise IOError("System configuration setup error: " + str(e))
+    # sys.exit(1)
 
 logFile = logDir + "killtest.log"
 timestampFile = varDir + "timestamp.txt"
 
-if (len(sys.argv) != 2):
-    print "Usage: " + sys.argv[0] + " <file with absolute paths of json files>"
+if len(sys.argv) != 2:
+    print("Usage: " + sys.argv[0] + " <file with absolute paths of json files>")
     sys.exit(1)
 
 commands = list()
@@ -227,8 +230,8 @@ commands = list()
 readCommands(sys.argv[1])
 
 if len(commands) < 1:
-    print >> sys.stderr, "ERROR: No commands read, there is nothing to execute"
-    sys.exit(1)
+   raise ValueError("ERROR: No commands read, there is nothing to execute")
+    # sys.exit(1)
 
 timestampMaxDiff = timestampMaxDiffDefault
 # Start last kill timestamp with an old enough timestamp
@@ -275,6 +278,6 @@ try:
 
         time.sleep(1)
 except KeyboardInterrupt:  # Ctrl+c
-    print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
+    print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
     killall()
     sys.exit(1)

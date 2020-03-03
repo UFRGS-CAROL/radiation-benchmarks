@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import subprocess
 import os
+
 
 DEFAULT_RADIATION_PATH = "/var/radiation-benchmarks/log"
 LOGS_DIR = "logs"
 TAR_COMMAND = "tar czf {} {}"
 TAR_DIR_FINAL = "/home/fernando/Dropbox/ChipIR202002"
+
+TIMEDELTA_DROPBOX = timedelta(hours=12)
+TIMEDELTA_DOWNLOAD = timedelta(hours=1)
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
@@ -49,15 +53,25 @@ def scp_all_files_from_device(device_ip, device_folder):
 def main():
     if not os.path.exists(LOGS_DIR):
         os.mkdir(LOGS_DIR)
+    last_copy = datetime.now()
+    while True:
+        tdelta = (datetime.now() - last_copy)
 
-    for device_ip in IPmachines:
-        machine_name = IPtoNames[device_ip]
-        device_folder = "{}/{}".format(LOGS_DIR, machine_name)
-        if not os.path.exists(device_folder):
-            os.mkdir(device_folder)
+        if tdelta > TIMEDELTA_DOWNLOAD:
+            for device_ip in IPmachines:
+                machine_name = IPtoNames[device_ip]
+                device_folder = "{}/{}".format(LOGS_DIR, machine_name)
+                if not os.path.exists(device_folder):
+                    os.mkdir(device_folder)
 
-        scp_all_files_from_device(device_ip=device_ip, device_folder=device_folder)
-        tar_files_from_device(device_folder=device_folder, machine_name=machine_name)
+                print("Copying from board {}".format(machine_name))
+                scp_all_files_from_device(device_ip=device_ip, device_folder=device_folder)
+
+                if tdelta > TIMEDELTA_DROPBOX:
+                    print("Uploading to dropbox from board {}".format(machine_name))
+                    tar_files_from_device(device_folder=device_folder, machine_name=machine_name)
+
+            last_copy = datetime.now()
 
 
 if __name__ == '__main__':
