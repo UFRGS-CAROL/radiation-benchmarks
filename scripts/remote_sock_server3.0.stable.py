@@ -15,47 +15,47 @@ serverIP = "192.168.1.5"  # IP of the remote socket server (hardware watchdog)
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
-    # "192.168.1.21",  # tegrax2
-    "192.168.1.10",  # k20
+    "192.168.1.11",  # k201
+ #   "192.168.1.21",  # k401
     # "192.168.1.15", #CarolTitanV1
     # "192.168.1.16", #CarolTeslaV1001
 ]
 
 # Set the machine names for each IP
 IPtoDiffReboot = {
-    "192.168.1.21": 60,  # caroltegrax21
-    "192.168.1.10": 50,  # k20
+    "192.168.1.11": 60,  # k201
+  #  "192.168.1.21": 60,  # k401
     # "192.168.1.6": 120,  # CarolXeon1
     # "192.168.1.7": 200,  # CarolXeon2
 }
 
 # Set the machine names for each IP
 IPtoNames = {
-    "192.168.1.21": "caroltegrax21",
-    "192.168.1.10": "carolk201",
+    "192.168.1.11": "carolk201",
+   # "192.168.1.21": "carolk401",
     # "192.168.1.6": "CarolXeon1",
     # "192.168.1.7": "CarolXeon2",
 }
 
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
-    "192.168.1.21": "192.168.1.100",  # caroltegrax21
-    "192.168.1.10": "192.168.1.100",  # carolk201
+    "192.168.1.11": "192.168.1.100",  # carolk201
+    #"192.168.1.21": "192.168.1.100",  # carolk201
     # "192.168.1.6": "192.168.1.102",  # CarolXeon1
     # "192.168.1.7": "192.168.1.104",  # CarolXeon2
 }
 
 # Set the switch Port that a machine IP is connected
 IPtoSwitchPort = {
-    "192.168.1.21": 1,  # caroltegrax2
-    "192.168.1.10": 1,  # carolk201
+    "192.168.1.11": 3,  # carolk201
+    "192.168.1.21": 1,  # carolk401
     # "192.168.1.6": 1,  # CarolXeon1
     # "192.168.1.7": 4,  # CarolXeon2
 }
 
 SwitchIPtoModel = {
-    "192.168.1.100": "default",
-    "192.168.1.101": "default",
+    "192.168.1.100": "lindy",
+    # "192.168.1.101": "default",
     # "192.168.1.102": "default",
     # "192.168.1.103": "lindy",
     # "192.168.1.104": "default",
@@ -159,6 +159,7 @@ def setIPSwitch(portNumber, status, switchIP):
         return 1
     if SwitchIPtoModel[switchIP] == "default":
         s = Switch(switchIP, 4)
+        print(cmd, switchIP)
         return s.cmd(int(portNumber), cmd)
     elif SwitchIPtoModel[switchIP] == "lindy":
         return lindySwitch(int(portNumber), cmd, switchIP)
