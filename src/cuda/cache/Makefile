@@ -4,7 +4,7 @@ EXEC=cudaCacheTest
 DISABLEL1=0
 LOGS=1
 BUILDPROFILER=0
-TESTMEM=shared
+TESTMEM=SHARED
 
 VPATH=./src/
 #CUDAPATH=/home/carol/cuda/cuda-toolkit
