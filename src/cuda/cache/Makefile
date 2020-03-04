@@ -4,6 +4,7 @@ EXEC=cudaCacheTest
 DISABLEL1=0
 LOGS=1
 BUILDPROFILER=0
+TESTMEM=shared
 
 VPATH=./src/
 #CUDAPATH=/home/carol/cuda/cuda-toolkit
@@ -74,17 +75,5 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations 10
-	
-testl2:
-	 ./$(EXEC)L2 --iterations 100 --memtotest L2
-
-testshared:
-	 ./$(EXEC) --iterations 10 --memtotest SHARED
-	
-testregisters:
-	./$(EXEC) --iterations 10 --memtotest REGISTERS	
-	
-testconstant:
-	./$(EXEC) --iterations 10 --memtotest READONLY	
+	 ./$(EXEC) --iterations 10 --memtotest $(TESTMEM)
 	
