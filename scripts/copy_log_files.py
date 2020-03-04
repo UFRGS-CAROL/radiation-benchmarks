@@ -21,10 +21,11 @@ IPmachines = [
     # "192.168.1.16", #CarolTeslaV1001
 ]
 
+
 # Set the machine names for each IP
 IPtoNames = {
     "192.168.1.11": "carolk201",
-    "192.168.1.21": "carolk401",
+    "192.168.1.21": "carolk202",
     # "192.168.1.6": "CarolXeon1",
     # "192.168.1.7": "CarolXeon2",
 }
@@ -54,6 +55,14 @@ def main():
     if not os.path.exists(LOGS_DIR):
         os.mkdir(LOGS_DIR)
     last_copy = datetime.now()
+    for device_ip in IPmachines:
+        machine_name = IPtoNames[device_ip]
+        device_folder = "{}/{}".format(LOGS_DIR, machine_name)
+        print("First copying from board {}".format(machine_name))
+        if not os.path.exists(device_folder):
+            os.mkdir(device_folder)
+        scp_all_files_from_device(device_ip=device_ip, device_folder=device_folder)
+
     while True:
         tdelta = (datetime.now() - last_copy)
 
@@ -61,8 +70,6 @@ def main():
             for device_ip in IPmachines:
                 machine_name = IPtoNames[device_ip]
                 device_folder = "{}/{}".format(LOGS_DIR, machine_name)
-                if not os.path.exists(device_folder):
-                    os.mkdir(device_folder)
 
                 print("Copying from board {}".format(machine_name))
                 scp_all_files_from_device(device_ip=device_ip, device_folder=device_folder)
