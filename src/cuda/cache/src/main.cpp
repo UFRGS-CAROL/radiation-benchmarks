@@ -67,7 +67,7 @@ void setup_execute(rad::Log& log, Parameters& test_parameter,
 
 			auto iteration_data = counter_thread.get_data_from_iteration();
 			for (auto info_line : iteration_data) {
-				log.log_info(info_line);
+				log.log_info_detail(info_line);
 				//std::cout << info_line << std::endl;
 			}
 #endif
