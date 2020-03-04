@@ -26,7 +26,8 @@ namespace rad {
 
 struct Log {
 	Log() :
-			_error(0), _info(0), _was_error_updated(false), _was_info_updated(false) {
+			_error(0), _info(0), _was_error_updated(false), _was_info_updated(
+					false) {
 	}
 
 	Log(std::string test_name, std::string test_info, size_t print_interval = 1) :
@@ -132,6 +133,12 @@ struct Log {
 #endif
 	}
 
+	void set_max_infos_iter(size_t max_errors) {
+#ifdef LOGS
+		::set_max_infos_iter(max_errors);
+#endif
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
@@ -145,12 +152,20 @@ struct Log {
 		return os;
 	}
 
+	uint64_t get_errors() {
+		return this->_error;
+	}
+
+	uint64_t get_infos() {
+		return this->_error;
+	}
 private:
 	//Hide copy constructor to avoid copies
 	//pass only as reference to the function/method
 	Log(const Log& l) :
 			_error(l._error), _info(l._info), _was_error_updated(
-					l._was_error_updated), _was_info_updated(l._was_info_updated) {
+					l._was_error_updated), _was_info_updated(
+					l._was_info_updated) {
 	}
 
 	uint64_t _error;
@@ -166,7 +181,6 @@ private:
 	std::shared_ptr<Profiler> profiler_thread;
 #endif
 #endif
-
 
 };
 
