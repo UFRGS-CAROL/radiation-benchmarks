@@ -16,8 +16,8 @@ struct SharedMemory: public Memory<uint64> {
 	SharedMemory();
 	SharedMemory(const Parameters& parameters);
 	void test(const uint64& mem) override;
-	bool call_checker(uint64& gold, Log& log, int64& hits,
-				int64& misses, int64& false_hits) override;
+	bool call_checker(uint64& gold, rad::Log& log, int64& hits,
+				int64& misses, int64& false_hits, bool verbose) override;
 };
 
 

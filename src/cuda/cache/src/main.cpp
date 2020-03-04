@@ -20,7 +20,9 @@
 #include "RegisterFile.h"
 #include "ReadOnly.h"
 #include "utils.h"
-#include "Log.h"
+//#include "Log.h"
+#include "generic_log.h"
+
 #include "Memory.h"
 
 //GET ECC DATA
@@ -29,7 +31,7 @@
 #endif
 
 template<typename data_>
-void setup_execute(Log& log, Parameters& test_parameter,
+void setup_execute(rad::Log& log, Parameters& test_parameter,
 		Memory<data_>& memory_obj) {
 
 	std::cout << std::fixed << std::setprecision(6);
@@ -38,7 +40,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 #ifdef BUILDPROFILER
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
-	for (uint64 iteration = 0; iteration < log.iterations;) {
+	for (uint64 iteration = 0; iteration < test_parameter.iterations;) {
 		for (auto mem : vet) {
 #ifdef BUILDPROFILER
 			//Start collecting data
@@ -46,16 +48,16 @@ void setup_execute(Log& log, Parameters& test_parameter,
 #endif
 
 			//set CUDA configuration each iteration
-			memory_obj.set_cache_config(log.test_mode);
+			memory_obj.set_cache_config(test_parameter.test_mode);
 
 			double start_it = rad::mysecond();
 			//Start iteration
-			log.start_iteration_app();
+			log.start_iteration();
 
 			memory_obj.test(mem);
 
 			//end iteration
-			log.end_iteration_app();
+			log.end_iteration();
 			double end_it = rad::mysecond();
 
 			//End collecting the data
@@ -78,20 +80,20 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			//Comparing the output
 			double start_cmp = rad::mysecond();
 			uint32 hits, misses, false_hits;
-			std::tie(hits, misses, false_hits) = memory_obj.compare(log, mem);
+			std::tie(hits, misses, false_hits) = memory_obj.compare(log, mem, test_parameter.verbose);
 			double end_cmp = rad::mysecond();
 
 			//update errors
-			if (log.errors) {
-				log.update_error_count();
-				log.update_info_count();
+			if (log.get_errors()) {
+				log.update_errors();
+				log.update_infos();
 			}
 
-			if (log.verbose) {
+			if (test_parameter.verbose) {
 				std::cout << "Iteration: " << iteration;
 				std::cout << " Time: " << end_it - start_it;
-				std::cout << " Errors: " << log.errors;
-				std::cout << " Info(memory errors): " << log.infos;
+				std::cout << " Errors: " << log.get_errors();
+				std::cout << " Info(memory errors): " << log.get_infos();
 				std::cout << " Hits: " << hits;
 				std::cout << " Misses: " << misses;
 				std::cout << " False hits: " << false_hits;
@@ -128,33 +130,43 @@ int main(int argc, char **argv) {
 #endif
 
 	//Parameter to the functions
-	Parameters test_parameter;
+	Parameters test_parameter(argc, argv);
+
+	std::string test_info = "";
+	test_info += std::string("iterations: ") + std::to_string(test_parameter.iterations);
+	test_info += " board: " + test_parameter.device;
+	test_info += " number_sms: " + std::to_string(test_parameter.number_of_sms);
+	test_info += " shared_mem: " + std::to_string(test_parameter.shared_memory_size);
+	test_info += " l2_size: " + std::to_string(test_parameter.l2_size);
+	test_info += " one_second_cycles: " + std::to_string(test_parameter.one_second_cycles);
+	test_info += " test_mode: " + test_parameter.test_mode;
+
+	std::string app = test_parameter.test_mode + "Test";
+//	set_iter_interval_print(10);
 
 	//Log obj
-	Log log(argc, argv, test_parameter.board_name,
-			test_parameter.shared_memory_size, test_parameter.l2_size,
-			test_parameter.number_of_sms, test_parameter.one_second_cycles);
-	log.set_info_max(10000);
-	test_parameter.set_setup_sleep_time(log.seconds_sleep);
+	rad::Log log(app, test_info, 10);
+	log.set_max_infos_iter(10000);
+//	test_parameter.set_setup_sleep_time(log.seconds_sleep);
 
-	std::cout << test_parameter << " Memory test: " << log.test_mode
+	std::cout << test_parameter << " Memory test: " << test_parameter.test_mode
 			<< std::endl;
 
 	//Test Registers
-	if (log.test_mode == "REGISTERS") {
+	if (test_parameter.test_mode == "REGISTERS") {
 		RegisterFile rf(test_parameter);
 		setup_execute(log, test_parameter, rf);
 	}
 
 	//test L1
-	if (log.test_mode == "L1") {
+	if (test_parameter.test_mode == "L1") {
 		//L1Cache l1(test_parameter);
 		//setup_execute(log, test_parameter, l1);
 		error("NOT WORKING");
 	}
 
 	//Test l2
-	if (log.test_mode == "L2") {
+	if (test_parameter.test_mode == "L2") {
 		if (l2_checked == false) {
 			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
 		}
@@ -163,13 +175,13 @@ int main(int argc, char **argv) {
 	}
 
 	//Test Shared
-	if (log.test_mode == "SHARED") {
+	if (test_parameter.test_mode == "SHARED") {
 		SharedMemory shared(test_parameter);
 		setup_execute(log, test_parameter, shared);
 	}
 
 	//Test ReadOnly
-	if (log.test_mode == "READONLY") {
+	if (test_parameter.test_mode == "READONLY") {
 		ReadOny constant(test_parameter);
 		setup_execute(log, test_parameter, constant);
 	}

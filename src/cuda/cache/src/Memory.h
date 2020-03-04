@@ -15,6 +15,8 @@
 #include "device_vector.h"
 #include "Parameters.h"
 
+#include "generic_log.h"
+
 //template<typename data_t, typename counter_t>
 //struct Comparator{
 //
@@ -38,8 +40,8 @@ struct Memory {
 	std::vector<data_> input_host_1;
 
 	virtual void test(const uint64& mem) = 0;
-	virtual bool call_checker(uint64& gold, Log& log, int64& hits,
-			int64& misses, int64& false_hits) = 0;
+	virtual bool call_checker(uint64& gold, rad::Log& log, int64& hits,
+			int64& misses, int64& false_hits, bool verbose) = 0;
 
 	virtual std::string error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
 			int64 misses, int64 false_hits) {
@@ -96,7 +98,7 @@ struct Memory {
 
 	template<typename T>
 	std::tuple<T, bool> get_correct_tmr_value(const T* v1, const T* v2,
-			const T* v3, const T& val_gold, const uint64 i, Log& log) {
+			const T* v3, const T& val_gold, const uint64 i, rad::Log& log, bool verbose) {
 		//For this case we don't need to check
 		if(this->device == K20 || this->device == K40){
 			return {v1[i], true};
@@ -117,11 +119,11 @@ struct Memory {
 				info_detail << ", r2: " << val_output_3;
 				info_detail << ", e: " << val_gold;
 
-				if (log.verbose && (log.errors < 10))
+				if (verbose && (log.get_infos() < 10))
 					std::cout << info_detail.str() << std::endl;
 
 				auto inf_det = info_detail.str();
-				log.log_info(inf_det);
+				log.log_info_detail(inf_det);
 			}
 
 			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
@@ -144,11 +146,11 @@ struct Memory {
 						info_detail << ", r2: " << val_output_3;
 						info_detail << ", e: " << val_gold;
 
-						if (log.verbose && (log.errors < 10))
+						if (verbose && (log.get_infos() < 10))
 							std::cout << info_detail.str() << std::endl;
 
 						auto inf_det = info_detail.str();
-						log.log_info(inf_det);
+						log.log_info_detail(inf_det);
 					}
 				}
 			} else if (val_output_2 == val_output_3) {
@@ -170,15 +172,15 @@ struct Memory {
 	// Set votedOutput pointer to retrieve the voted matrix
 	template<typename T>
 	bool check_output_errors(const T* v1, const T* v2, const T* v3,
-			const T& val_gold, Log& log, int64 hits, int64 misses,
-			int64 false_hits, size_t size) {
+			const T& val_gold, rad::Log& log, int64 hits, int64 misses,
+			int64 false_hits, size_t size, bool verbose) {
 
 #pragma omp parallel for shared(log)
 		for (uint64 i = 0; i < size; i++) {
 			T val_output;
 			bool check_flag;
 			std::tie(val_output, check_flag) = this->get_correct_tmr_value(v1,
-					v2, v3, val_gold, i, log);
+					v2, v3, val_gold, i, log, verbose);
 
 			if (val_gold != val_output && check_flag) {
 #pragma omp critical
@@ -186,24 +188,24 @@ struct Memory {
 
 					std::string errdet = this->error_detail(i, val_gold,
 							val_output, hits, misses, false_hits);
-					if (log.verbose && (log.errors < 10))
+					if (verbose && (log.get_errors() < 10))
 						std::cout << errdet << std::endl;
 
-					log.log_error(errdet);
+					log.log_error_detail(errdet);
 				}
 			}
 		}
 
-		if (log.errors != 0) {
+		if (log.get_errors() != 0) {
 			std::cout << "#" << std::endl;
 		}
-		if (log.infos != 0) {
+		if (log.get_infos() != 0) {
 			std::cout << "M" << std::endl;
 		}
-		return log.errors == 0 || log.infos == 0;
+		return log.get_errors() == 0 || log.get_infos() == 0;
 	}
 
-	std::tuple<int64, int64, int64> compare(Log& log, uint64& mem) {
+	std::tuple<int64, int64, int64> compare(rad::Log& log, uint64& mem, bool verbose) {
 		//Checking the misses
 		int64 hits = 0;
 		int64 misses = 0;
@@ -224,7 +226,7 @@ struct Memory {
 			zero_cout += (hit == 0 || miss == 0);
 		}
 
-		this->call_checker(mem, log, hits, misses, false_hits);
+		this->call_checker(mem, log, hits, misses, false_hits, verbose);
 
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);

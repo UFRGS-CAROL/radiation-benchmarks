@@ -114,11 +114,11 @@ void L1Cache::test(const uint64& mem) {
 	this->output_host_1 = output_device_1.to_vector();
 }
 
-bool L1Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-		int64& false_hits) {
+bool L1Cache::call_checker(uint64& gold, rad::Log& log, int64& hits, int64& misses,
+		int64& false_hits, bool verbose) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
 			(uint64*) (this->output_host_2.data()),
 			(uint64*) (this->output_host_3.data()), gold, log, hits, misses,
-			false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+			false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64, verbose);
 }

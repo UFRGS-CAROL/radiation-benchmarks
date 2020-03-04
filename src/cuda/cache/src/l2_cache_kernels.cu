@@ -103,13 +103,13 @@ L2Cache::L2Cache(const Parameters& parameters) :
 	this->l2_size = parameters.l2_size;
 }
 
-bool L2Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-		int64& false_hits) {
+bool L2Cache::call_checker(uint64& gold, rad::Log& log, int64& hits, int64& misses,
+		int64& false_hits, bool verbose) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
 			(uint64*) (this->output_host_2.data()),
 			(uint64*) (this->output_host_3.data()),
-			gold, log, hits, misses, false_hits, this->output_host_1.size());
+			gold, log, hits, misses, false_hits, this->output_host_1.size(), verbose);
 }
 
 //__global__ void clear_cache_kenel(float *random_array) {

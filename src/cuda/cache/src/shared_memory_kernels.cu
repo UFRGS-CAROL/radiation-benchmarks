@@ -137,12 +137,12 @@ SharedMemory::SharedMemory(const Parameters& parameters) :
 	this->output_host_1.resize(v_size_multiple_threads);
 }
 
-bool SharedMemory::call_checker(uint64& gold, Log& log, int64& hits,
-		int64& misses, int64& false_hits) {
+bool SharedMemory::call_checker(uint64& gold, rad::Log& log, int64& hits,
+		int64& misses, int64& false_hits, bool verbose) {
 	uint64* out_ptr1 = (uint64*) (this->output_host_1.data());
 	uint64* out_ptr2 = (uint64*) (this->output_host_2.data());
 	uint64* out_ptr3 = (uint64*) (this->output_host_3.data());
 
 	return this->check_output_errors(out_ptr1, out_ptr2, out_ptr3, gold, log,
-			hits, misses, false_hits, this->output_host_1.size());
+			hits, misses, false_hits, this->output_host_1.size(), verbose);
 }

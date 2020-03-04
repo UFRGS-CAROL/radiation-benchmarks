@@ -25,8 +25,8 @@ struct RegisterFile: public Memory<uint32> {
 	std::string error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
 			int64 misses, int64 false_hits) override;
 
-	bool call_checker(uint64& gold, Log& log, int64& hits,
-			int64& misses, int64& false_hits) override;
+	bool call_checker(uint64& gold, rad::Log& log, int64& hits,
+			int64& misses, int64& false_hits, bool verbose) override;
 
 
 };

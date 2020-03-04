@@ -5,16 +5,16 @@
  *      Author: carol
  */
 
-#ifndef LOG_H_
-#define LOG_H_
-#include <string>
-#include <sys/time.h>
-#include "utils.h"
+//#ifndef LOG_H_
+//#define LOG_H_
+//#include <string>
+//#include <sys/time.h>
+//#include "utils.h"
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
-
+//#ifdef LOGS
+//#include "log_helper.h"
+//#endif
+/*
 class Log {
 public:
 	int32 iterations;
@@ -59,6 +59,7 @@ public:
 #endif
 	}
 
+	/*
 	void usage(std::string binary) {
 			std::cout << "USAGE: " << binary << " [arguments] that are:\n"
 				<< "--iterations <default 1>\n"
@@ -193,6 +194,6 @@ public:
 //		return def;
 //	}
 
-};
+};*/
 
-#endif /* LOG_H_ */
+//#endif /* LOG_H_ */

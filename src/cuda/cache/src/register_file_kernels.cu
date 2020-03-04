@@ -70,8 +70,8 @@ std::string RegisterFile::error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
 	return error_detail;
 }
 
-bool RegisterFile::call_checker(uint64& gold, Log& log, int64& hits,
-		int64& misses, int64& false_hits) {
+bool RegisterFile::call_checker(uint64& gold, rad::Log& log, int64& hits,
+		int64& misses, int64& false_hits, bool verbose) {
 	uint32* out_ptr1 = (uint32*) this->output_host_1.data();
 	uint32* out_ptr2 = (uint32*) this->output_host_2.data();
 	uint32* out_ptr3 = (uint32*) this->output_host_3.data();
@@ -79,5 +79,5 @@ bool RegisterFile::call_checker(uint64& gold, Log& log, int64& hits,
 	uint32 gold_ = gold;
 
 	return this->check_output_errors(out_ptr1, out_ptr2, out_ptr3, gold_, log,
-			hits, misses, false_hits, this->output_host_1.size());
+			hits, misses, false_hits, this->output_host_1.size(), verbose);
 }
