@@ -13,7 +13,7 @@ PRECISIONS = ["single"]
 TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
 FASTMATH = 1
 OPS = {x: 10000000 for x in TYPES if x not in ["pythagorean", "euler"]}
-OPS.update({"pythagorean": 10000, "euler": 10000})
+OPS.update({"pythagorean": 50000, "euler": 40000000})
 BUILDPROFILER = 0
 
 
