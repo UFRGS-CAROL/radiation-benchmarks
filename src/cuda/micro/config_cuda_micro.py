@@ -12,7 +12,8 @@ ITERATIONS = int(1e9)
 PRECISIONS = ["single"]
 TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
 FASTMATH = 1
-OPS = 10000000
+OPS = {x: 10000000 for x in TYPES if x not in ["pythagorean", "euler"]}
+OPS.update({"pythagorean": 10000, "euler": 10000})
 BUILDPROFILER = 0
 
 
@@ -33,20 +34,19 @@ def config(board, debug):
     src_benchmark = install_dir + "src/cuda/micro"
     data_path = install_dir + "data/micro"
 
-    ops = OPS
-
     generate = ["sudo mkdir -p " + bin_path,
                 "sudo mkdir -p " + data_path,
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
                 "make -C ../common",
-                "make BUILDPROFILER={} PRECISION=".format(BUILDPROFILER) + " -j 4 OPS=" + str(ops),
+                "make BUILDPROFILER={} PRECISION=".format(BUILDPROFILER) + " -j 4",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for inst_type in TYPES:
         for precision in PRECISIONS:
+            ops = OPS[inst_type]
             gold_path = data_path + "/gold_{}_{}.data".format(inst_type, precision)
             gen = [
                 ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
@@ -77,4 +77,3 @@ if __name__ == "__main__":
 
     board, hostname = discover_board()
     config(board=board, debug=debug_mode)
-
