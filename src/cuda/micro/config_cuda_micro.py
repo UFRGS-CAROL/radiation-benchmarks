@@ -10,14 +10,15 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = int(1e9)
 PRECISIONS = ["single"]
-TYPES = ["fma", "add", "mul"]
-OPS=100000000
-BUILDPROFILER=0
+TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
+FASTMATH = 1
+OPS = 100000000
+BUILDPROFILER = 0
 
-def config(board, test_type, arith_type, debug):
 
-    benchmark_bin = "cuda_micro-" + test_type + "_" + arith_type
-    print "Generating " + benchmark_bin + " for CUDA, board:" + board
+def config(board, debug):
+    benchmark_bin = "cudaMicro"
+    print("Generating " + benchmark_bin + " for CUDA, board:" + str(board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -26,54 +27,54 @@ def config(board, test_type, arith_type, debug):
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
-        print >> sys.stderr, "Configuration setup error: " + str(e)
-        sys.exit(1)
+        raise IOError("Configuration setup error: " + str(e))
 
     bin_path = install_dir + "bin"
     src_benchmark = install_dir + "src/cuda/micro"
-    
-    
-    # This will define how many instructions will be executed
+    data_path = install_dir + "data/micro"
+
     ops = OPS
 
-    for_jetson = 0
-    lib = "NVMLWrapper.so"
-    if "X1" in board or "X2" in board:
-        ops = 1000000
-        for_jetson = 1
-        lib = ""
-
-    generate = ["sudo mkdir -p " + bin_path, 
-                "cd " + src_benchmark, 
-                "make clean", 
+    generate = ["sudo mkdir -p " + bin_path,
+                "sudo mkdir -p " + data_path,
+                "cd " + src_benchmark,
+                "make clean",
                 "make -C ../../include ",
-                "make -C ../common {}".format(lib),
-                "make TYPE=" + test_type + " BUILDPROFILER={} FORJETSON={} PRECISION=".format(BUILDPROFILER, for_jetson) + arith_type +
-                " -j 4 OPS=" + str(ops),
+                "make -C ../common",
+                "make BUILDPROFILER={} PRECISION=".format(BUILDPROFILER) + " -j 4 OPS=" + str(ops),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
-    exe = [None] * 2
-    exe[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + '/' + benchmark_bin + " "]
-    exe[1] = ['-iterations=' + str(ITERATIONS)]
+    for inst_type in TYPES:
+        for precision in PRECISIONS:
+            gold_path = data_path + "/gold_{}_{}.data".format(inst_type, precision)
+            gen = [
+                ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                 bin_path + '/' + benchmark_bin + " "],
+                ['--iterations {}'.format(ITERATIONS)],
+                ['--gold {}'.format(gold_path)],
+                ['--precision {}'.format(precision)],
+                ['--inst {}'.format(inst_type)],
+                ['--opnum {}'.format(ops)],
+                ['--generate']
+            ]
 
-    execute.append(' '.join(str(r) for v in exe for r in v))
+            generate.append(' '.join(str(r) for v in gen for r in v))
+            del gen[-1]
+            execute.append(' '.join(str(r) for v in gen for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
 
-
 if __name__ == "__main__":
+    debug_mode = False
     try:
-        parameter = str(sys.argv[1:][1]).upper() 
+        parameter = str(sys.argv[1:][0]).upper()
         if parameter == 'DEBUG':
             debug_mode = True
-    except:
-        debug_mode = False
-    
+    except IndexError:
+        pass
+
     board, hostname = discover_board()
-    for test_type in TYPES:
-        for arith_type in PRECISIONS:
-            config(board=hostname, test_type=test_type, arith_type=arith_type, debug=debug_mode)
-    print "Multiple jsons may have been generated."
-    
+    config(board=board, debug=debug_mode)
+

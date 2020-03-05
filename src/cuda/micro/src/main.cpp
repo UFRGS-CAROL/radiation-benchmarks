@@ -19,9 +19,9 @@
 #include "generic_log.h"
 
 //GET ECC DATA
-#ifdef BUILDPROFILER
-#include "NVMLWrapper.h"
-#endif
+//#ifdef BUILDPROFILER
+//#include "NVMLWrapper.h"
+//#endif
 
 //#ifdef LOGS
 //#include "log_helper.h"
@@ -103,13 +103,13 @@ void setup(Parameters& parameters) {
 
 	Micro<real_t> micro_obj(parameters, log_ptr);
 
-#ifdef BUILDPROFILER
-	std::string log_file_name(get_log_file_name());
-	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
-
-//START PROFILER THREAD
-	profiler_thread->start_profile();
-#endif
+//#ifdef BUILDPROFILER
+//	std::string log_file_name(get_log_file_name());
+//	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+//
+////START PROFILER THREAD
+//	profiler_thread->start_profile();
+//#endif
 
 	//================== Init logs
 	std::string test_info = "";
@@ -131,9 +131,9 @@ void setup(Parameters& parameters) {
 
 	setup_execute(parameters, micro_obj);
 
-#ifdef BUILDPROFILER
-	profiler_thread->end_profile();
-#endif
+//#ifdef BUILDPROFILER
+//	profiler_thread->end_profile();
+//#endif
 }
 
 int main(int argc, char **argv) {

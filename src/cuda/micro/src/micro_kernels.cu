@@ -87,13 +87,13 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t input_a,
 	void (*kernel)(real_t*, real_t, real_t, real_t, uint32_t);
 	switch (micro) {
 	case ADD:
-//		kernel = micro_kernel_add<LOOPING_UNROLL, USEFASTMATH>;
+		kernel = micro_kernel_add<LOOPING_UNROLL, USEFASTMATH>;
 		break;
 	case MUL:
-//		kernel = micro_kernel_mul<LOOPING_UNROLL, USEFASTMATH>;
+		kernel = micro_kernel_mul<LOOPING_UNROLL, USEFASTMATH>;
 		break;
 	case FMA:
-//		kernel = micro_kernel_fma<LOOPING_UNROLL, USEFASTMATH>;
+		kernel = micro_kernel_fma<LOOPING_UNROLL, USEFASTMATH>;
 		break;
 		throw_line("Not implemented yet")
 		;
