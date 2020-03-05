@@ -29,6 +29,10 @@ Parameters::Parameters(int argc, char* argv[]) {
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
 
+	if(this->generate){
+		this->iterations = 1;
+	}
+
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
 
