@@ -86,6 +86,7 @@ void setup(Parameters& parameters) {
 	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
 	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
+	test_info += " memory_used:" + std::to_string(parameters.memory_size_to_use);
 
 	auto internal_iterations =
 			(parameters.micro == LDST) ?
