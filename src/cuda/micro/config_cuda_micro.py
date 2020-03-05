@@ -12,7 +12,7 @@ ITERATIONS = int(1e9)
 PRECISIONS = ["single"]
 TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
 FASTMATH = 1
-OPS = 100000000
+OPS = 10000000
 BUILDPROFILER = 0
 
 
