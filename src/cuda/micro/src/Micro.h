@@ -53,7 +53,7 @@ template<typename real_t>
 struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
-	Input<real_t> input_kernel;
+	const Input<real_t> input_kernel;
 	real_t gold;
 
 	std::vector<real_t> output_host;
