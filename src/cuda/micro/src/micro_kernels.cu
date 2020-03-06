@@ -23,14 +23,14 @@ template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
 __global__ void micro_kernel_add(real_t *d_R0, real_t input_a, real_t input_b,
 		real_t output_r, const uint32_t ops) {
 	real_t acc = output_r;
-	real_t input_a_neg = -input_a;
+	real_t input_r_neg = -output_r;
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
-		acc = add_inline<USEFASTMATH>(acc, input_a);
-		acc = add_inline<USEFASTMATH>(acc, input_a_neg);
-		acc = add_inline<USEFASTMATH>(acc, input_a_neg);
-		acc = add_inline<USEFASTMATH>(acc, input_a);
+		acc = add_inline<USEFASTMATH>(acc, output_r);
+		acc = add_inline<USEFASTMATH>(acc, input_r_neg);
+		acc = add_inline<USEFASTMATH>(acc, input_r_neg);
+		acc = add_inline<USEFASTMATH>(acc, output_r);
 	}
 
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
