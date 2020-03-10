@@ -76,35 +76,30 @@ struct Micro {
 		}
 
 		this->gold.resize(this->parameters.block_size, real_t(0.0));
+		this->input_host.resize(this->parameters.block_size, real_t(0.0));
+
 		if (this->parameters.generate == false) {
+			std::vector<real_t> whole_file(this->parameters.block_size * 2);
+
 			this->read_from_file(this->parameters.generate_output,
-					this->gold.data(), this->parameters.block_size);
+					whole_file.data(), this->parameters.block_size * 2);
+
+			std::copy(whole_file.begin(),
+					whole_file.begin() + this->parameters.block_size,
+					this->input_host.begin());
+			std::copy(whole_file.begin() + this->parameters.block_size,
+					whole_file.end(), this->gold.begin());
+
 		} else {
 			// First create an instance of an engine.
 			std::random_device rnd_device;
 			// Specify the engine and distribution.
 			std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
-			std::uniform_real_distribution<real_t> dist {-this->input_limits.OUTPUT_R,
-					this->input_limits.OUTPUT_R };
-			for (auto& i : this->gold)
+			std::uniform_real_distribution<real_t> dist {
+					-this->input_limits.OUTPUT_R, this->input_limits.OUTPUT_R };
+			for (auto& i : this->input_host)
 				i = dist(mersenne_engine) + real_t(0.001); //never zero
-
 		}
-
-//		switch (this->parameters.micro) {
-//		case ADD:
-//		case MUL:
-//		case FMA:
-//			this->gold = this->input_kernel.OUTPUT_R;
-//			break;
-//		case PYTHAGOREAN:
-//		case EULER:
-//			if (this->parameters.generate == false) {
-//				this->read_from_file(this->parameters.generate_output,
-//						&(this->gold), 1);
-//			}
-//			break;
-//		}
 
 	}
 
@@ -150,7 +145,12 @@ struct Micro {
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
 			this->write_to_file(this->parameters.generate_output,
-					this->output_host.data(), this->parameters.block_size);
+					this->input_host.data(), this->parameters.block_size,
+					std::ios::out);
+			this->write_to_file(this->parameters.generate_output,
+					this->output_host.data(), this->parameters.block_size,
+					std::ios::app);
+
 		}
 		return errors;
 	}
@@ -170,9 +170,10 @@ struct Micro {
 		return true;
 	}
 
-	static bool write_to_file(std::string& path, real_t* array,
-			uint32_t count) {
-		std::ofstream output(path, std::ios::binary);
+	template<typename openmode>
+	static bool write_to_file(std::string& path, real_t* array, uint32_t count,
+			openmode& write_mode) {
+		std::ofstream output(path, std::ios::binary | write_mode);
 		if (output.good()) {
 			output.write(reinterpret_cast<char*>(array),
 					count * sizeof(real_t));
