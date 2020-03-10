@@ -18,26 +18,6 @@
 #include "cuda_utils.h"
 #include "generic_log.h"
 
-//GET ECC DATA
-//#ifdef BUILDPROFILER
-//#include "NVMLWrapper.h"
-//#endif
-
-//#ifdef LOGS
-//#include "log_helper.h"
-//
-//#ifdef BUILDPROFILER
-//
-//#ifdef FORJETSON
-//#include "include/JTX2Inst.h"
-//#define OBJTYPE JTX2Inst
-//#else
-//#include "include/NVMLWrapper.h"
-//#define OBJTYPE NVMLWrapper
-//#endif
-//#endif
-//
-//#endif
 
 template<typename real_t>
 void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {

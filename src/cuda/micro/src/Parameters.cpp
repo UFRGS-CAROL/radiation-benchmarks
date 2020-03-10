@@ -53,8 +53,9 @@ Parameters::Parameters(int argc, char* argv[]) {
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
 	os << "Micro type: " << p.instruction_str << std::endl;
-	os << "Preicison: " << p.precision_str << std::endl;
+	os << "Precision: " << p.precision_str << std::endl;
 	os << "SM count; " << p.sm_count << std::endl;
+	os << "Generate: " << p.generate << std::endl;
 	os << "Grids x Blocks: " << p.grid_size << " x " << p.block_size
 			<< std::endl;
 	os << "Verbose: " << p.verbose << std::endl;

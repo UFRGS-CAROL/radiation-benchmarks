@@ -69,13 +69,9 @@ clean:
 	
 	
 generate:
-	./$(EXEC) --iterations $(ITERATIONS) --inst pythagorean --verbose  \
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \
 			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-			  --generate --gold ./gold_pythagorean.data
-			  
-	./$(EXEC) --iterations $(ITERATIONS) --inst euler --verbose  \
-			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-			  --generate --gold ./gold_euler.data
+			  --generate --gold ./gold_$(MICRO).data
 			  
 test:
 	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose \
