@@ -135,9 +135,10 @@ struct Micro {
 					if (this->parameters.verbose && i < 10) {
 						std::cout << error_detail.str() << std::endl;
 					}
-					errors++;
 #pragma omp critical
 					{
+						errors++;
+
 						this->log->log_error_detail(error_detail.str());
 					}
 				}

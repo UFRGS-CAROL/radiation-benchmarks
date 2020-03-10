@@ -39,6 +39,9 @@ static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA },
 
+		//DIV
+		{ "div", DIV },
+
 		//Pythagorean
 		{ "pythagorean", PYTHAGOREAN },
 
@@ -46,7 +49,9 @@ static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		{ "euler", EULER },
 
 		//Log
-		{ "log", LOG }, };
+		{ "log", LOG },
+
+};
 
 static std::unordered_map<std::string, PRECISION> pre = {
 //half
