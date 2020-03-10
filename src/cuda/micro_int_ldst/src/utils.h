@@ -22,7 +22,7 @@
 
 //The amount of memory that will be used
 //in the LDST test
- static std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
+static std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
 //ADD
 		{ "TITAN V", 1024ull * 1024ull * 1024ull },
 		//MUL
@@ -30,9 +30,7 @@
 		//FMA
 		{ "Tesla K20c", 1024ull * 1024ull * 256ull },
 
-		{ "Tesla K40c", 1024ull * 1024ull * 256ull },
-};
-
+		{ "Tesla K40c", 1024ull * 1024ull * 256ull }, };
 
 //Max number of load/stores performed
 //each time
@@ -49,11 +47,10 @@
 #define LOOPING_UNROLL 256
 
 typedef enum {
-	ADD_INT, MUL_INT, MAD_INT, LDST
+	ADD_INT, MUL_INT, MAD_INT, LDST, BRANCH
 } MICROINSTRUCTION;
 
-
- static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
+static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 //ADD
 		{ "add", ADD_INT },
 		//MUL
@@ -61,9 +58,10 @@ typedef enum {
 		//FMA
 		{ "mad", MAD_INT },
 
-		{ "ldst", LDST},
-		};
+		//Branch
+		{ "branch", BRANCH },
 
+		{ "ldst", LDST }, };
 
 void __throw_line(std::string err, std::string line, std::string file);
 

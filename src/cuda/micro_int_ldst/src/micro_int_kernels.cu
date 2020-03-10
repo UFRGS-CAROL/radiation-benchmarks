@@ -7,6 +7,7 @@
 
 #include "Parameters.h"
 #include "MicroInt.h"
+#include "branch_kernel.h"
 
 /**
  * dst is the output of the kernel
@@ -97,6 +98,9 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		break;
 	case LDST:
 		kernel = ldst_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
+		break;
+	case BRANCH:
+		kernel = branch_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
 		break;
 	}
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);
