@@ -22,14 +22,9 @@
  */
 template<bool USEFASTMATH, typename real_t>
 __DEVICE_INLINE__ real_t fma_inline(real_t a, real_t b, real_t c) {
-	return a * b + c;
+	return (a * b) + c;
 }
 
-template<>
-__DEVICE_INLINE__ double fma_inline<true>(double a, double b, double c) {
-	return __fma_rn(a, b, c);
-
-}
 
 template<>
 __DEVICE_INLINE__ float fma_inline<true>(float a, float b, float c) {
@@ -44,11 +39,6 @@ __DEVICE_INLINE__ float fma_inline<true>(float a, float b, float c) {
 template<bool USEFASTMATH, typename real_t>
 __DEVICE_INLINE__ real_t add_inline(real_t a, real_t b) {
 	return a + b;
-}
-
-template<>
-__DEVICE_INLINE__ double add_inline<true>(double a, double b) {
-	return __dadd_rn(a, b);
 }
 
 template<>
@@ -67,13 +57,23 @@ __DEVICE_INLINE__ real_t mul_inline(real_t a, real_t b) {
 }
 
 template<>
-__DEVICE_INLINE__ double mul_inline<true>(double a, double b) {
-	return __dmul_rn(a, b);
+__DEVICE_INLINE__ float mul_inline<true>(float a, float b) {
+	return __fmul_rn(a, b);
+}
+
+/**
+ * ----------------------------------------
+ * MUL
+ * ----------------------------------------
+ */
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t div_inline(real_t a, real_t b) {
+	return a / b;
 }
 
 template<>
-__DEVICE_INLINE__ float mul_inline<true>(float a, float b) {
-	return __fmul_rn(a, b);
+__DEVICE_INLINE__ float div_inline<true>(float a, float b) {
+	return __fdividef(a, b);
 }
 
 /**

@@ -53,11 +53,15 @@ template<typename real_t>
 struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
-	const Input<real_t> input_kernel;
-	real_t gold;
+	const Input<real_t> input_limits;
+
+	std::vector<real_t> input_host;
+	rad::DeviceVector<real_t> input_device;
 
 	std::vector<real_t> output_host;
 	rad::DeviceVector<real_t> output_device;
+
+	std::vector<real_t> gold;
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
@@ -71,20 +75,36 @@ struct Micro {
 					<< end_gen - start_gen << std::endl;
 		}
 
-		switch (this->parameters.micro) {
-		case ADD:
-		case MUL:
-		case FMA:
-			this->gold = this->input_kernel.OUTPUT_R;
-			break;
-		case PYTHAGOREAN:
-		case EULER:
-			if (this->parameters.generate == false) {
-				this->read_from_file(this->parameters.generate_output,
-						&(this->gold), 1);
-			}
-			break;
+		this->gold.resize(this->parameters.block_size, real_t(0.0));
+		if (this->parameters.generate == false) {
+			this->read_from_file(this->parameters.generate_output,
+					this->gold.data(), this->parameters.block_size);
+		} else {
+			// First create an instance of an engine.
+			std::random_device rnd_device;
+			// Specify the engine and distribution.
+			std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
+			std::uniform_real_distribution<real_t> dist {-this->input_limits.OUTPUT_R,
+					this->input_limits.OUTPUT_R };
+			for (auto& i : this->gold)
+				i = dist(mersenne_engine) + real_t(0.001); //never zero
+
 		}
+
+//		switch (this->parameters.micro) {
+//		case ADD:
+//		case MUL:
+//		case FMA:
+//			this->gold = this->input_kernel.OUTPUT_R;
+//			break;
+//		case PYTHAGOREAN:
+//		case EULER:
+//			if (this->parameters.generate == false) {
+//				this->read_from_file(this->parameters.generate_output,
+//						&(this->gold), 1);
+//			}
+//			break;
+//		}
 
 	}
 
@@ -107,12 +127,13 @@ struct Micro {
 #pragma omp parallel for
 			for (size_t i = 0; i < this->output_host.size(); i++) {
 				real_t output = this->output_host[i];
-				if (output != this->gold) {
+				real_t gold_t = this->gold[i % this->parameters.block_size];
+				if (output != gold_t) {
 					std::stringstream error_detail;
 					//20 is from old micro-benchmarks precision
 					error_detail << " p: [" << i << "],";
 					error_detail << std::scientific << std::setprecision(20);
-					error_detail << " e: " << this->gold << ", r: " << output;
+					error_detail << " e: " << gold_t << ", r: " << output;
 
 					if (this->parameters.verbose && i < 10) {
 						std::cout << error_detail.str() << std::endl;
@@ -126,12 +147,10 @@ struct Micro {
 			}
 		} else {
 			//save only the first thread result
-			this->gold = this->output_host[0];
-			if (this->parameters.micro == EULER
-					|| this->parameters.micro == PYTHAGOREAN) {
-				this->write_to_file(this->parameters.generate_output,
-						&(this->gold), 1);
-			}
+			//This will save only the first BLOCK_SIZE of results
+			//which must be equals to the rest of the array
+			this->write_to_file(this->parameters.generate_output,
+					this->output_host.data(), this->parameters.block_size);
 		}
 		return errors;
 	}
