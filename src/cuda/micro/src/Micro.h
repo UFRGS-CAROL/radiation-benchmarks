@@ -101,6 +101,8 @@ struct Micro {
 				i = dist(mersenne_engine) + real_t(0.001); //never zero
 		}
 
+		this->input_device = this->input_host;
+
 	}
 
 	virtual ~Micro() = default;
