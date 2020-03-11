@@ -87,10 +87,8 @@ struct MicroInt {
 		//generates both golds
 		for (auto i = 1; i < MAX_THREAD_BLOCK; i++) {
 			this->gold_branch_kernel.push_back(
-					i
-							+ ((i % 2) ?
-									-MAX_THREAD_LD_ST_OPERATIONS :
-									MAX_THREAD_LD_ST_OPERATIONS) + 1);
+					i + ((i % 2) ? -MAX_THREAD_LD_ST_OPERATIONS :
+					MAX_THREAD_LD_ST_OPERATIONS) + 1);
 
 			this->gold_host.push_back(dist(mersenne_engine));
 		}
@@ -157,7 +155,10 @@ struct MicroInt {
 					error_detail += " gold_position: " + std::to_string(i);
 					error_detail += " e: " + std::to_string(golden);
 					error_detail += " r: " + std::to_string(output);
-					std::cout << error_detail << std::endl;
+
+					if (this->parameters.verbose && error_vector[i] < 5) {
+						std::cout << error_detail << std::endl;
+					}
 					error_vector[i]++;
 #pragma omp critical
 					{
