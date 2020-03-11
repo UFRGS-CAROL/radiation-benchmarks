@@ -29,11 +29,27 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
-template<uint32_t UNROLL_MAX, typename int_t>
-__global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
-	int_t acc = src[threadIdx.x];
-	int_t input_i = src[threadIdx.x];
-	int_t divisor = 0x100000000 / input_i + 1;
+//template<uint32_t UNROLL_MAX, typename int_t>
+//__global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
+//	int_t acc = src[threadIdx.x];
+//	int_t input_i = src[threadIdx.x];
+//	int_t divisor = 0x100000000 / input_i + 1;
+//#pragma unroll UNROLL_MAX
+//	for (uint32_t i = 0; i < op; i++) {
+//		acc *= input_i;
+//		acc = __mulhi(acc, divisor);
+//		acc *= input_i;
+//		acc = __mulhi(acc, divisor);
+//	}
+//
+//	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+//}
+
+template<uint32_t UNROLL_MAX>
+__global__ void mul_int_kernel(int32_t* src, int32_t* dst, uint32_t op) {
+	int32_t acc = src[threadIdx.x];
+	int32_t input_i = src[threadIdx.x];
+	int32_t divisor = 0x100000000 / input_i + 1;
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
 		acc *= input_i;
