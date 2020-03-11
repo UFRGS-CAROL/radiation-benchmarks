@@ -89,9 +89,7 @@ struct MicroInt {
 		this->gold_host.push_back(dist(mersenne_engine));
 
 		for (auto i = 1; i < MAX_THREAD_BLOCK; i++) {
-			this->gold_branch_kernel.push_back(
-					i + ((i % 2) ? -MAX_THREAD_LD_ST_OPERATIONS :
-					MAX_THREAD_LD_ST_OPERATIONS) + 1);
+			this->gold_branch_kernel.push_back((i % 2) ? i + this->parameters.operation_num : i);
 
 			this->gold_host.push_back(dist(mersenne_engine));
 		}
