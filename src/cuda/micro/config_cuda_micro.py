@@ -6,6 +6,7 @@ import os
 import sys
 
 sys.path.insert(0, '../../include')
+s
 from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = int(1e9)

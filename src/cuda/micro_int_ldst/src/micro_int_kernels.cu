@@ -15,8 +15,8 @@
  */
 template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
-	volatile register int_t acc = src[threadIdx.x];
-	volatile register int_t input_i = src[threadIdx.x];
+	int_t acc = src[threadIdx.x];
+	volatile int_t input_i = src[threadIdx.x];
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
@@ -65,13 +65,14 @@ template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t acc = src[threadIdx.x];
 	volatile int_t input_i = src[threadIdx.x];
+	volatile int_t input_i_neg = -input_i;
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
 		acc += input_i * input_i;
-		acc -= input_i * input_i;
-		acc -= input_i * input_i;
-		acc += input_i * input_i;
+		acc += input_i_neg * input_i;
+		acc += input_i * input_i_neg;
+		acc += input_i_neg * input_i_neg;
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;

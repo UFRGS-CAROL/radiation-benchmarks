@@ -28,8 +28,8 @@ __global__ void micro_kernel_add(real_t *dst, real_t *src, const uint32_t ops) {
 	for (uint32_t count = 0; count < ops; count++) {
 		acc = add_inline<USEFASTMATH>(acc, input_i);
 		acc = add_inline<USEFASTMATH>(acc, input_i_neg);
-		acc = add_inline<USEFASTMATH>(acc, input_i_neg);
 		acc = add_inline<USEFASTMATH>(acc, input_i);
+		acc = add_inline<USEFASTMATH>(acc, input_i_neg);
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
@@ -45,8 +45,8 @@ __global__ void micro_kernel_mul(real_t *dst, real_t *src, const uint32_t ops) {
 	for (uint32_t count = 0; count < ops; count++) {
 		acc = mul_inline<USEFASTMATH>(acc, input_i);
 		acc = mul_inline<USEFASTMATH>(acc, input_i_inv);
-		acc = mul_inline<USEFASTMATH>(acc, input_i_inv);
 		acc = mul_inline<USEFASTMATH>(acc, input_i);
+		acc = mul_inline<USEFASTMATH>(acc, input_i_inv);
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
