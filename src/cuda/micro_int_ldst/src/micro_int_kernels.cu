@@ -36,10 +36,10 @@ __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-		acc = acc * input_i;
-		acc = acc / input_i;
-		acc = acc * input_i;
-		acc = acc / input_i;
+		acc = __mulhi(acc, input_i);
+		acc = __mulhi(acc, input_i);
+		acc = __mulhi(acc, input_i);
+		acc = __mulhi(acc, input_i);
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
