@@ -16,11 +16,14 @@ with open("src/branch_kernel.h", "w") as fp:
 
     fp.write("\tconst uint32_t i =  (blockDim.x * blockIdx.x + threadIdx.x);\n")
 
-    fp.write("\n\tif (threadIdx.x == 0) dst[i] = threadIdx.x;")
+    fp.write("\n\tif (threadIdx.x == 0) dst[i] = 0;")
 
     # setting the registers
     for i in range(1, MAXBRANCHS):
-        fp.write("\n\telse if (threadIdx.x == {}) dst[i] = threadIdx.x;".format(i, i))
+        fp.write("\n\telse if (threadIdx.x == {})".format(i) + "{\n")  # " dst[i] = {};".format(i, i))
+        fp.write("\t\tdst[i] = ((threadIdx.x % 2) ? threadIdx.x - UNROLL_MAX : threadIdx.x + UNROLL_MAX) + 1;\n")
+        fp.write("\t}")
+
 
 
     fp.write("\n}\n\n")
