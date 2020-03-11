@@ -32,14 +32,20 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
 template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t acc = src[threadIdx.x];
-	int_t input_i = src[threadIdx.x];
+	volatile int_t input_i = src[threadIdx.x];
+	int_t divider = input_i * input_i; //^2
+	divider *= divider; //^4
+	divider *= divider; //^8
+	divider *= divider; //^16
 
-#pragma unroll UNROLL_MAX
+#pragma unroll 16
 	for (uint32_t i = 0; i < op; i++) {
-		asm("mul.hi.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
-//		asm("div.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
-		asm("mul.hi.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
-//		asm("div.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+
+#pragma unroll 16
+		for (uint32_t k = 0; k < 16; k++)
+			acc *= input_i;
+
+		acc = acc / divider;
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
