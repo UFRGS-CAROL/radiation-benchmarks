@@ -33,7 +33,7 @@ template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t acc = src[threadIdx.x];
 	int_t input_i = src[threadIdx.x];
-	int_t divisor = 0xFFFFFFFF / input_i;
+	int_t divisor = 0xFFFFFFFF / input_i + 1;
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
 		acc *= input_i;
