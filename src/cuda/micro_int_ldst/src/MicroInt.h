@@ -85,6 +85,9 @@ struct MicroInt {
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
 
 		//generates both golds
+		this->gold_branch_kernel.push_back(0);
+		this->gold_host.push_back(dist(mersenne_engine));
+
 		for (auto i = 1; i < MAX_THREAD_BLOCK; i++) {
 			this->gold_branch_kernel.push_back(
 					i + ((i % 2) ? -MAX_THREAD_LD_ST_OPERATIONS :
