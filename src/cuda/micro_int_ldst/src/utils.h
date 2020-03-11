@@ -19,7 +19,7 @@
 #define MAX_THREAD_BLOCK WARP_SIZE * WARP_SIZE
 
 #define RANGE_INT_MAX 1024
-#define RANGE_INT_MIN 2
+#define RANGE_INT_MIN 3
 
 
 //The amount of memory that will be used
