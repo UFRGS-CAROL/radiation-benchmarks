@@ -31,6 +31,7 @@ struct MicroInt {
 	size_t array_size;
 
 	std::vector<int_t> gold_host;
+	std::vector<int_t> gold_branch_kernel;
 	std::vector<int_t> input_host;
 	std::vector<int_t> output_host;
 
@@ -82,10 +83,12 @@ struct MicroInt {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
-		this->gold_host.resize(MAX_THREAD_BLOCK, 0);
 
-		for (auto& i : this->gold_host)
-			i = dist(mersenne_engine);
+		//generates both golds
+		for(auto i = 0; i < MAX_THREAD_BLOCK; i++){
+			this->gold_branch_kernel.push_back(i);
+			this->gold_host.push_back(dist(mersenne_engine));
+		}
 
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
@@ -130,6 +133,11 @@ struct MicroInt {
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t slice;
+
+		auto gold_ptr = this->gold_host.data();
+		if(this->parameters.micro == BRANCH)
+			gold_ptr = this->gold_branch_kernel.data();
+
 #pragma omp parallel for shared(error_vector, slice)
 		for (slice = 0; slice < slices; slice++) {
 			auto i_ptr = slice * gold_size;
@@ -137,7 +145,7 @@ struct MicroInt {
 
 			for (size_t i = 0; i < this->gold_host.size(); i++) {
 				int_t output = output_ptr[i];
-				int_t golden = this->gold_host[i];
+				int_t golden = gold_ptr[i];
 				if (output != golden) {
 					std::string error_detail;
 					error_detail = "array_position: " + std::to_string(i_ptr);
