@@ -85,8 +85,13 @@ struct MicroInt {
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
 
 		//generates both golds
-		for(auto i = 0; i < MAX_THREAD_BLOCK; i++){
-			this->gold_branch_kernel.push_back(i);
+		for (auto i = 1; i < MAX_THREAD_BLOCK; i++) {
+			this->gold_branch_kernel.push_back(
+					i
+							+ ((i % 2) ?
+									-MAX_THREAD_LD_ST_OPERATIONS :
+									MAX_THREAD_LD_ST_OPERATIONS) + 1);
+
 			this->gold_host.push_back(dist(mersenne_engine));
 		}
 
@@ -102,7 +107,7 @@ struct MicroInt {
 			this->input_host = this->gold_host;
 		}
 
-		if(parameters.debug){
+		if (parameters.debug) {
 			this->input_host[rand() % this->input_host.size()] = 0;
 		}
 
@@ -135,7 +140,7 @@ struct MicroInt {
 		size_t slice;
 
 		auto gold_ptr = this->gold_host.data();
-		if(this->parameters.micro == BRANCH)
+		if (this->parameters.micro == BRANCH)
 			gold_ptr = this->gold_branch_kernel.data();
 
 #pragma omp parallel for shared(error_vector, slice)

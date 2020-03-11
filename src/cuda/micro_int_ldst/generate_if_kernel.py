@@ -21,7 +21,7 @@ with open("src/branch_kernel.h", "w") as fp:
     # setting the registers
     for i in range(1, MAXBRANCHS):
         fp.write("\n\telse if (threadIdx.x == {})".format(i) + "{\n")  # " dst[i] = {};".format(i, i))
-        fp.write("\t\tdst[i] = ((threadIdx.x % 2) ? threadIdx.x - UNROLL_MAX : threadIdx.x + UNROLL_MAX) + 1;\n")
+        fp.write("\t\tdst[i] = threadIdx.x + ((threadIdx.x % 2) ?  -UNROLL_MAX : UNROLL_MAX) + {};\n".format(i))
         fp.write("\t}")
 
 
