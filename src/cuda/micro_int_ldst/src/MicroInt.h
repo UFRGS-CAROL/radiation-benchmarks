@@ -82,7 +82,7 @@ struct MicroInt {
 		std::random_device rnd_device;
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
-		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
+		std::uniform_int_distribution<int_t> dist { RANGE_INT_MIN, RANGE_INT_MAX };
 
 		//generates both golds
 		for (auto i = 0; i < MAX_THREAD_BLOCK; i++) {
