@@ -36,12 +36,11 @@ __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t divider = input_i * input_i; //^2
 	divider *= divider; //^4
 	divider *= divider; //^8
-	divider *= divider; //^16
 
-#pragma unroll 16
+#pragma unroll 32
 	for (uint32_t i = 0; i < op; i++) {
 
-#pragma unroll 16
+#pragma unroll 8
 		for (uint32_t k = 0; k < 16; k++)
 			acc *= input_i;
 

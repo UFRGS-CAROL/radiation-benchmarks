@@ -18,7 +18,7 @@
 
 #define MAX_THREAD_BLOCK WARP_SIZE * WARP_SIZE
 
-#define RANGE_INT_VAL 100
+#define RANGE_INT_VAL 15
 
 //The amount of memory that will be used
 //in the LDST test
