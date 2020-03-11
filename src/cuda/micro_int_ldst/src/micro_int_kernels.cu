@@ -32,14 +32,14 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
 template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t acc = src[threadIdx.x];
-	volatile register int_t input_i = src[threadIdx.x];
+	int_t input_i = src[threadIdx.x];
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-		acc = __mulhi(acc, input_i);
-		acc = __mulhi(acc, input_i);
-		acc = __mulhi(acc, input_i);
-		acc = __mulhi(acc, input_i);
+		asm("mul.hi.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+//		asm("div.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+		asm("mul.hi.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+//		asm("div.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
