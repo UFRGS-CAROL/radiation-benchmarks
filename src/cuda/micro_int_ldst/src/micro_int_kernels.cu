@@ -33,18 +33,13 @@ template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t acc = src[threadIdx.x];
 	volatile int_t input_i = src[threadIdx.x];
-	volatile int_t divider = input_i * input_i; //^2
-	divider *= divider; //^4
-	divider *= divider; //^8
 
-#pragma unroll 32
+#pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-
-#pragma unroll 8
-		for (uint32_t k = 0; k < 8; k++)
-			acc *= input_i;
-
-		acc = acc / divider;
+		asm("mul.lo.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+		asm("mul.lo.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+		asm("mul.lo.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
+		asm("mul.lo.s32 %0, %2, %1;" : "=r"(acc) : "r"(acc), "r"(input_i));
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
@@ -105,7 +100,7 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		kernel = ldst_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
 		break;
 	case BRANCH:
-		kernel = branch_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
+		kernel = branch_int_kernel<0>;
 		break;
 	}
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);
