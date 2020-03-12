@@ -84,6 +84,8 @@ struct Micro {
 			this->read_from_file(this->parameters.gold, this->gold.data(),
 					this->parameters.block_size);
 		} else {
+
+
 			// First create an instance of an engine.
 			std::random_device rnd_device;
 			// Specify the engine and distribution.
@@ -96,6 +98,11 @@ struct Micro {
 
 		this->input_device = this->input_host;
 
+	}
+
+	bool file_exists(const std::string& name) {
+		std::ifstream f(name);
+		return f.good();
 	}
 
 	virtual ~Micro() = default;
