@@ -166,7 +166,7 @@ struct MicroInt {
 					error_detail += " e: " + std::to_string(golden);
 					error_detail += " r: " + std::to_string(output);
 
-					if (this->parameters.verbose && error_vector[i] < 5) {
+					if (this->parameters.verbose && i < 5) {
 						std::cout << error_detail << std::endl;
 					}
 					error_vector[i]++;
