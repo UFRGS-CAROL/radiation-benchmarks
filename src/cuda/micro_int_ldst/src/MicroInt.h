@@ -57,6 +57,7 @@ struct MicroInt {
 		}
 
 		if (this->parameters.generate) {
+			std::cout << "Generating or reading input\n";
 			auto start_gen = rad::mysecond();
 			this->generate_input();
 			auto end_gen = rad::mysecond();
@@ -81,6 +82,9 @@ struct MicroInt {
 
 		if (this->parameters.verbose) {
 			std::cout << "Output device allocation time: " << out_allocation
+					<< std::endl;
+			std::cout << "Size of input array " << this->input_host.size()
+					<< " size of output " << this->output_host.size()
 					<< std::endl;
 		}
 
