@@ -22,7 +22,8 @@ struct Parameters {
 	std::string instruction_str;
 	std::string device;
 	std::string precision_str;
-	std::string generate_output;
+	std::string gold;
+	std::string input;
 
 	uint32_t sm_count;
 	uint32_t iterations;

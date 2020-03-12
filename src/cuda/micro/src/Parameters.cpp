@@ -17,9 +17,12 @@ Parameters::Parameters(int argc, char* argv[]) {
 	LOOPING_UNROLL);
 	this->precision_str = rad::find_char_arg(argc, argv, "--precision",
 			"float");
-	this->generate_output = rad::find_char_arg(argc, argv, "--gold",
+	this->gold = rad::find_char_arg(argc, argv, "--gold",
 			"./gold.data");
+	this->input = rad::find_char_arg(argc, argv, "--input",
+			"./input.data");
 	this->generate = rad::find_arg(argc, argv, "--generate");
+
 
 	this->micro = mic[this->instruction_str];
 	this->precision = pre[this->precision_str];
@@ -61,7 +64,10 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Fast math: " << p.fast_math << std::endl;
-	os << "Device " << p.device;
+	os << "Device " << p.device << std::endl;
+	os << "Gold file: " << p.gold << std::endl;
+	os << "Input file: " << p.input << std::endl;
+	os << "Generate: " << p.generate << std::endl;
 
 	return os;
 }

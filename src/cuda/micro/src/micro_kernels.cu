@@ -45,8 +45,8 @@ __global__ void micro_kernel_mul(real_t *dst, real_t *src, const uint32_t ops) {
 	for (uint32_t count = 0; count < ops; count++) {
 		acc = mul_inline<USEFASTMATH>(acc, input_i);
 		acc = mul_inline<USEFASTMATH>(acc, input_i_inv);
-		acc = mul_inline<USEFASTMATH>(acc, input_i);
 		acc = mul_inline<USEFASTMATH>(acc, input_i_inv);
+		acc = mul_inline<USEFASTMATH>(acc, input_i);
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;

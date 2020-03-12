@@ -79,17 +79,10 @@ struct Micro {
 		this->input_host.resize(this->parameters.block_size, real_t(0.0));
 
 		if (this->parameters.generate == false) {
-			std::vector<real_t> whole_file(this->parameters.block_size * 2);
-
-			this->read_from_file(this->parameters.generate_output,
-					whole_file.data(), this->parameters.block_size * 2);
-
-			std::copy(whole_file.begin(),
-					whole_file.begin() + this->parameters.block_size,
-					this->input_host.begin());
-			std::copy(whole_file.begin() + this->parameters.block_size,
-					whole_file.end(), this->gold.begin());
-
+			this->read_from_file(this->parameters.input,
+					this->input_host.data(), this->parameters.block_size);
+			this->read_from_file(this->parameters.gold, this->gold.data(),
+					this->parameters.block_size);
 		} else {
 			// First create an instance of an engine.
 			std::random_device rnd_device;
@@ -147,12 +140,11 @@ struct Micro {
 			//save only the first thread result
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
-			this->write_to_file(this->parameters.generate_output,
-					this->input_host.data(), this->parameters.block_size,
-					std::ios::out);
-			this->write_to_file(this->parameters.generate_output,
-					this->output_host.data(), this->parameters.block_size,
-					std::ios::app);
+			this->write_to_file(this->parameters.input, this->input_host.data(),
+					this->parameters.block_size, std::ios::out);
+
+			this->write_to_file(this->parameters.gold, this->output_host.data(),
+					this->parameters.block_size, std::ios::out);
 
 		}
 		return errors;

@@ -21,7 +21,7 @@
 #define RANGE_INT_MAX 1024
 #define RANGE_INT_MIN 3
 
-#define LOOPING_UNROLL 256
+#define LOOPING_UNROLL 128
 
 typedef enum {
 	ADD, MUL, FMA, DIV, PYTHAGOREAN, EULER, LOG
