@@ -64,7 +64,13 @@ mkdir:
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-	
+
+generate:
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ./input_$(MICRO).data \
+			  --opnum $(OPNUM) --generate --gold ./gold_$(MICRO).data --verbose
+			  
 test:
-	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM)
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ./input_$(MICRO).data \
+			  --opnum $(OPNUM) --gold ./gold_$(MICRO).data --verbose
+
 	
