@@ -150,32 +150,48 @@ struct MicroInt {
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t slice;
+		if (this->parameters.generate) {
 
 #pragma omp parallel for shared(error_vector, slice)
-		for (slice = 0; slice < slices; slice++) {
-			auto i_ptr = slice * gold_size;
-			int_t* output_ptr = this->output_host.data() + i_ptr;
+			for (slice = 0; slice < slices; slice++) {
+				auto i_ptr = slice * gold_size;
+				int_t* output_ptr = this->output_host.data() + i_ptr;
 
-			for (size_t i = 0; i < this->gold_host.size(); i++) {
-				int_t output = output_ptr[i];
-				int_t golden = this->gold_host[i];
-				if (output != golden) {
-					std::string error_detail;
-					error_detail = "array_position: " + std::to_string(i_ptr);
-					error_detail += " gold_position: " + std::to_string(i);
-					error_detail += " e: " + std::to_string(golden);
-					error_detail += " r: " + std::to_string(output);
+				for (size_t i = 0; i < this->gold_host.size(); i++) {
+					int_t output = output_ptr[i];
+					int_t golden = this->gold_host[i];
+					if (output != golden) {
+						std::string error_detail;
+						error_detail = "array_position: "
+								+ std::to_string(i_ptr);
+						error_detail += " gold_position: " + std::to_string(i);
+						error_detail += " e: " + std::to_string(golden);
+						error_detail += " r: " + std::to_string(output);
 
-					if (this->parameters.verbose && i < 5) {
-						std::cout << error_detail << std::endl;
-					}
-					error_vector[i]++;
+						if (this->parameters.verbose && i < 5) {
+							std::cout << error_detail << std::endl;
+						}
+						error_vector[i]++;
 #pragma omp critical
-					{
-						this->log->log_error_detail(error_detail);
+						{
+							this->log->log_error_detail(error_detail);
+						}
 					}
 				}
 			}
+		} else {
+			//save only the first thread result
+			//This will save only the first BLOCK_SIZE of results
+			//which must be equals to the rest of the array
+			if (!(this->file_exists(this->parameters.input))) {
+				this->write_to_file(this->parameters.input,
+						this->input_host.data(), this->block_size,
+						std::ios::out);
+			}
+
+			this->write_to_file(this->parameters.gold, this->output_host.data(),
+					this->block_size, std::ios::out);
+
 		}
 
 		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
