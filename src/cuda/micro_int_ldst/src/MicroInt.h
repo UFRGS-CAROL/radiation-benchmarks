@@ -150,12 +150,12 @@ struct MicroInt {
 	}
 
 	size_t compare_output() {
-		auto gold_size = this->gold_host.size();
-		auto slices = this->array_size / gold_size;
-		std::vector<size_t> error_vector(slices, 0);
-		size_t slice;
-		if (!this->parameters.generate) {
 
+		if (!this->parameters.generate) {
+			auto gold_size = this->gold_host.size();
+			auto slices = this->array_size / gold_size;
+			std::vector<size_t> error_vector(slices, 0);
+			size_t slice;
 #pragma omp parallel for shared(error_vector, slice)
 			for (slice = 0; slice < slices; slice++) {
 				auto i_ptr = slice * gold_size;
@@ -183,13 +183,16 @@ struct MicroInt {
 					}
 				}
 			}
+
+			return std::accumulate(error_vector.begin(), error_vector.end(), 0);
+
 		} else {
 
 			//save only the first thread result
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
 			if (!(this->file_exists(this->parameters.input))) {
-				if(this->parameters.verbose){
+				if (this->parameters.verbose) {
 					std::cout << "Writing input file\n";
 				}
 				this->write_to_file(this->parameters.input,
@@ -197,15 +200,13 @@ struct MicroInt {
 						std::ios::out);
 			}
 
-			if(this->parameters.verbose){
+			if (this->parameters.verbose) {
 				std::cout << "Writing gold file\n";
 			}
 			this->write_to_file(this->parameters.gold, this->output_host.data(),
 					this->block_size, std::ios::out);
-
+			return 0;
 		}
-
-		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
 	}
 
 	void reset_output_device() {
