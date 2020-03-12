@@ -19,6 +19,12 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->micro = mic[this->instruction_str];
 	this->debug = rad::find_arg(argc, argv, "--debug");
 
+	this->gold = rad::find_char_arg(argc, argv, "--gold",
+				"./gold.data");
+	this->input = rad::find_char_arg(argc, argv, "--input",
+			"./input.data");
+	this->generate = rad::find_arg(argc, argv, "--generate");
+
 	auto dev_prop = rad::get_device();
 	this->device = dev_prop.name;
 	this->memory_size_to_use = gpu_ddr_by_gpu[this->device];
@@ -57,6 +63,8 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Device " << p.device;
-
+	os << "Gold file: " << p.gold << std::endl;
+	os << "Input file: " << p.input << std::endl;
+	os << "Generate: " << p.generate << std::endl;
 	return os;
 }

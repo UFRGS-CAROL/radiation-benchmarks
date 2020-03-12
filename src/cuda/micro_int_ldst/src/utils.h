@@ -46,7 +46,7 @@ static std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
 //max thread ld/st operation
 #define MAX_THREAD_LD_ST_OPERATIONS 16
 
-#define LOOPING_UNROLL 256
+#define LOOPING_UNROLL 128
 
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST, BRANCH

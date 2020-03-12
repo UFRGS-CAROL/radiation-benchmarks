@@ -20,6 +20,8 @@ struct Parameters {
 	MICROINSTRUCTION micro;
 	std::string instruction_str;
 	std::string device;
+	std::string gold;
+	std::string input;
 
 	size_t sm_count;
 	size_t iterations;
@@ -29,6 +31,7 @@ struct Parameters {
 
 	bool verbose;
 	bool debug;
+	bool generate;
 
 	Parameters(int argc, char* argv[]);
 
