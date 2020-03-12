@@ -39,6 +39,10 @@ Parameters::Parameters(int argc, char* argv[]) {
 						+ std::to_string(dev_prop.warpSize));
 	}
 
+	if(this->generate == true){
+		this->iterations = 1;
+	}
+
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {

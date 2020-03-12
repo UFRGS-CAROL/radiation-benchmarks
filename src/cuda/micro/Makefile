@@ -74,7 +74,7 @@ generate:
 			  --generate --gold ./gold_$(MICRO).data --input ./input_$(MICRO).data
 			  
 test:
-	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose \
-	 		   --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-	 		   --gold ./gold_$(MICRO).data
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \
+			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
+			  --gold ./gold_$(MICRO).data --input ./input_$(MICRO).data
 	

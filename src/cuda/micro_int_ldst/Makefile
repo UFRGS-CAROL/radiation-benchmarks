@@ -66,11 +66,11 @@ clean:
 	
 
 generate:
-	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ./input_$(MICRO).data \
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ../micro/input_$(MICRO).data \
 			  --opnum $(OPNUM) --generate --gold ./gold_$(MICRO).data --verbose
 			  
 test:
-	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ./input_$(MICRO).data \
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ../micro/input_$(MICRO).data \
 			  --opnum $(OPNUM) --gold ./gold_$(MICRO).data --verbose
 
 	
