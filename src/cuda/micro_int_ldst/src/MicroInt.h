@@ -75,13 +75,16 @@ struct MicroInt {
 
 			this->gold_host.resize(this->block_size);
 			this->read_from_file(this->parameters.input, new_input.data(), this->block_size);
-			this->read_from_file(this->parameters.gold, this->gold_host.data(), this->block_size);
-
+			if (this->parameters.micro == LDST) {
+				this->gold_host = new_input;
+			}else{
+				this->read_from_file(this->parameters.gold, this->gold_host.data(), this->block_size);
+			}
 			this->input_host.resize(final_input_size);
 			this->grow_input_host(new_input, final_input_size);
 
-		}
 
+		}
 		auto out_allocation = rad::mysecond();
 		//Set the output size
 		this->output_device.resize(this->array_size);
@@ -175,7 +178,7 @@ struct MicroInt {
 						error_detail += " e: " + std::to_string(golden);
 						error_detail += " r: " + std::to_string(output);
 
-						if (this->parameters.verbose && i < 5) {
+						if (this->parameters.verbose && (i + slice) < 5) {
 							std::cout << error_detail << std::endl;
 						}
 						error_vector[i]++;
