@@ -11,6 +11,7 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include <fstream>
 
 #include "Parameters.h"
 #include "generic_log.h"
@@ -77,6 +78,11 @@ struct MicroInt {
 
 	}
 
+	inline bool file_exists(const std::string& name) {
+		std::ifstream f(name);
+		return f.good();
+	}
+
 	void generate_input() {
 		// First create an instance of an engine.
 		std::random_device rnd_device;
@@ -90,16 +96,23 @@ struct MicroInt {
 			this->gold_host.push_back(dist(mersenne_engine));
 		}
 
+		this->input_host.resize(MAX_THREAD_BLOCK);
+
+		if (this->file_exists(this->parameters.input)) {
+			this->read_from_file(this->parameters.input,
+					this->input_host.data(), this->input_host.size());
+		} else {
+			this->input_host = this->gold_host;
+		}
+
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
 			for (auto begin = this->input_host.begin(), end =
 					this->input_host.end(); begin < end;
-					begin += this->gold_host.size()) {
-				std::copy(this->gold_host.begin(), this->gold_host.end(),
+					begin += this->input_host.size()) {
+				std::copy(this->input_host.begin(), this->input_host.end(),
 						begin);
 			}
-		} else {
-			this->input_host = this->gold_host;
 		}
 
 		if (parameters.debug) {
@@ -172,12 +185,34 @@ struct MicroInt {
 		this->output_device.clear();
 	}
 
+	static bool read_from_file(std::string& path, int_t* array,
+			uint32_t count) {
+		std::ifstream input(path, std::ios::binary);
+		if (input.good()) {
+			input.read(reinterpret_cast<char*>(array), count * sizeof(int_t));
+			input.close();
+			return false;
+		}
+		return true;
+	}
+
+	template<typename openmode>
+	static bool write_to_file(std::string& path, int_t* array, uint32_t count,
+			openmode& write_mode) {
+		std::ofstream output(path, std::ios::binary | write_mode);
+		if (output.good()) {
+			output.write(reinterpret_cast<char*>(array),
+					count * sizeof(int_t));
+			output.close();
+
+			return false;
+		}
+		return true;
+	}
+
 };
 
 template<>
 void MicroInt<int32_t>::execute_micro();
-
-//template<>
-//size_t MicroInt<int32_t>::compare_on_gpu();
 
 #endif /* MICROINT_H_ */
