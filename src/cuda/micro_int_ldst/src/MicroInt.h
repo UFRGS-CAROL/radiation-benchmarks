@@ -150,7 +150,6 @@ struct MicroInt {
 	}
 
 	size_t compare_output() {
-
 		if (!this->parameters.generate) {
 			auto gold_size = this->gold_host.size();
 			auto slices = this->array_size / gold_size;
