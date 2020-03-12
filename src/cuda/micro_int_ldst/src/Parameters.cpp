@@ -45,6 +45,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
+	os << std::boolalpha;
 	os << "Micro type " << p.instruction_str << std::endl;
 	os << "SM count = " << p.sm_count << std::endl;
 	constexpr auto mb = 1 << 20;
