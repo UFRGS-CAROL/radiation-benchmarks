@@ -25,7 +25,6 @@ __DEVICE_INLINE__ real_t fma_inline(real_t a, real_t b, real_t c) {
 	return (a * b) + c;
 }
 
-
 template<>
 __DEVICE_INLINE__ float fma_inline<true>(float a, float b, float c) {
 	return __fmaf_rn(a, b, c);
@@ -84,17 +83,23 @@ __DEVICE_INLINE__ float div_inline<true>(float a, float b) {
 
 template<bool USEFASTMATH, typename real_t>
 __DEVICE_INLINE__ real_t pythagorean_identity(real_t a, real_t b) {
-	return pow(sin(a), real_t(2.0)) + pow(cos(b), real_t(2.0));
+	real_t pow_sin = pow(sin(a), real_t(2.0));
+	real_t pow_cos = pow(cos(b), real_t(2.0));
+	return pow_cos + pow_cos;
 }
 
 template<>
 __DEVICE_INLINE__ float pythagorean_identity<false>(float a, float b) {
-	return powf(sinf(a), 2.0f) + powf(cosf(b), 2.0f);
+	float pow_sin = powf(sinf(a), 2.0f);
+	float pow_cos = powf(cosf(b), 2.0f);
+	return pow_cos + pow_cos;
 }
 
 template<>
 __DEVICE_INLINE__ float pythagorean_identity<true>(float a, float b) {
-	return __powf(__sinf(a), 2.0f) + __powf(__cosf(b), 2.0f);
+	float pow_sin = __powf(__sinf(a), 2.0f);
+	float pow_cos = __powf(__cosf(b), 2.0f);
+	return pow_cos + pow_cos;
 }
 
 /**
