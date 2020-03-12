@@ -69,12 +69,15 @@ struct MicroInt {
 						<< std::endl;
 			}
 		} else {
-			std::vector<int_t> new_input(final_input_size);
+			//It must be the final size of basic input
+			//then the input is resized
+			std::vector<int_t> new_input(this->block_size);
 
 			this->gold_host.resize(this->block_size);
-			this->read_from_file(this->parameters.input, new_input.data(), final_input_size);
+			this->read_from_file(this->parameters.input, new_input.data(), this->block_size);
 			this->read_from_file(this->parameters.gold, this->gold_host.data(), this->block_size);
 
+			this->input_host.resize(final_input_size);
 			this->grow_input_host(new_input, final_input_size);
 
 		}
