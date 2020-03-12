@@ -85,15 +85,30 @@ struct Micro {
 					this->parameters.block_size);
 		} else {
 
-
-			// First create an instance of an engine.
-			std::random_device rnd_device;
-			// Specify the engine and distribution.
-			std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
-			std::uniform_real_distribution<real_t> dist {
-					-this->input_limits.OUTPUT_R, this->input_limits.OUTPUT_R };
-			for (auto& i : this->input_host)
-				i = dist(mersenne_engine) + real_t(0.001); //never zero
+			if (this->file_exists(this->parameters.input)) {
+				if (this->parameters.verbose) {
+					std::cout << this->parameters.input
+							<< " file already exists, reading\n";
+				}
+				this->read_from_file(this->parameters.input,
+						this->input_host.data(), this->parameters.block_size);
+			} else {
+				if (this->parameters.verbose) {
+					std::cout << "Generating a new input file\n";
+				}
+				// First create an instance of an engine.
+				std::random_device rnd_device;
+				// Specify the engine and distribution.
+				std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
+				std::uniform_real_distribution<real_t> dist {
+						-this->input_limits.OUTPUT_R,
+						this->input_limits.OUTPUT_R };
+				for (auto& i : this->input_host)
+					i = dist(mersenne_engine) + real_t(0.001); //never zero
+				this->write_to_file(this->parameters.input,
+						this->input_host.data(), this->parameters.block_size,
+						std::ios::out);
+			}
 		}
 
 		this->input_device = this->input_host;
@@ -147,9 +162,6 @@ struct Micro {
 			//save only the first thread result
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
-			this->write_to_file(this->parameters.input, this->input_host.data(),
-					this->parameters.block_size, std::ios::out);
-
 			this->write_to_file(this->parameters.gold, this->output_host.data(),
 					this->parameters.block_size, std::ios::out);
 
@@ -161,8 +173,7 @@ struct Micro {
 		this->output_device.clear();
 	}
 
-	bool read_from_file(std::string& path, real_t* array,
-			uint32_t count) {
+	bool read_from_file(std::string& path, real_t* array, uint32_t count) {
 		std::ifstream input(path, std::ios::binary);
 		if (input.good()) {
 			input.read(reinterpret_cast<char*>(array), count * sizeof(real_t));
