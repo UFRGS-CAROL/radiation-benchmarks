@@ -6,16 +6,17 @@ import os
 import sys
 
 sys.path.insert(0, '../../include')
-s
-from common_config import discover_board, execute_and_write_json_to_file
 
-ITERATIONS = int(1e9)
-PRECISIONS = ["single"]
-TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
-FASTMATH = 1
-OPS = {x: 10000000 for x in TYPES if x not in ["pythagorean", "euler"]}
-OPS.update({"pythagorean": 50000, "euler": 40000000})
-BUILDPROFILER = 0
+from common_config import discover_board, execute_and_write_json_to_file
+import common_micro_config as cm
+
+# ITERATIONS = int(1e9)
+# PRECISIONS = ["single"]
+# TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
+# FASTMATH = 1
+# OPS = {x: 10000000 for x in TYPES if x not in ["pythagorean", "euler"]}
+# OPS.update({"pythagorean": 50000, "euler": 40000000})
+# BUILDPROFILER = 0
 
 
 def config(board, debug):
@@ -41,28 +42,38 @@ def config(board, debug):
                 "make clean",
                 "make -C ../../include ",
                 "make -C ../common",
-                "make BUILDPROFILER={} PRECISION=".format(BUILDPROFILER) + " -j 4",
+                "make BUILDPROFILER={} PRECISION=".format(cm.BUILD_PROFILER) + " -j 4",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
-    for inst_type in TYPES:
-        for precision in PRECISIONS:
-            ops = OPS[inst_type]
-            gold_path = data_path + "/gold_{}_{}.data".format(inst_type, precision)
-            gen = [
-                ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                 bin_path + '/' + benchmark_bin + " "],
-                ['--iterations {}'.format(ITERATIONS)],
-                ['--gold {}'.format(gold_path)],
-                ['--precision {}'.format(precision)],
-                ['--inst {}'.format(inst_type)],
-                ['--opnum {}'.format(ops)],
-                ['--generate']
-            ]
+    for inst_type in cm.FLOAT_MICRO:
+        print(inst_type)
+        configs = cm.FLOAT_MICRO[inst_type]
+        fast_math_list = configs["fast_math"]
+        ops_list = configs["ops_list"]
+        precisions = configs["precisions"]
+        for precision in precisions:
+            for ops in ops_list:
+                for fast_math in fast_math_list:
+                    gold_path = data_path + "/gold_{}_{}_{}_{}.data".format(ops, fast_math, inst_type, precision)
+                    input_path = data_path + "/" + cm.GENERAL_
+                    gen = [
+                        ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                         bin_path + '/' + benchmark_bin + " "],
+                        ['--iterations {}'.format(cm.ITERATIONS)],
+                        ['--input {}'.format(input_path)],
+                        ['--gold {}'.format(gold_path)],
+                        ['--precision {}'.format(precision)],
+                        ['--inst {}'.format(inst_type)],
+                        ['--opnum {}'.format(ops)],
+                    ]
+                    if fast_math == 1:
+                        gen.append(['--fast-math'])
+                    gen.append(['--generate'])
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            del gen[-1]
-            execute.append(' '.join(str(r) for v in gen for r in v))
+                    generate.append(' '.join(str(r) for v in gen for r in v))
+                    del gen[-1]
+                    execute.append(' '.join(str(r) for v in gen for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
