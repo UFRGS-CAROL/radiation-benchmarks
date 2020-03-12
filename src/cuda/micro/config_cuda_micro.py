@@ -56,7 +56,7 @@ def config(board, debug):
             for ops in ops_list:
                 for fast_math in fast_math_list:
                     gold_path = data_path + "/gold_{}_{}_{}_{}.data".format(ops, fast_math, inst_type, precision)
-                    input_path = data_path + "/" + cm.GENERAL_
+                    input_path = data_path + "/" + cm.GENERAL_INPUT
                     gen = [
                         ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                          bin_path + '/' + benchmark_bin + " "],
