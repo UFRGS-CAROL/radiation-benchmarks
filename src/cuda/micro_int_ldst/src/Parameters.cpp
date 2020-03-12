@@ -15,14 +15,13 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->iterations = rad::find_int_arg(argc, argv, "--iterations", 10);
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->instruction_str = rad::find_char_arg(argc, argv, "--inst", "add");
-	this->operation_num = rad::find_int_arg(argc, argv, "--opnum", LOOPING_UNROLL);
+	this->operation_num = rad::find_int_arg(argc, argv, "--opnum",
+			LOOPING_UNROLL);
 	this->micro = mic[this->instruction_str];
 	this->debug = rad::find_arg(argc, argv, "--debug");
 
-	this->gold = rad::find_char_arg(argc, argv, "--gold",
-				"./gold.data");
-	this->input = rad::find_char_arg(argc, argv, "--input",
-			"./input.data");
+	this->gold = rad::find_char_arg(argc, argv, "--gold", "./gold.data");
+	this->input = rad::find_char_arg(argc, argv, "--input", "./input.data");
 	this->generate = rad::find_arg(argc, argv, "--generate");
 
 	auto dev_prop = rad::get_device();
@@ -39,7 +38,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 						+ std::to_string(dev_prop.warpSize));
 	}
 
-	if(this->generate == true){
+	if (this->generate == true) {
 		this->iterations = 1;
 	}
 
@@ -66,7 +65,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "MB" << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
-	os << "Device " << p.device;
+	os << "Device " << p.device << std::endl;
 	os << "Gold file: " << p.gold << std::endl;
 	os << "Input file: " << p.input << std::endl;
 	os << "Generate: " << p.generate << std::endl;
