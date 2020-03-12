@@ -39,6 +39,10 @@ CXXFLAGS+= -DBUILDPROFILER
 LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
+INPUT_FILE=../micro/input_$(MICRO).data
+ifeq ($(MICRO), mad)
+INPUT_FILE=../micro/input_fma.data
+endif
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
@@ -66,11 +70,11 @@ clean:
 	
 
 generate:
-	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ../micro/input_$(MICRO).data \
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input $(INPUT_FILE) \
 			  --opnum $(OPNUM) --generate --gold ./gold_$(MICRO).data --verbose
 			  
 test:
-	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input ../micro/input_$(MICRO).data \
+	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --input $(INPUT_FILE) \
 			  --opnum $(OPNUM) --gold ./gold_$(MICRO).data --verbose
 
 	
