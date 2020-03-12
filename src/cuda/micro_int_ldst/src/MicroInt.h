@@ -42,7 +42,7 @@ struct MicroInt {
 			parameters(parameters), log(log) {
 		//both benchmarks will use MAX_THREAD_BLOCK size
 		this->block_size = MAX_THREAD_BLOCK;
-
+		size_t final_input_size;
 		if (this->parameters.micro == LDST) {
 			//Array size is the amount of memory that will be evaluated
 			this->array_size = this->parameters.memory_size_to_use
@@ -50,10 +50,12 @@ struct MicroInt {
 			this->parameters.operation_num = MEM_OPERATION_NUM;
 			this->grid_size = this->array_size
 					/ (this->parameters.operation_num * this->block_size);
+			final_input_size = this->array_size;
 		} else {
 			//multiplies the grid size by the maximum number of warps per SM
 			this->grid_size = this->parameters.sm_count * WARP_PER_SM;
 			this->array_size = this->grid_size * this->block_size;
+			final_input_size = this->block_size;
 		}
 
 		if (this->parameters.generate) {
@@ -67,17 +69,21 @@ struct MicroInt {
 						<< std::endl;
 			}
 		} else {
-			this->input_host.resize(this->block_size);
+			std::vector<int_t> new_input(final_input_size);
+
 			this->gold_host.resize(this->block_size);
-			this->read_from_file(this->parameters.input,
-					this->input_host.data(), this->block_size);
-			this->read_from_file(this->parameters.gold, this->gold_host.data(),
-					this->block_size);
+			this->read_from_file(this->parameters.input, new_input.data(), final_input_size);
+			this->read_from_file(this->parameters.gold, this->gold_host.data(), this->block_size);
+
+			this->grow_input_host(new_input, final_input_size);
+
 		}
 
 		auto out_allocation = rad::mysecond();
 		//Set the output size
 		this->output_device.resize(this->array_size);
+		this->output_host.resize(this->array_size);
+
 		out_allocation = rad::mysecond() - out_allocation;
 
 		if (this->parameters.verbose) {
@@ -109,12 +115,8 @@ struct MicroInt {
 
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
-			auto chunck = this->array_size / new_input.size();
-
-			for (auto i = 0; i < chunck; i++) {
-				auto begin = this->input_host.begin() + i * new_input.size();
-				std::copy(new_input.begin(), new_input.end(), begin);
-			}
+			//must be equal to the output when executing LDST
+			this->grow_input_host(new_input, this->array_size);
 		} else {
 			this->input_host = new_input;
 			if (this->file_exists(this->parameters.input)) {
@@ -235,6 +237,14 @@ struct MicroInt {
 		return true;
 	}
 
+private:
+	void grow_input_host(const std::vector<int_t>& new_input, uint32_t new_size) {
+		auto chunck = new_size / new_input.size();
+		for (auto i = 0; i < chunck; i++) {
+			auto begin = this->input_host.begin() + i * new_input.size();
+			std::copy(new_input.begin(), new_input.end(), begin);
+		}
+	}
 };
 
 template<>

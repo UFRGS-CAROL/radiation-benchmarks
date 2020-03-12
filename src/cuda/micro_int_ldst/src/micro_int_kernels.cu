@@ -29,22 +29,6 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
-//template<uint32_t UNROLL_MAX, typename int_t>
-//__global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
-//	int_t acc = src[threadIdx.x];
-//	int_t input_i = src[threadIdx.x];
-//	int_t divisor = 0x100000000 / input_i + 1;
-//#pragma unroll UNROLL_MAX
-//	for (uint32_t i = 0; i < op; i++) {
-//		acc *= input_i;
-//		acc = __mulhi(acc, divisor);
-//		acc *= input_i;
-//		acc = __mulhi(acc, divisor);
-//	}
-//
-//	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
-//}
-
 template<uint32_t UNROLL_MAX>
 __global__ void mul_int_kernel(int32_t* src, int32_t* dst, uint32_t op) {
 	int32_t acc = src[threadIdx.x];
@@ -129,38 +113,3 @@ void MicroInt<int32_t>::execute_micro() {
 			this->output_device.data(), this->grid_size, this->block_size,
 			this->parameters.operation_num);
 }
-
-/**
- *
- * May be useful in the future
- template<typename int_t>
- __global__ void check_kernel(int_t* lhs, int_t* rhs) {
- const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-
- if (lhs[thread_id] != rhs[thread_id]) {
- atomicAdd(&errors, 1);
- }
- }
-
- template<typename int_t>
- size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size,
- MICROINSTRUCTION& micro) {
-
- size_t grid = array_size / (MAX_THREAD_BLOCK);
- check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
-
- unsigned long long herrors = 0;
- rad::checkFrameworkErrors(cudaGetLastError());
- rad::checkFrameworkErrors(cudaDeviceSynchronize());
- rad::checkFrameworkErrors(
- cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
- return herrors;
- }
-
- template<>
- size_t MicroInt<int32_t>::compare_on_gpu() {
- return call_checker(this->output_device.data(), this->input_device.data(),
- this->array_size, this->parameters.micro);
- }
-
- */
