@@ -184,15 +184,22 @@ struct MicroInt {
 				}
 			}
 		} else {
+
 			//save only the first thread result
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
 			if (!(this->file_exists(this->parameters.input))) {
+				if(this->parameters.verbose){
+					std::cout << "Writing input file\n";
+				}
 				this->write_to_file(this->parameters.input,
 						this->input_host.data(), this->block_size,
 						std::ios::out);
 			}
 
+			if(this->parameters.verbose){
+				std::cout << "Writing gold file\n";
+			}
 			this->write_to_file(this->parameters.gold, this->output_host.data(),
 					this->block_size, std::ios::out);
 
