@@ -32,7 +32,6 @@ struct MicroInt {
 	size_t array_size;
 
 	std::vector<int_t> gold_host;
-	std::vector<int_t> gold_branch_kernel;
 	std::vector<int_t> input_host;
 	std::vector<int_t> output_host;
 
@@ -57,23 +56,32 @@ struct MicroInt {
 			this->array_size = this->grid_size * this->block_size;
 		}
 
-		auto start_gen = rad::mysecond();
-		this->generate_input();
-		auto end_gen = rad::mysecond();
+		if (this->parameters.generate) {
+			auto start_gen = rad::mysecond();
+			this->generate_input();
+			auto end_gen = rad::mysecond();
 
-		if (this->parameters.verbose) {
-			std::cout << "Input generation time: " << end_gen - start_gen
-					<< std::endl;
+			if (this->parameters.verbose) {
+				std::cout << "Input generation time: " << end_gen - start_gen
+						<< std::endl;
+			}
+		} else {
+			this->input_host.resize(this->block_size);
+			this->gold_host.resize(this->block_size);
+			this->read_from_file(this->parameters.input,
+					this->input_host.data(), this->block_size);
+			this->read_from_file(this->parameters.gold, this->gold_host.data(),
+					this->block_size);
 		}
 
-		start_gen = rad::mysecond();
+		auto out_allocation = rad::mysecond();
 		//Set the output size
 		this->output_device.resize(this->array_size);
-		end_gen = rad::mysecond();
+		out_allocation = rad::mysecond() - out_allocation;
 
 		if (this->parameters.verbose) {
-			std::cout << "Output device allocation time: "
-					<< end_gen - start_gen << std::endl;
+			std::cout << "Output device allocation time: " << out_allocation
+					<< std::endl;
 		}
 
 	}
@@ -90,28 +98,24 @@ struct MicroInt {
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { RANGE_INT_MIN, RANGE_INT_MAX };
 
-		//generates both golds
+		std::vector<int_t> new_input;
 		for (auto i = 0; i < MAX_THREAD_BLOCK; i++) {
-			this->gold_branch_kernel.push_back(i);
-			this->gold_host.push_back(dist(mersenne_engine));
-		}
-
-		this->input_host.resize(MAX_THREAD_BLOCK);
-
-		if (this->file_exists(this->parameters.input)) {
-			this->read_from_file(this->parameters.input,
-					this->input_host.data(), this->input_host.size());
-		} else {
-			this->input_host = this->gold_host;
+			new_input.push_back(dist(mersenne_engine));
 		}
 
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
-			for (auto begin = this->input_host.begin(), end =
-					this->input_host.end(); begin < end;
-					begin += this->input_host.size()) {
-				std::copy(this->input_host.begin(), this->input_host.end(),
-						begin);
+			auto chunck = this->array_size / new_input.size();
+
+			for (auto i = 0; i < chunck; i++) {
+				auto begin = this->input_host.begin() + i * new_input.size();
+				std::copy(new_input.begin(), new_input.end(), begin);
+			}
+		} else {
+			this->input_host = new_input;
+			if (this->file_exists(this->parameters.input)) {
+				this->read_from_file(this->parameters.input,
+						this->input_host.data(), this->input_host.size());
 			}
 		}
 
@@ -147,10 +151,6 @@ struct MicroInt {
 		std::vector<size_t> error_vector(slices, 0);
 		size_t slice;
 
-		auto gold_ptr = this->gold_host.data();
-		if (this->parameters.micro == BRANCH)
-			gold_ptr = this->gold_branch_kernel.data();
-
 #pragma omp parallel for shared(error_vector, slice)
 		for (slice = 0; slice < slices; slice++) {
 			auto i_ptr = slice * gold_size;
@@ -158,7 +158,7 @@ struct MicroInt {
 
 			for (size_t i = 0; i < this->gold_host.size(); i++) {
 				int_t output = output_ptr[i];
-				int_t golden = gold_ptr[i];
+				int_t golden = this->gold_host[i];
 				if (output != golden) {
 					std::string error_detail;
 					error_detail = "array_position: " + std::to_string(i_ptr);
@@ -185,8 +185,7 @@ struct MicroInt {
 		this->output_device.clear();
 	}
 
-	static bool read_from_file(std::string& path, int_t* array,
-			uint32_t count) {
+	bool read_from_file(std::string& path, int_t* array, uint32_t count) {
 		std::ifstream input(path, std::ios::binary);
 		if (input.good()) {
 			input.read(reinterpret_cast<char*>(array), count * sizeof(int_t));
@@ -197,12 +196,11 @@ struct MicroInt {
 	}
 
 	template<typename openmode>
-	static bool write_to_file(std::string& path, int_t* array, uint32_t count,
+	bool write_to_file(std::string& path, int_t* array, uint32_t count,
 			openmode& write_mode) {
 		std::ofstream output(path, std::ios::binary | write_mode);
 		if (output.good()) {
-			output.write(reinterpret_cast<char*>(array),
-					count * sizeof(int_t));
+			output.write(reinterpret_cast<char*>(array), count * sizeof(int_t));
 			output.close();
 
 			return false;
