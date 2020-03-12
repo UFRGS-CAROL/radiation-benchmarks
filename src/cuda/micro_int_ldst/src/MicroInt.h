@@ -244,11 +244,17 @@ struct MicroInt {
 
 private:
 	void grow_input_host(const std::vector<int_t>& new_input, uint32_t new_size) {
-		auto chunck = new_size / new_input.size();
-		for (auto i = 0; i < chunck; i++) {
-			auto begin = this->input_host.begin() + i * new_input.size();
+		auto chunck = new_input.size();
+
+		for(auto begin = this->input_host.begin(), end = this->input_host.end();
+				begin < end;
+				begin += chunck){
 			std::copy(new_input.begin(), new_input.end(), begin);
 		}
+//		for (auto i = 0; i < chunck; i++) {
+//			auto begin = this->input_host.begin() + i * new_input.size();
+//			std::copy(new_input.begin(), new_input.end(), begin);
+//		}
 	}
 };
 
