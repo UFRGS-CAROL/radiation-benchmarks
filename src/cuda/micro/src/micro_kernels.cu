@@ -73,11 +73,11 @@ template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
 __global__ void micro_kernel_pythagorean(real_t *dst, real_t *src,
 		const uint32_t ops) {
 	real_t acc = 0;
-	real_t input_i = fabs(src[threadIdx.x]);
+	real_t input_i = fabs(src[threadIdx.x]) * M_PI / real_t(180.0f);
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
-		acc += pythagorean_identity<USEFASTMATH>(input_i, input_i);
+		acc += pythagorean_identity<USEFASTMATH>(input_i);
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
