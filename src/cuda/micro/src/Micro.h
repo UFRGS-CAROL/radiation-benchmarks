@@ -154,7 +154,7 @@ struct Micro {
 		this->output_device.clear();
 	}
 
-	static bool read_from_file(std::string& path, real_t* array,
+	bool read_from_file(std::string& path, real_t* array,
 			uint32_t count) {
 		std::ifstream input(path, std::ios::binary);
 		if (input.good()) {
@@ -166,7 +166,7 @@ struct Micro {
 	}
 
 	template<typename openmode>
-	static bool write_to_file(std::string& path, real_t* array, uint32_t count,
+	bool write_to_file(std::string& path, real_t* array, uint32_t count,
 			openmode& write_mode) {
 		std::ofstream output(path, std::ios::binary | write_mode);
 		if (output.good()) {

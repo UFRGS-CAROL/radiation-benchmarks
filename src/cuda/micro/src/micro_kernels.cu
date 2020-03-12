@@ -73,7 +73,7 @@ template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
 __global__ void micro_kernel_pythagorean(real_t *dst, real_t *src,
 		const uint32_t ops) {
 	real_t acc = 0;
-	real_t input_i = src[threadIdx.x];
+	real_t input_i = fabs(src[threadIdx.x]);
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
@@ -128,7 +128,6 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t* input,
 
 		} else {
 			kernel = micro_kernel_pythagorean<LOOPING_UNROLL, false>;
-
 		}
 		break;
 	case EULER:

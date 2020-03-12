@@ -45,6 +45,7 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 		//Comparing the output
 		auto start_cmp = rad::mysecond();
 		auto errors = micro_obj.compare_output();
+
 		//update errors
 		micro_obj.log->update_errors();
 		micro_obj.log->update_infos();
