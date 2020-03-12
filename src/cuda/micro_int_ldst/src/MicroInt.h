@@ -86,6 +86,7 @@ struct MicroInt {
 		//Set the output size
 		this->output_device.resize(this->array_size);
 		this->output_host.resize(this->array_size);
+		this->input_device = this->input_host;
 
 		out_allocation = rad::mysecond() - out_allocation;
 
@@ -131,8 +132,6 @@ struct MicroInt {
 		if (parameters.debug) {
 			this->input_host[rand() % this->input_host.size()] = 0;
 		}
-
-		this->input_device = this->input_host;
 	}
 
 	virtual ~MicroInt() = default;
