@@ -117,7 +117,8 @@ struct MicroInt {
 
 		std::vector<int_t> new_input;
 		for (auto i = 0; i < MAX_THREAD_BLOCK; i++) {
-			new_input.push_back(dist(mersenne_engine));
+			auto new_element = dist(mersenne_engine);
+			new_input.push_back(new_element);
 		}
 
 		if (this->parameters.micro == LDST) {
