@@ -37,7 +37,7 @@ def config(board, debug):
                 "make clean",
                 "make -C ../../include ",
                 "make -C ../common ",
-                "make BUILDPROFILER={} LOGS=1".format(cm.BUILDPROFILER),
+                "make BUILDPROFILER={} LOGS=1".format(cm.BUILD_PROFILER),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
 
     execute = []

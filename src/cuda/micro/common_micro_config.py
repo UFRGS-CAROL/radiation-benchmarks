@@ -26,8 +26,9 @@ INT_MICRO = {i: STDDICT for i in COMMON_MICROS_LIST}
 for n in INT_MICRO_LIST:
     new_one = copy.deepcopy(STDDICT)
     new_one["fast_math"] = [0]
-    new_one["op_list"] = [0]
+    new_one["ops_list"] = [0]
     INT_MICRO[n] = new_one
+
 
 FLOAT_MICRO = copy.deepcopy(COMMON_MICROS)
 del FLOAT_MICRO["mad"]
