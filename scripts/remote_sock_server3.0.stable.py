@@ -13,10 +13,13 @@ sleepTime = 5  # Time between checks
 
 serverIP = "192.168.1.5"  # IP of the remote socket server (hardware watchdog)
 
+# time of a hard reboot
+rebootingSleep = 10
+
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
     "192.168.1.11",  # k201
- #   "192.168.1.21",  # k401
+    "192.168.1.21",  # k401
     # "192.168.1.15", #CarolTitanV1
     # "192.168.1.16", #CarolTeslaV1001
 ]
@@ -24,15 +27,14 @@ IPmachines = [
 # Set the machine names for each IP
 IPtoDiffReboot = {
     "192.168.1.11": 60,  # k201
-  #  "192.168.1.21": 60,  # k401
-    # "192.168.1.6": 120,  # CarolXeon1
+    "192.168.1.21": 90,  # k401
     # "192.168.1.7": 200,  # CarolXeon2
 }
 
 # Set the machine names for each IP
 IPtoNames = {
     "192.168.1.11": "carolk201",
-   # "192.168.1.21": "carolk401",
+    "192.168.1.21": "carolk202",
     # "192.168.1.6": "CarolXeon1",
     # "192.168.1.7": "CarolXeon2",
 }
@@ -40,7 +42,7 @@ IPtoNames = {
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
     "192.168.1.11": "192.168.1.100",  # carolk201
-    #"192.168.1.21": "192.168.1.100",  # carolk201
+    "192.168.1.21": "192.168.1.100",  # carolk201
     # "192.168.1.6": "192.168.1.102",  # CarolXeon1
     # "192.168.1.7": "192.168.1.104",  # CarolXeon2
 }
@@ -175,7 +177,7 @@ class RebootMachine(threading.Thread):
         switchIP = IPtoSwitchIP[self.address]
         print("\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port))
         setIPSwitch(port, "Off", switchIP)
-        time.sleep(10)
+        time.sleep(rebootingSleep)
         setIPSwitch(port, "On", switchIP)
 
 
