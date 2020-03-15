@@ -128,7 +128,10 @@ int main(int argc, char **argv) {
 			setup_execute(parameters, micro_obj);
 			return 0;
 		}
-		default: {
+		case ADD:
+		case MUL:
+		case FMA:
+		case MAD: {
 			MicroInt<int32_t> micro_obj(parameters, log_ptr);
 			setup_execute(parameters, micro_obj);
 			return 0;
