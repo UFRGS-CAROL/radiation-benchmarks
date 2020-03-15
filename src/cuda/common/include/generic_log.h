@@ -43,8 +43,8 @@ struct Log {
 		 * must build libraries before build with this macro
 		 */
 #ifdef BUILDPROFILER
-		std::string log_file_name(get_log_file_name());
-		this->profiler_thread = std::make_shared<NVMLWrapper>(0, log_file_name);
+//		std::string log_file_name(get_log_file_name());
+		this->profiler_thread = std::make_shared<NVMLWrapper>(0, this->get_log_file_name());
 
 		//START PROFILER THREAD
 		profiler_thread->start_profile();
@@ -142,7 +142,7 @@ struct Log {
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
-		file_name = get_log_file_name();
+		file_name = d.get_log_file_name();
 #endif
 		os << "LOGFILENAME: " << file_name << std::endl;
 		os << "Error: " << d._error << std::endl;
@@ -158,6 +158,10 @@ struct Log {
 
 	uint64_t get_infos() {
 		return this->_error;
+	}
+
+	std::string get_log_file_name(){
+		return std::string(::get_log_file_name());
 	}
 private:
 	//Hide copy constructor to avoid copies
