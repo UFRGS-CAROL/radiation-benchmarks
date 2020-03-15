@@ -121,12 +121,12 @@ int main(int argc, char **argv) {
 		case LDST: {
 			MicroLDST<int32_t> micro_obj(parameters, log_ptr);
 			setup_execute(parameters, micro_obj);
-			return 0;
+			break;
 		}
 		case BRANCH: {
 			MicroBranch<int32_t> micro_obj(parameters, log_ptr);
 			setup_execute(parameters, micro_obj);
-			return 0;
+			break;
 		}
 		case ADD:
 		case MUL:
@@ -134,14 +134,22 @@ int main(int argc, char **argv) {
 		case MAD: {
 			MicroInt<int32_t> micro_obj(parameters, log_ptr);
 			setup_execute(parameters, micro_obj);
-			return 0;
 		}
 		}
-		break;
+		return 0;
 	}
 	case SINGLE: {
-		MicroReal<float> micro_obj(parameters, log_ptr);
-		setup_execute(parameters, micro_obj);
+		switch (parameters.micro) {
+		case ADD:
+		case MUL:
+		case FMA:
+		case MAD:
+		case EULER:
+		case PYTHAGOREAN:
+		case DIV:
+			MicroReal<float> micro_obj(parameters, log_ptr);
+			setup_execute(parameters, micro_obj);
+		}
 		return 0;
 	}
 	case HALF:
