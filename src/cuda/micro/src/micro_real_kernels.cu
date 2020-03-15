@@ -1,4 +1,4 @@
-#include "Micro.h"
+#include "MicroReal.h"
 #include "device_functions.h"
 #include "input_device.h"
 
@@ -20,7 +20,7 @@ __global__ void real_fma_kernel(real_t *dst, const uint32_t ops) {
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_add(real_t *dst, const uint32_t ops) {
+__global__ void real_add_kernel(real_t *dst, const uint32_t ops) {
 	real_t acc = common_float_input[threadIdx.x];
 	real_t input_i = common_float_input[threadIdx.x];
 	real_t input_i_neg = -input_i;
@@ -106,7 +106,7 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, size_t grid_size,
 	void (*kernel)(real_t*, uint32_t);
 	switch (micro) {
 	case ADD:
-		kernel = micro_kernel_add<LOOPING_UNROLL, true>;
+		kernel = real_add_kernel<LOOPING_UNROLL, true>;
 		break;
 	case MUL:
 		kernel = real_mul_kernel<LOOPING_UNROLL, true>;
@@ -145,7 +145,7 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, size_t grid_size,
 }
 
 template<>
-void Micro<float>::execute_micro() {
+void MicroReal<float>::execute_micro() {
 	execute_kernel(this->parameters.micro, this->output_device.data(),
 			this->parameters.grid_size, this->parameters.block_size,
 			this->parameters.operation_num, this->parameters.fast_math);

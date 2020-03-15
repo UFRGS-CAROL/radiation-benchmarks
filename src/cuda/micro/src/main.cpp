@@ -13,7 +13,7 @@
 
 #include "utils.h"
 #include "Parameters.h"
-#include "Micro.h"
+
 #include "MicroLDST.h"
 #include "MicroInt.h"
 #include "MicroReal.h"

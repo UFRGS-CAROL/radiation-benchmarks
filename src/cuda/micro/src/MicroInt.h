@@ -20,7 +20,6 @@ struct MicroInt: public Micro<int_t> {
 	}
 
 	void execute_micro();
-
 };
 
 template<>

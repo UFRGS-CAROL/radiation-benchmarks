@@ -7,6 +7,8 @@
 
 #ifndef MICROREAL_H_
 #define MICROREAL_H_
+
+#include "Micro.h"
 #include "Parameters.h"
 #include "generic_log.h"
 

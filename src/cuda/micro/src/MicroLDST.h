@@ -52,11 +52,11 @@ struct MicroLDST: public Micro<int_t> {
 
 	void get_setup_input() {
 		rad::checkFrameworkErrors(cudaMemcpyToSymbol(this->gold.data(),
-				common_int_input, sizeof(int_t) * this->block_size, 0));
+						common_int_input, sizeof(int_t) * this->block_size, 0));
 		this->grow_input_host(this->gold);
 	}
 
-	void execute_micro();
+	void execute_micro() ;
 
 private:
 	void grow_input_host(const std::vector<int_t>& new_input) {
