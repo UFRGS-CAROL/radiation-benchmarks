@@ -52,19 +52,20 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->grid_size = this->sm_count * WARP_PER_SM;
 	this->array_size = this->block_size * this->grid_size;
 
-	if(argc < 2){
+	if (argc < 2) {
 		std::string help = "You could the following configurations: ";
 		help += "\nPrecisions - ";
-		for(auto p : this->pre){
+		for (auto p : this->pre) {
 			help += p.first + " ";
 		}
 		help += "\nMicro benchmarks - ";
-		for(auto m : this->mic){
+		for (auto m : this->mic) {
 			help += m.first + " ";
 		}
 
-		for(auto s : this->gpu_ddr_by_gpu)
-		help += "\nFor " + s.first + " GPU LD/ST micro uses " + std::to_string(s.second) + "\n";
+		for (auto s : this->gpu_ddr_by_gpu)
+			help += "\nFor " + s.first + " GPU LD/ST micro uses "
+					+ std::to_string(s.second) + "\n";
 
 		throw_line(help);
 	}
@@ -97,7 +98,8 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Fast math: " << p.fast_math << std::endl;
-	os << "Operations per thread " << p.operation_num << " x " << LOOPING_UNROLL << std::endl;
+	os << "Operations per thread " << p.operation_num << " x " << LOOPING_UNROLL
+			<< std::endl;
 	os << "Device " << p.device << std::endl;
 	os << "Gold file: " << p.gold << std::endl;
 	os << "Generate: " << p.generate << std::endl;

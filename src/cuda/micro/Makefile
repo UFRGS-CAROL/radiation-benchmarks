@@ -72,10 +72,10 @@ clean:
 generate:
 	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \
 			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-			  --generate --gold ./gold_$(MICRO).data --input ./input_$(MICRO).data
+			  --generate --gold ./gold_$(MICRO).data
 			  
 test:
 	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \
 			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-			  --gold ./gold_$(MICRO).data --input ./input_$(MICRO).data
+			  --gold ./gold_$(MICRO).data
 	

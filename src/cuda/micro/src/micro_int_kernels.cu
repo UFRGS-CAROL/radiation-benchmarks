@@ -76,6 +76,7 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* output, uint32_t grid_size,
 		kernel = mul_int_kernel<LOOPING_UNROLL>;
 		break;
 	case MAD:
+	case FMA:
 		kernel = mad_int_kernel<LOOPING_UNROLL>;
 		break;
 	case BRANCH:

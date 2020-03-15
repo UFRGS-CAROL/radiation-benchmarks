@@ -119,10 +119,16 @@ int main(int argc, char **argv) {
 	switch (parameters.precision) {
 	case INT32: {
 		std::shared_ptr<Micro<int32_t>> micro_obj;
-		if (parameters.micro == LDST || parameters.micro == BRANCH) {
+		switch (parameters.micro) {
+		case LDST:
 			micro_obj = std::make_shared<MicroLDST<int32_t>>(parameters,
 					log_ptr);
-		} else {
+			break;
+		case BRANCH:
+			micro_obj = std::make_shared<MicroBranch<int32_t>>(parameters,
+					log_ptr);
+			break;
+		default:
 			micro_obj = std::make_shared<MicroInt<int32_t>>(parameters,
 					log_ptr);
 		}
