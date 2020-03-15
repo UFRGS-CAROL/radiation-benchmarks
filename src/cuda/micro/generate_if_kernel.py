@@ -4,17 +4,18 @@ MAXBRANCHS = 1024
 
 with open("src/branch_kernel.h", "w") as fp:
     fp.write("#ifndef BRANCH_KERNEL_H_\n")
-    fp.write("#define BRANCH_KERNEL_H_\n")
+    fp.write("#define BRANCH_KERNEL_H_\n\n")
+    fp.write("#include <cstdint>\n\n")
 
 
     ####################################################################
     # kernel for FFFF which must be or
     fp.write(
         "\ntemplate<uint32_t UNROLL_MAX, typename int_t>"
-        "\n__global__ void branch_int_kernel(int_t* src, int_t* dst, uint32_t op) {\n"
+        "\n__global__ void int_branch_kernel(int_t* src, int_t* dst, uint32_t op) {\n"
     )
 
-    fp.write("\tconst uint32_t i = (blockDim.x * blockIdx.x + threadIdx.x);\n")
+    fp.write("\tconst int_t i = (blockDim.x * blockIdx.x + threadIdx.x);\n")
     fp.write("\tint_t value = i;\n")
 
     fp.write("\n\tif (threadIdx.x == 0) {\n\t\tvalue = 0;\n\t}")

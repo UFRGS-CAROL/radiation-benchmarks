@@ -1,9 +1,12 @@
 #ifndef BRANCH_KERNEL_H_
 #define BRANCH_KERNEL_H_
 
+#include <cstdint>
+
+
 template<uint32_t UNROLL_MAX, typename int_t>
-__global__ void branch_int_kernel(int_t* src, int_t* dst, uint32_t op) {
-	const uint32_t i = (blockDim.x * blockIdx.x + threadIdx.x);
+__global__ void int_branch_kernel(int_t* src, int_t* dst, uint32_t op) {
+	const int_t i = (blockDim.x * blockIdx.x + threadIdx.x);
 	int_t value = i;
 
 	if (threadIdx.x == 0) {

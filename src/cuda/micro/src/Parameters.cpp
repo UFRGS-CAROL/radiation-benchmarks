@@ -24,8 +24,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->generate = rad::find_arg(argc, argv, "--generate");
 
 
-	this->micro = mic[this->instruction_str];
-	this->precision = pre[this->precision_str];
+	this->micro = this->mic[this->instruction_str];
+	this->precision = this->pre[this->precision_str];
 
 	this->fast_math = rad::find_arg(argc, argv, "--fast_math");
 

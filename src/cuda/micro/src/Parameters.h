@@ -13,7 +13,7 @@
 //#include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "utils.h"
+#include "common.h"
 
 struct Parameters {
 
@@ -25,9 +25,9 @@ struct Parameters {
 	std::string gold;
 	std::string input;
 
-	uint32_t sm_count;
-	uint32_t iterations;
-	uint32_t operation_num;
+	size_t sm_count;
+	size_t iterations;
+	size_t operation_num;
 
 	size_t grid_size;
 	size_t block_size;
@@ -40,6 +40,43 @@ struct Parameters {
 	Parameters(int argc, char* argv[]);
 
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& p);
+
+private:
+ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
+	//ADD
+			{ "add", ADD },
+			//MUL
+			{ "mul", MUL },
+			//FMA
+			{ "fma", FMA },
+			//MAD
+			{ "mad", FMA },
+			//DIV
+			{ "div", DIV },
+			//Pythagorean
+			{ "pythagorean", PYTHAGOREAN },
+			//EULER
+			{ "euler", EULER },
+			//Branch
+			{ "branch", BRANCH },
+			//ldst
+			{ "ldst", LDST },
+	};
+
+ std::unordered_map<std::string, PRECISION> pre = {
+	//half
+			{ "half", HALF },
+			//float
+			{ "single", SINGLE },
+			//another name for float
+			{ "float", SINGLE },
+			//double
+			{ "double", DOUBLE },
+			//INT32
+			{ "int32", INT32 },
+			//INT64
+			{ "int64", INT64 },
+	};
 };
 
 #endif /* PARAMETERS_H_ */

@@ -8,8 +8,6 @@
 #ifndef MICROSPECIAL_H_
 #define MICROSPECIAL_H_
 
-#include <vector>
-#include <random>
 #include <iostream>
 #include <sstream>      // std::stringstream
 #include <iomanip> 	   // setprecision
@@ -19,49 +17,24 @@
 #include "generic_log.h"
 #include "device_vector.h"
 #include "utils.h"
-
 #include "omp.h"
 
-template<typename ... Types> struct Input {
-};
-
-template<>
-struct Input<double> {
-//#define OPS_PER_THREAD_OPERATION 1
-	double INPUT_A = 1.1945305291614955E+103; // 0x5555555555555555
-	double INPUT_B = 3.7206620809969885E-103; // 0x2AAAAAAAAAAAAAAA
-	double OUTPUT_R = 4.444444444444444; //0x4011C71C71C71C71
-};
-
-template<>
-struct Input<float> {
-//#define OPS_PER_THREAD_OPERATION 1
-	float INPUT_A = 1.4660155E+13; // 0x55555555
-	float INPUT_B = 3.0316488E-13; // 0x2AAAAAAA
-	float OUTPUT_R = 4.444444; //0x408E38E3
-};
-
-template<>
-struct Input<half> {
-//#define OPS_PER_THREAD_OPERATION 2
-	half INPUT_A = 1.066E+2; // 0x56AA
-	half INPUT_B = 4.166E-2; // 0x2955
-	half OUTPUT_R = 4.44; // 0x4471
-};
-
-template<typename real_t>
+template<typename micro_type_t>
 struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
-	const Input<real_t> input_limits;
+	const Input<micro_type_t> input_limits;
 
-	std::vector<real_t> input_host;
-	rad::DeviceVector<real_t> input_device;
+	std::vector<micro_type_t> input_host;
+	rad::DeviceVector<micro_type_t> input_device;
 
-	std::vector<real_t> output_host;
-	rad::DeviceVector<real_t> output_device;
+	std::vector<micro_type_t> output_host;
+	rad::DeviceVector<micro_type_t> output_device;
 
-	std::vector<real_t> gold;
+	std::vector<micro_type_t> gold;
+
+	size_t grid_size;
+	size_t block_size;
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
@@ -75,49 +48,34 @@ struct Micro {
 					<< end_gen - start_gen << std::endl;
 		}
 
-		this->gold.resize(this->parameters.block_size, real_t(0.0));
-		this->input_host.resize(this->parameters.block_size, real_t(0.0));
+		this->gold.resize(this->parameters.block_size, micro_type_t(0.0));
+		this->input_host.resize(this->parameters.block_size, micro_type_t(0.0));
 
 		if (this->parameters.generate == false) {
-			this->read_from_file(this->parameters.input,
-					this->input_host.data(), this->parameters.block_size);
-			this->read_from_file(this->parameters.gold, this->gold.data(),
-					this->parameters.block_size);
+			this->read_from_file(this->parameters.input, this->input_host);
+			this->read_from_file(this->parameters.gold, this->gold);
 		} else {
 
-			if (this->file_exists(this->parameters.input)) {
+			if (file_exists(this->parameters.input)) {
 				if (this->parameters.verbose) {
 					std::cout << this->parameters.input
 							<< " file already exists, reading\n";
 				}
-				this->read_from_file(this->parameters.input,
-						this->input_host.data(), this->parameters.block_size);
+				this->read_from_file(this->parameters.input, this->input_host);
 			} else {
 				if (this->parameters.verbose) {
 					std::cout << "Generating a new input file\n";
 				}
-				// First create an instance of an engine.
-				std::random_device rnd_device;
-				// Specify the engine and distribution.
-				std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
-				std::uniform_real_distribution<real_t> dist {
-						-this->input_limits.OUTPUT_R,
-						this->input_limits.OUTPUT_R };
-				for (auto& i : this->input_host)
-					i = dist(mersenne_engine) + real_t(0.001); //never zero
-				this->write_to_file(this->parameters.input,
-						this->input_host.data(), this->parameters.block_size,
+
+				this->input_host.resize(this->parameters.block_size);
+				generate_new_array(this->input_host);
+				this->write_to_file(this->parameters.input, this->input_host,
 						std::ios::out);
 			}
 		}
 
 		this->input_device = this->input_host;
 
-	}
-
-	bool file_exists(const std::string& name) {
-		std::ifstream f(name);
-		return f.good();
 	}
 
 	virtual ~Micro() = default;
@@ -129,7 +87,7 @@ struct Micro {
 	void execute_micro() {
 		throw_line(
 				"Method execute_micro not created for type == "
-						+ std::string(typeid(real_t).name()))
+						+ std::string(typeid(micro_type_t).name()))
 	}
 
 	size_t compare_output() {
@@ -138,8 +96,9 @@ struct Micro {
 		if (this->parameters.generate == false) {
 #pragma omp parallel for
 			for (size_t i = 0; i < this->output_host.size(); i++) {
-				real_t output = this->output_host[i];
-				real_t gold_t = this->gold[i % this->parameters.block_size];
+				micro_type_t output = this->output_host[i];
+				micro_type_t gold_t =
+						this->gold[i % this->parameters.block_size];
 				if (output != gold_t) {
 					std::stringstream error_detail;
 					//20 is from old micro-benchmarks precision
@@ -162,8 +121,7 @@ struct Micro {
 			//save only the first thread result
 			//This will save only the first BLOCK_SIZE of results
 			//which must be equals to the rest of the array
-			this->write_to_file(this->parameters.gold, this->output_host.data(),
-					this->parameters.block_size, std::ios::out);
+			this->write_to_file(this->parameters.gold, this->output_host, std::ios::out);
 
 		}
 		return errors;
@@ -173,10 +131,12 @@ struct Micro {
 		this->output_device.clear();
 	}
 
-	bool read_from_file(std::string& path, real_t* array, uint32_t count) {
+	bool read_from_file(std::string& path, std::vector<micro_type_t>& array) {
+		size_t count = array.size();
 		std::ifstream input(path, std::ios::binary);
 		if (input.good()) {
-			input.read(reinterpret_cast<char*>(array), count * sizeof(real_t));
+			input.read(reinterpret_cast<char*>(array.data()),
+					count * sizeof(micro_type_t));
 			input.close();
 			return false;
 		}
@@ -184,12 +144,13 @@ struct Micro {
 	}
 
 	template<typename openmode>
-	bool write_to_file(std::string& path, real_t* array, uint32_t count,
+	bool write_to_file(std::string& path, std::vector<micro_type_t>& array,
 			openmode& write_mode) {
+		size_t count = array.size();
 		std::ofstream output(path, std::ios::binary | write_mode);
 		if (output.good()) {
-			output.write(reinterpret_cast<char*>(array),
-					count * sizeof(real_t));
+			output.write(reinterpret_cast<char*>(array.data()),
+					count * sizeof(micro_type_t));
 			output.close();
 
 			return false;
@@ -198,8 +159,5 @@ struct Micro {
 	}
 
 };
-
-template<>
-void Micro<float>::execute_micro();
 
 #endif /* MicroSpecial_H_ */

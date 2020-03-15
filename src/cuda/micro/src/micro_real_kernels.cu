@@ -2,7 +2,7 @@
 #include "device_functions.h"
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_fma(real_t *dst, real_t *src, const uint32_t ops) {
+__global__ void real_fma_kernel(real_t *dst, real_t *src, const uint32_t ops) {
 	real_t acc = src[threadIdx.x];
 	real_t input_i = src[threadIdx.x];
 	real_t input_i_neg = -input_i;
@@ -36,7 +36,7 @@ __global__ void micro_kernel_add(real_t *dst, real_t *src, const uint32_t ops) {
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_mul(real_t *dst, real_t *src, const uint32_t ops) {
+__global__ void real_mul_kernel(real_t *dst, real_t *src, const uint32_t ops) {
 	real_t acc = src[threadIdx.x];
 	real_t input_i = src[threadIdx.x];
 	real_t input_i_inv = real_t(1.0f) / input_i;
@@ -53,7 +53,7 @@ __global__ void micro_kernel_mul(real_t *dst, real_t *src, const uint32_t ops) {
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_div(real_t *dst, real_t *src, const uint32_t ops) {
+__global__ void real_div_kernel(real_t *dst, real_t *src, const uint32_t ops) {
 	real_t acc = src[threadIdx.x];
 	real_t input_i = src[threadIdx.x];
 	real_t input_i_inv = real_t(1) / input_i;
@@ -70,7 +70,7 @@ __global__ void micro_kernel_div(real_t *dst, real_t *src, const uint32_t ops) {
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_pythagorean(real_t *dst, real_t *src,
+__global__ void real_pythagorean_kernel(real_t *dst, real_t *src,
 		const uint32_t ops) {
 	real_t acc = 0;
 	real_t input_i = fabs(src[threadIdx.x]) * M_PI / real_t(180.0f);
@@ -84,7 +84,7 @@ __global__ void micro_kernel_pythagorean(real_t *dst, real_t *src,
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_euler(real_t *dst, real_t *src,
+__global__ void real_euler_kernel(real_t *dst, real_t *src,
 		const uint32_t ops) {
 	real_t acc = 0;
 	real_t input_i = src[threadIdx.x];
@@ -109,33 +109,33 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t* input,
 		kernel = micro_kernel_add<LOOPING_UNROLL, true>;
 		break;
 	case MUL:
-		kernel = micro_kernel_mul<LOOPING_UNROLL, true>;
+		kernel = real_mul_kernel<LOOPING_UNROLL, true>;
 		break;
 	case FMA:
-		kernel = micro_kernel_fma<LOOPING_UNROLL, true>;
+		kernel = real_fma_kernel<LOOPING_UNROLL, true>;
 		break;
 	case DIV:
 		if (fast_math) {
-			kernel = micro_kernel_div<LOOPING_UNROLL, true>;
+			kernel = real_div_kernel<LOOPING_UNROLL, true>;
 		} else {
-			kernel = micro_kernel_div<LOOPING_UNROLL, false>;
+			kernel = real_div_kernel<LOOPING_UNROLL, false>;
 		}
 
 		break;
 	case PYTHAGOREAN:
 		if (fast_math) {
-			kernel = micro_kernel_pythagorean<LOOPING_UNROLL, true>;
+			kernel = real_pythagorean_kernel<LOOPING_UNROLL, true>;
 
 		} else {
-			kernel = micro_kernel_pythagorean<LOOPING_UNROLL, false>;
+			kernel = real_pythagorean_kernel<LOOPING_UNROLL, false>;
 		}
 		break;
 	case EULER:
 		if (fast_math) {
-			kernel = micro_kernel_euler<LOOPING_UNROLL, true>;
+			kernel = real_euler_kernel<LOOPING_UNROLL, true>;
 
 		} else {
-			kernel = micro_kernel_euler<LOOPING_UNROLL, false>;
+			kernel = real_euler_kernel<LOOPING_UNROLL, false>;
 
 		}
 		break;
