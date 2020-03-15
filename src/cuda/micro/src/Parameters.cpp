@@ -97,6 +97,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Fast math: " << p.fast_math << std::endl;
+	os << "Operations per thread " << p.operation_num << " x " << LOOPING_UNROLL << std::endl;
 	os << "Device " << p.device << std::endl;
 	os << "Gold file: " << p.gold << std::endl;
 	os << "Generate: " << p.generate << std::endl;
