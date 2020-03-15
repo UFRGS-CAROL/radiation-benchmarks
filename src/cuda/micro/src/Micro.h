@@ -75,7 +75,7 @@ struct Micro {
 		this->output_device.to_vector(this->output_host);
 	}
 
-	void execute_micro() {
+	virtual void execute_micro() {
 		throw_line(
 				"Method execute_micro not created for type == "
 						+ std::string(typeid(micro_type_t).name()))
