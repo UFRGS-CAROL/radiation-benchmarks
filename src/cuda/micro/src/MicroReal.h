@@ -10,11 +10,11 @@
 #include "Parameters.h"
 #include "generic_log.h"
 
-template<typename int_t>
-struct MicroReal: public Micro<int_t> {
+template<typename real_t>
+struct MicroReal: public Micro<real_t> {
 
 	MicroReal(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
-			Micro<int_t>(parameters, log) {
+			Micro<real_t>(parameters, log) {
 	}
 
 	void execute_micro();

@@ -28,6 +28,8 @@ struct Parameters {
 	size_t sm_count;
 	size_t iterations;
 	size_t operation_num;
+	size_t memory_size_to_use;
+	size_t global_gpu_memory_bytes;
 
 	size_t grid_size;
 	size_t block_size;
@@ -42,7 +44,7 @@ struct Parameters {
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& p);
 
 private:
- std::unordered_map<std::string, MICROINSTRUCTION> mic = {
+	std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 	//ADD
 			{ "add", ADD },
 			//MUL
@@ -60,10 +62,9 @@ private:
 			//Branch
 			{ "branch", BRANCH },
 			//ldst
-			{ "ldst", LDST },
-	};
+			{ "ldst", LDST }, };
 
- std::unordered_map<std::string, PRECISION> pre = {
+	std::unordered_map<std::string, PRECISION> pre = {
 	//half
 			{ "half", HALF },
 			//float
@@ -75,8 +76,18 @@ private:
 			//INT32
 			{ "int32", INT32 },
 			//INT64
-			{ "int64", INT64 },
-	};
+			{ "int64", INT64 }, };
+
+	//The amount of memory that will be used
+	//in the LDST test
+	std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
+			{ "TITAN V", 1024ull * 1024ull * 1024ull },
+			//MUL
+			{ "V100", 1024ull * 1024ull * 1024ull },
+			//FMA
+			{ "Tesla K20c", 1024ull * 1024ull * 256ull },
+
+			{ "Tesla K40c", 1024ull * 1024ull * 256ull }, };
 };
 
 #endif /* PARAMETERS_H_ */

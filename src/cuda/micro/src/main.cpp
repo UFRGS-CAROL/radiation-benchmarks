@@ -14,45 +14,54 @@
 #include "utils.h"
 #include "Parameters.h"
 #include "Micro.h"
+#include "MicroLDST.h"
+#include "MicroInt.h"
+#include "MicroReal.h"
 
 #include "cuda_utils.h"
 #include "generic_log.h"
 
-
 template<typename real_t>
-void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
+void setup_execute(Parameters& test_parameter,
+		std::shared_ptr<Micro<real_t>>& micro_obj) {
+
+	if (!test_parameter.generate) {
+		micro_obj->get_setup_input();
+	}
 
 	for (size_t iteration = 0; iteration < test_parameter.iterations;
 			iteration++) {
 
 		auto start_it = rad::mysecond();
 		//Start iteration
-		micro_obj.log->start_iteration();
-		micro_obj.execute_micro();
+		micro_obj->log->start_iteration();
+		micro_obj->execute_micro();
 
 		rad::checkFrameworkErrors(cudaGetLastError());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 		//end iteration
-		micro_obj.log->end_iteration();
+		micro_obj->log->end_iteration();
 		auto end_it = rad::mysecond();
 
 		//Copying from GPU
 		auto start_cpy = rad::mysecond();
-		micro_obj.copy_back_output();
+		micro_obj->copy_back_output();
 		auto end_cpy = rad::mysecond();
 
 		//Comparing the output
 		auto start_cmp = rad::mysecond();
-		auto errors = micro_obj.compare_output();
-
+		size_t errors = 0;
+		if (test_parameter.generate == false) {
+			errors = micro_obj->compare_output();
+		}
 		//update errors
-		micro_obj.log->update_errors();
-		micro_obj.log->update_infos();
+		micro_obj->log->update_errors();
+		micro_obj->log->update_infos();
 		auto end_cmp = rad::mysecond();
 
 		auto start_reset_output = rad::mysecond();
-		micro_obj.reset_output_device();
+		micro_obj->reset_output_device();
 		auto end_reset_output = rad::mysecond();
 
 		if (test_parameter.verbose) {
@@ -75,14 +84,18 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 			std::cout << " Reset time: " << reset_time << std::endl;
 		}
 	}
+
+	if (test_parameter.generate) {
+		micro_obj->save_output();
+	}
 }
 
-template<typename real_t>
-void setup(Parameters& parameters) {
+int main(int argc, char **argv) {
 	std::cout << std::setprecision(6) << std::setfill('0');
-	std::shared_ptr < rad::Log > log_ptr;
 
-	Micro<real_t> micro_obj(parameters, log_ptr);
+	//================== Set block and grid size for MxM kernel
+	Parameters parameters(argc, argv);
+	std::shared_ptr<rad::Log> log_ptr;
 
 	//================== Init logs
 	std::string test_info = "";
@@ -96,29 +109,36 @@ void setup(Parameters& parameters) {
 	std::string test_name = std::string("cuda_micro-")
 			+ parameters.instruction_str + "-" + parameters.precision_str;
 
-	log_ptr = std::make_shared < rad::Log > (test_name, test_info);
+	log_ptr = std::make_shared<rad::Log>(test_name, test_info);
 
 	if (parameters.verbose) {
 		std::cout << *log_ptr << std::endl;
-	}
-
-	setup_execute(parameters, micro_obj);
-}
-
-int main(int argc, char **argv) {
-	//================== Set block and grid size for MxM kernel
-	Parameters parameters(argc, argv);
-	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
 	}
 
-	switch (parameters.precision){
-	case SINGLE:
-		setup<float>(parameters);
+	switch (parameters.precision) {
+	case INT32: {
+		std::shared_ptr<Micro<int32_t>> micro_obj;
+		if (parameters.micro == LDST || parameters.micro == BRANCH) {
+			micro_obj = std::make_shared<MicroLDST<int32_t>>(parameters,
+					log_ptr);
+		} else {
+			micro_obj = std::make_shared<MicroInt<int32_t>>(parameters,
+					log_ptr);
+		}
+		setup_execute(parameters, micro_obj);
 		return 0;
+	}
+	case SINGLE: {
+		std::shared_ptr<Micro<float>> micro_obj = std::make_shared<
+				MicroReal<float>>(parameters, log_ptr);
+		setup_execute(parameters, micro_obj);
+		return 0;
+	}
 	case HALF:
 	case DOUBLE:
-		throw_line("not implemented yet");
+		throw_line("not implemented yet")
+		;
 	}
 }
 

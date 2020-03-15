@@ -36,8 +36,11 @@ Parameters::Parameters(int argc, char* argv[]) {
 		this->iterations = 1;
 	}
 
+	this->memory_size_to_use = this->gpu_ddr_by_gpu[this->device];
+
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
+	this->global_gpu_memory_bytes = dev_prop.totalGlobalMem;
 
 	if (dev_prop.warpSize != WARP_SIZE) {
 		throw_line(

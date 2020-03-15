@@ -7,15 +7,17 @@
 
 #include "Parameters.h"
 #include "MicroInt.h"
+#include "branch_kernel.h"
+#include "input_device.h"
 
 /**
  * dst is the output of the kernel
  * defined_src is defined input that has max threadIdx size
  */
 template<uint32_t UNROLL_MAX, typename int_t>
-__global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
-	int_t acc = src[threadIdx.x];
-	volatile int_t input_i = src[threadIdx.x];
+__global__ void add_int_kernel(int_t* dst, const uint32_t op) {
+	int_t acc = common_int_input[threadIdx.x];
+	volatile int_t input_i = common_int_input[threadIdx.x];
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
@@ -29,29 +31,26 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, const uint32_t op) {
 }
 
 template<uint32_t UNROLL_MAX>
-__global__ void mul_int_kernel(int32_t* src, int32_t* dst, uint32_t op) {
-	volatile int32_t acc = src[threadIdx.x];
-	volatile int32_t input_i = src[threadIdx.x];
-	volatile int32_t divisor = 0x100000000 / input_i + 1;
+__global__ void mul_int_kernel(int32_t* dst, uint32_t op) {
+	volatile int32_t acc = common_int_input[threadIdx.x];
+	volatile int32_t input_i = common_int_input[threadIdx.x];
+	volatile int32_t divisor = inverse_mul_input[threadIdx.x];
+
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
 		acc *= input_i;
 		acc = __mulhi(acc, divisor);
 		acc *= input_i;
 		acc = __mulhi(acc, divisor);
-//		asm("mul.lo.s32 %0, %1, %2;" : "=r"(acc) : "r"(acc), "r"(input_i));
-//		asm("mul.hi.s32 %0, %1, %2;" : "=r"(acc) : "r"(acc), "r"(divisor));
-//		asm("mul.lo.s32 %0, %1, %2;" : "=r"(acc) : "r"(acc), "r"(input_i));
-//		asm("mul.hi.s32 %0, %1, %2;" : "=r"(acc) : "r"(acc), "r"(divisor));
 	}
 
 	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<uint32_t UNROLL_MAX, typename int_t>
-__global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
-	int_t acc = src[threadIdx.x];
-	volatile int_t input_i = src[threadIdx.x];
+__global__ void mad_int_kernel(int_t* dst, uint32_t op) {
+	int_t acc = common_int_input[threadIdx.x];
+	volatile int_t input_i = common_int_input[threadIdx.x];
 	volatile int_t input_i_neg = -input_i;
 
 #pragma unroll UNROLL_MAX
@@ -66,9 +65,9 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 }
 
 template<typename int_t>
-void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
-		uint32_t grid_size, uint32_t block_size, uint32_t operation_num) {
-	void (*kernel)(int_t*, int_t*, uint32_t);
+void execute_kernel(MICROINSTRUCTION& micro, int_t* output, uint32_t grid_size,
+		uint32_t block_size, uint32_t operation_num) {
+	void (*kernel)(int_t*, uint32_t);
 	switch (micro) {
 	case ADD:
 		kernel = add_int_kernel<LOOPING_UNROLL>;
@@ -79,17 +78,15 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 	case MAD:
 		kernel = mad_int_kernel<LOOPING_UNROLL>;
 		break;
-	case LDST:
 	case BRANCH:
-		throw_line("Incorrect configuration\n");
+		kernel = int_branch_kernel<0>;
 		break;
 	}
-	kernel<<<grid_size, block_size>>>(input, output, operation_num);
+	kernel<<<grid_size, block_size>>>(output, operation_num);
 }
 
 template<>
 void MicroInt<int32_t>::execute_micro() {
-	execute_kernel(this->parameters.micro, this->input_device.data(),
-			this->output_device.data(), this->grid_size, this->block_size,
-			this->parameters.operation_num);
+	execute_kernel(this->parameters.micro, this->output_device.data(),
+			this->grid_size, this->block_size, this->parameters.operation_num);
 }

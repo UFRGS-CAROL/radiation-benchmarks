@@ -11,7 +11,6 @@
 #include <iostream>
 #include <sstream>      // std::stringstream
 #include <iomanip> 	   // setprecision
-#include <fstream> 	   // file operations
 
 #include "Parameters.h"
 #include "generic_log.h"
@@ -23,10 +22,6 @@ template<typename micro_type_t>
 struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
-	const Input<micro_type_t> input_limits;
-
-	std::vector<micro_type_t> input_host;
-	rad::DeviceVector<micro_type_t> input_device;
 
 	std::vector<micro_type_t> output_host;
 	rad::DeviceVector<micro_type_t> output_device;
@@ -36,46 +31,42 @@ struct Micro {
 	size_t grid_size;
 	size_t block_size;
 
+	Micro();
+
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
+		//all benchmarks will use MAX_THREAD_BLOCK size
+		//Max thread block size set
+		this->block_size = MAX_THREAD_BLOCK;
+		//multiplies the grid size by the maximum number of warps per SM
+		this->grid_size = this->parameters.sm_count * WARP_PER_SM;
+		this->parameters.array_size = this->grid_size * this->block_size;
+
 		auto start_gen = rad::mysecond();
 		//Set the output size
 		this->output_device.resize(this->parameters.array_size);
+		this->gold.resize(this->parameters.block_size);
+
 		auto end_gen = rad::mysecond();
 
 		if (this->parameters.verbose) {
-			std::cout << "Output device allocation time: "
+			std::cout << "Output/input device allocation time: "
 					<< end_gen - start_gen << std::endl;
 		}
+	}
 
-		this->gold.resize(this->parameters.block_size, micro_type_t(0.0));
-		this->input_host.resize(this->parameters.block_size, micro_type_t(0.0));
+	void get_setup_input() {
+		read_from_file(this->parameters.gold, this->gold);
+	}
 
-		if (this->parameters.generate == false) {
-			this->read_from_file(this->parameters.input, this->input_host);
-			this->read_from_file(this->parameters.gold, this->gold);
-		} else {
+	void save_output() {
+		//save only the first thread result
+		//This will save only the first BLOCK_SIZE of results
+		//which must be equals to the rest of the array
+		std::vector<micro_type_t> output_to_save(this->output_host.begin(),
+				this->output_host.begin() + this->block_size);
 
-			if (file_exists(this->parameters.input)) {
-				if (this->parameters.verbose) {
-					std::cout << this->parameters.input
-							<< " file already exists, reading\n";
-				}
-				this->read_from_file(this->parameters.input, this->input_host);
-			} else {
-				if (this->parameters.verbose) {
-					std::cout << "Generating a new input file\n";
-				}
-
-				this->input_host.resize(this->parameters.block_size);
-				generate_new_array(this->input_host);
-				this->write_to_file(this->parameters.input, this->input_host,
-						std::ios::out);
-			}
-		}
-
-		this->input_device = this->input_host;
-
+		write_to_file(this->parameters.gold, output_to_save);
 	}
 
 	virtual ~Micro() = default;
@@ -92,70 +83,34 @@ struct Micro {
 
 	size_t compare_output() {
 		size_t errors = 0;
-
-		if (this->parameters.generate == false) {
+		auto& block_size = this->parameters.block_size;
 #pragma omp parallel for
-			for (size_t i = 0; i < this->output_host.size(); i++) {
-				micro_type_t output = this->output_host[i];
-				micro_type_t gold_t =
-						this->gold[i % this->parameters.block_size];
-				if (output != gold_t) {
-					std::stringstream error_detail;
-					//20 is from old micro-benchmarks precision
-					error_detail << " p: [" << i << "],";
-					error_detail << std::scientific << std::setprecision(20);
-					error_detail << " e: " << gold_t << ", r: " << output;
+		for (size_t i = 0; i < this->output_host.size(); i++) {
+			micro_type_t output = this->output_host[i];
+			micro_type_t gold_t = this->gold[i % block_size];
+			if (output != gold_t) {
+				std::stringstream error_detail;
+				//20 is from old micro-benchmarks precision
+				error_detail << " p: [" << i << "],";
+				error_detail << std::scientific << std::setprecision(20);
+				error_detail << " e: " << gold_t << ", r: " << output;
 
-					if (this->parameters.verbose && i < 10) {
-						std::cout << error_detail.str() << std::endl;
-					}
+				if (this->parameters.verbose && i < 10) {
+					std::cout << error_detail.str() << std::endl;
+				}
 #pragma omp critical
-					{
-						errors++;
+				{
+					errors++;
 
-						this->log->log_error_detail(error_detail.str());
-					}
+					this->log->log_error_detail(error_detail.str());
 				}
 			}
-		} else {
-			//save only the first thread result
-			//This will save only the first BLOCK_SIZE of results
-			//which must be equals to the rest of the array
-			this->write_to_file(this->parameters.gold, this->output_host, std::ios::out);
-
 		}
 		return errors;
 	}
 
 	void reset_output_device() {
 		this->output_device.clear();
-	}
-
-	bool read_from_file(std::string& path, std::vector<micro_type_t>& array) {
-		size_t count = array.size();
-		std::ifstream input(path, std::ios::binary);
-		if (input.good()) {
-			input.read(reinterpret_cast<char*>(array.data()),
-					count * sizeof(micro_type_t));
-			input.close();
-			return false;
-		}
-		return true;
-	}
-
-	template<typename openmode>
-	bool write_to_file(std::string& path, std::vector<micro_type_t>& array,
-			openmode& write_mode) {
-		size_t count = array.size();
-		std::ofstream output(path, std::ios::binary | write_mode);
-		if (output.good()) {
-			output.write(reinterpret_cast<char*>(array.data()),
-					count * sizeof(micro_type_t));
-			output.close();
-
-			return false;
-		}
-		return true;
 	}
 
 };

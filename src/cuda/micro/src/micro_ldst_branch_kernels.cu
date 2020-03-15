@@ -5,7 +5,6 @@
  *      Author: fernando
  */
 
-#include "branch_kernel.h"
 #include "MicroLDST.h"
 #include "utils.h"
 #include "common.h"
@@ -39,14 +38,13 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 	case ADD:
 	case MUL:
 	case MAD:
+	case BRANCH:
 		throw_line("Incorrect configuration\n");
 		break;
 	case LDST:
 		kernel = int_ldst_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
 		break;
-	case BRANCH:
-		kernel = int_branch_kernel<0>;
-		break;
+
 	}
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);
 }
