@@ -82,7 +82,7 @@ private:
 	std::unordered_map<std::string, size_t> gpu_ddr_by_gpu = {
 			{ "TITAN V", 1024ull * 1024ull * 1024ull },
 			//MUL
-			{ "V100", 1024ull * 1024ull * 1024ull },
+			{ "Tesla V100-PCIE-16GB", 1024ull * 1024ull * 1024ull },
 			//FMA
 			{ "Tesla K20c", 1024ull * 1024ull * 256ull },
 
