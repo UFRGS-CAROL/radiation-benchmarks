@@ -23,7 +23,6 @@ struct Parameters {
 	std::string device;
 	std::string precision_str;
 	std::string gold;
-	std::string input;
 
 	size_t sm_count;
 	size_t iterations;

@@ -11,7 +11,7 @@ with open("src/branch_kernel.h", "w") as fp:
     ####################################################################
     # kernel for FFFF which must be or
     fp.write(
-        "\ntemplate<uint32_t UNROLL_MAX, typename int_t>"
+        "\ntemplate<typename int_t>"
         "\n__global__ void int_branch_kernel(int_t* dst, uint32_t op) {\n"
     )
 

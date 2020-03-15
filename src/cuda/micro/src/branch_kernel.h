@@ -4,7 +4,7 @@
 #include <cstdint>
 
 
-template<uint32_t UNROLL_MAX, typename int_t>
+template<typename int_t>
 __global__ void int_branch_kernel(int_t* dst, uint32_t op) {
 	const int_t i = (blockDim.x * blockIdx.x + threadIdx.x);
 	int_t value = i;
