@@ -22,11 +22,10 @@
 #include "generic_log.h"
 
 template<typename real_t>
-void setup_execute(Parameters& test_parameter,
-		std::shared_ptr<Micro<real_t>>& micro_obj) {
+void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 
 	if (!test_parameter.generate) {
-		micro_obj->get_setup_input();
+		micro_obj.get_setup_input();
 	}
 
 	for (size_t iteration = 0; iteration < test_parameter.iterations;
@@ -34,34 +33,34 @@ void setup_execute(Parameters& test_parameter,
 
 		auto start_it = rad::mysecond();
 		//Start iteration
-		micro_obj->log->start_iteration();
-		micro_obj->execute_micro();
+		micro_obj.log->start_iteration();
+		micro_obj.execute_micro();
 
 		rad::checkFrameworkErrors(cudaGetLastError());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 		//end iteration
-		micro_obj->log->end_iteration();
+		micro_obj.log->end_iteration();
 		auto end_it = rad::mysecond();
 
 		//Copying from GPU
 		auto start_cpy = rad::mysecond();
-		micro_obj->copy_back_output();
+		micro_obj.copy_back_output();
 		auto end_cpy = rad::mysecond();
 
 		//Comparing the output
 		auto start_cmp = rad::mysecond();
 		size_t errors = 0;
 		if (test_parameter.generate == false) {
-			errors = micro_obj->compare_output();
+			errors = micro_obj.compare_output();
 		}
 		//update errors
-		micro_obj->log->update_errors();
-		micro_obj->log->update_infos();
+		micro_obj.log->update_errors();
+		micro_obj.log->update_infos();
 		auto end_cmp = rad::mysecond();
 
 		auto start_reset_output = rad::mysecond();
-		micro_obj->reset_output_device();
+		micro_obj.reset_output_device();
 		auto end_reset_output = rad::mysecond();
 
 		if (test_parameter.verbose) {
@@ -86,7 +85,7 @@ void setup_execute(Parameters& test_parameter,
 	}
 
 	if (test_parameter.generate) {
-		micro_obj->save_output();
+		micro_obj.save_output();
 	}
 }
 
@@ -118,26 +117,27 @@ int main(int argc, char **argv) {
 
 	switch (parameters.precision) {
 	case INT32: {
-		std::shared_ptr<Micro<int32_t>> micro_obj;
 		switch (parameters.micro) {
-		case LDST:
-			micro_obj = std::make_shared<MicroLDST<int32_t>>(parameters,
-					log_ptr);
-			break;
-		case BRANCH:
-			micro_obj = std::make_shared<MicroBranch<int32_t>>(parameters,
-					log_ptr);
-			break;
-		default:
-			micro_obj = std::make_shared<MicroInt<int32_t>>(parameters,
-					log_ptr);
+		case LDST: {
+			MicroLDST<int32_t> micro_obj(parameters, log_ptr);
+			setup_execute(parameters, micro_obj);
+			return 0;
 		}
-		setup_execute(parameters, micro_obj);
-		return 0;
+		case BRANCH: {
+			MicroBranch<int32_t> micro_obj(parameters, log_ptr);
+			setup_execute(parameters, micro_obj);
+			return 0;
+		}
+		default: {
+			MicroInt<int32_t> micro_obj(parameters, log_ptr);
+			setup_execute(parameters, micro_obj);
+			return 0;
+		}
+		}
+		break;
 	}
 	case SINGLE: {
-		std::shared_ptr<Micro<float>> micro_obj = std::make_shared<
-				MicroReal<float>>(parameters, log_ptr);
+		MicroReal<float> micro_obj(parameters, log_ptr);
 		setup_execute(parameters, micro_obj);
 		return 0;
 	}
