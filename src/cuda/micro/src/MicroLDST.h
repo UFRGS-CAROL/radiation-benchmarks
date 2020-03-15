@@ -29,19 +29,16 @@ struct MicroLDST: public Micro<int_t> {
 
 	MicroLDST(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			Micro<int_t>(parameters, log) {
-		auto& array_size = this->parameters.array_size;
-		auto& block_size = this->block_size;
 		//Array size is the amount of memory that will be evaluated
-		array_size = this->parameters.memory_size_to_use / sizeof(int_t);
-		this->parameters.operation_num = MEM_OPERATION_NUM;
-		this->grid_size = array_size
-				/ (this->parameters.operation_num * block_size);
+		parameters.array_size = parameters.memory_size_to_use / sizeof(int_t);
+		parameters.operation_num = MEM_OPERATION_NUM;
+		this->grid_size = parameters.array_size / (parameters.operation_num * this->block_size);
 
 		auto start_gen = rad::mysecond();
 		//Set the output size
-		this->output_device.resize(array_size);
-		this->input_host.resize(array_size);
-		this->input_device.resize(array_size);
+		this->output_device.resize(parameters.array_size);
+		this->input_host.resize(parameters.array_size);
+		this->input_device.resize(parameters.array_size);
 		auto end_gen = rad::mysecond();
 
 		if (this->parameters.verbose) {
