@@ -8,9 +8,9 @@ FAST_MATH = [0, 1]
 OPS_LIST = [1, 8]
 BUILD_PROFILER = 0
 
-COMMON_MICROS_LIST = ["add", "mul", "mad"]
-INT_MICRO_LIST = ["branch", "ldst"]
-FLOAT_MICRO_LIST = ["div", "fma", "euler", "pythagorean"]
+COMMON_MICROS_LIST = ["add"] #, "mul", "mad"]
+INT_MICRO_LIST = [] #"branch", "ldst"]
+FLOAT_MICRO_LIST = [] #"div", "fma", "euler", "pythagorean"]
 
 STDDICT = {
     "fast_math": FAST_MATH,
@@ -30,7 +30,8 @@ for n in INT_MICRO_LIST:
 
 
 FLOAT_MICRO = copy.deepcopy(COMMON_MICROS)
-del FLOAT_MICRO["mad"]
+if "mad" in FLOAT_MICRO:
+    del FLOAT_MICRO["mad"]
 
 for n in FLOAT_MICRO_LIST:
     new_one = copy.deepcopy(STDDICT)
