@@ -68,7 +68,7 @@ def config(board, debug):
         configs = cm.INT_MICRO[inst_type]
         ops_list = configs["ops_list"]
         for ops in ops_list:
-            gold_path = data_path + "/gold_{}_{}_in32.data".format(inst_type, ops)
+            gold_path = data_path + "/gold_{}_{}_int32.data".format(inst_type, ops)
             gen = [
                 ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                  bin_path + '/' + benchmark_bin + " "],
