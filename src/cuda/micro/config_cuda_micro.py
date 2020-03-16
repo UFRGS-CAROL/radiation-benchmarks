@@ -1,22 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import ConfigParser
-import copy
-import os
+import configparser
 import sys
 
 sys.path.insert(0, '../../include')
 
 from common_config import discover_board, execute_and_write_json_to_file
 import common_micro_config as cm
-
-# ITERATIONS = int(1e9)
-# PRECISIONS = ["single"]
-# TYPES = ["fma", "add", "mul", "pythagorean", "euler"]
-# FASTMATH = 1
-# OPS = {x: 10000000 for x in TYPES if x not in ["pythagorean", "euler"]}
-# OPS.update({"pythagorean": 50000, "euler": 40000000})
-# BUILDPROFILER = 0
 
 
 def config(board, debug):
@@ -25,7 +15,7 @@ def config(board, debug):
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(conf_file)
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
