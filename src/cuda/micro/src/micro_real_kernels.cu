@@ -146,7 +146,7 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, size_t grid_size,
 
 template<>
 void MicroReal<float>::execute_micro() {
-	execute_kernel(this->parameters.micro, this->output_device.data(),
+	execute_kernel(this->parameters.micro, this->output_device_1.data(),
 			this->parameters.grid_size, this->parameters.block_size,
 			this->parameters.operation_num, this->parameters.fast_math);
 

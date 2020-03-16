@@ -88,12 +88,12 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* output, uint32_t grid_size,
 
 template<>
 void MicroInt<int32_t>::execute_micro() {
-	execute_kernel(this->parameters.micro, this->output_device.data(),
+	execute_kernel(this->parameters.micro, this->output_device_1.data(),
 			this->grid_size, this->block_size, this->parameters.operation_num);
 }
 
 template<>
 void MicroBranch<int32_t>::execute_micro() {
-	execute_kernel(this->parameters.micro, this->output_device.data(),
+	execute_kernel(this->parameters.micro, this->output_device_1.data(),
 			this->grid_size, this->block_size, this->parameters.operation_num);
 }

@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
 	std::string test_name = std::string("cuda_micro-")
 			+ parameters.instruction_str + "-" + parameters.precision_str;
 
-	log_ptr = std::make_shared<rad::Log>(test_name, test_info);
+	log_ptr = std::make_shared<rad::Log>(test_name, test_info, 10);
 
 	if (parameters.verbose) {
 		std::cout << *log_ptr << std::endl;
