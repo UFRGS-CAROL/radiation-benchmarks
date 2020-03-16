@@ -56,12 +56,10 @@ def config(board, debug):
             for ops in ops_list:
                 for fast_math in fast_math_list:
                     gold_path = data_path + "/gold_{}_{}_{}_{}.data".format(ops, fast_math, inst_type, precision)
-                    input_path = data_path + "/" + cm.GENERAL_INPUT
                     gen = [
                         ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                          bin_path + '/' + benchmark_bin + " "],
                         ['--iterations {}'.format(cm.ITERATIONS)],
-                        ['--input {}'.format(input_path)],
                         ['--gold {}'.format(gold_path)],
                         ['--precision {}'.format(precision)],
                         ['--inst {}'.format(inst_type)],
@@ -74,6 +72,27 @@ def config(board, debug):
                     generate.append(' '.join(str(r) for v in gen for r in v))
                     del gen[-1]
                     execute.append(' '.join(str(r) for v in gen for r in v))
+
+    for inst_type in cm.INT_MICRO:
+        print(inst_type)
+        configs = cm.INT_MICRO[inst_type]
+        ops_list = configs["ops_list"]
+        for ops in ops_list:
+            gold_path = data_path + "/gold_{}_{}.data".format(inst_type, ops)
+            gen = [
+                ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                 bin_path + '/' + benchmark_bin + " "],
+                ['--iterations {}'.format(cm.ITERATIONS)],
+                ['--gold {}'.format(gold_path)],
+                ['--precision int32'],
+                ['--inst {}'.format(inst_type)],
+                ['--opnum {}'.format(ops)],
+                ['--generate']
+            ]
+
+            generate.append(' '.join(str(r) for v in gen for r in v))
+            del gen[-1]
+            execute.append(' '.join(str(r) for v in gen for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 

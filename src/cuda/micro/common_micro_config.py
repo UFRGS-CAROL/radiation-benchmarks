@@ -5,9 +5,8 @@ ITERATIONS = int(1e9)
 PRECISIONS = ["single"]
 
 FAST_MATH = [0, 1]
-OPS_LIST = [128, 1024]
+OPS_LIST = [1, 8]
 BUILD_PROFILER = 0
-GENERAL_INPUT = "input_general.data"
 
 COMMON_MICROS_LIST = ["add", "mul", "mad"]
 INT_MICRO_LIST = ["branch", "ldst"]
