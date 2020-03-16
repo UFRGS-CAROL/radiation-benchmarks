@@ -104,6 +104,13 @@ int main(int argc, char **argv) {
 			+ parameters.precision_str;
 	test_info += " opnum:" + std::to_string(parameters.operation_num);
 	test_info += " fast_math:" + std::to_string(parameters.fast_math);
+	test_info += " memory_used:"
+			+ std::to_string(parameters.memory_size_to_use);
+	auto internal_iterations =
+			(parameters.micro == LDST) ?
+					std::to_string(MAX_THREAD_LD_ST_OPERATIONS) :
+					std::to_string(LOOPING_UNROLL);
+	test_info += " internal_iterations:" + internal_iterations;
 
 	std::string test_name = std::string("cuda_micro-")
 			+ parameters.instruction_str + "-" + parameters.precision_str;
