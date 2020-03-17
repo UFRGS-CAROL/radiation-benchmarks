@@ -3,6 +3,11 @@
 from datetime import datetime, timedelta
 import subprocess
 import os
+from time import sleep
+import sys
+sys.path.insert(0, os.path.abspath("."))
+
+from remote_sock_parameters import IPmachines, IPtoNames
 
 
 DEFAULT_RADIATION_PATH = "/var/radiation-benchmarks/log"
@@ -10,25 +15,9 @@ LOGS_DIR = "logs"
 TAR_COMMAND = "tar czf {} {}"
 TAR_DIR_FINAL = "/home/fernando/Dropbox/ChipIR202002"
 
-TIMEDELTA_DROPBOX = timedelta(hours=12)
-TIMEDELTA_DOWNLOAD = timedelta(hours=1)
-
-# Set the machines IP to check, comment the ones we are not checking
-IPmachines = [
-    "192.168.1.11",  # k201
-    "192.168.1.21",  # k401
-    # "192.168.1.15", #CarolTitanV1
-    # "192.168.1.16", #CarolTeslaV1001
-]
-
-
-# Set the machine names for each IP
-IPtoNames = {
-    "192.168.1.11": "carolk201",
-    "192.168.1.21": "carolk202",
-    # "192.168.1.6": "CarolXeon1",
-    # "192.168.1.7": "CarolXeon2",
-}
+TIMEDELTA_DROPBOX = timedelta(hours=8)
+TIMEDELTA_DOWNLOAD = timedelta(minutes=20)
+MAX_SCP_TRIES = 10
 
 
 def tar_files_from_device(device_folder, machine_name):
@@ -47,8 +36,15 @@ def scp_all_files_from_device(device_ip, device_folder):
     scp_string = "carol@{}:{}/*.log".format(device_ip, DEFAULT_RADIATION_PATH)
     output_scp = "{}/".format(device_folder)
     print(scp_string)
-    p = subprocess.Popen(["scp", scp_string, output_scp])
-    sts = os.waitpid(p.pid, 0)
+    for i in range(1, MAX_SCP_TRIES + 1):
+        p = subprocess.Popen(["scp", scp_string, output_scp], stdout=subprocess.DEVNULL)
+        os.waitpid(p.pid, 0)
+
+        if p.stderr is None:
+            break
+        print("Trying for the {}th time".format(i))
+        print(p.stderr)
+        sleep(10)
 
 
 def main():
