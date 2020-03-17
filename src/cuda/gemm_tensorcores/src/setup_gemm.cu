@@ -5,7 +5,6 @@
 #include "no_tensor_kernels.h"
 //#include <cutlass/gemm/device/gemm.h>
 
-
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
 	bool duplicated;
@@ -52,7 +51,6 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 		std::cout << this->dim_grid << std::endl;
 	} //default constructor
 };
-
 
 template<typename real_t>
 struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
@@ -275,6 +273,8 @@ void setup_execute(Parameters& parameters,
 
 			comparing_time = rad::mysecond() - comparing_time;
 			if (parameters.verbose) {
+				auto wasted_time = copy_time + comparing_time;
+				auto full_time = wasted_time + computation_time;
 				std::cout << "Iteration: " << it << " DMR errors "
 						<< errors.first << ". " << "Radiation errors: "
 						<< errors.second << ". "
@@ -282,6 +282,8 @@ void setup_execute(Parameters& parameters,
 						<< "s. " << "Time spent on comparing: "
 						<< comparing_time << "s. " << "Time spent on copying: "
 						<< copy_time << "s. " << std::endl;
+				std::cout << "Wasted time " << wasted_time << " ("
+						<< int((wasted_time / full_time) * 100.0f) << "%)"<< std::endl;
 			} else {
 				std::cout << "Iteration: " << it << " DMR errors "
 						<< errors.first << ". " << "Radiation errors: "
