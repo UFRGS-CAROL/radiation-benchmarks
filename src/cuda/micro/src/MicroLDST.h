@@ -36,7 +36,7 @@ struct MicroLDST: public Micro<int_t> {
 
 		auto start_gen = rad::mysecond();
 		//Set the output size
-		this->output_device.resize(parameters.array_size);
+		this->output_device_1.resize(parameters.array_size);
 		this->input_host.resize(parameters.array_size);
 		this->input_device.resize(parameters.array_size);
 		auto end_gen = rad::mysecond();

@@ -5,7 +5,7 @@
 
 
 template<typename int_t>
-__global__ void int_branch_kernel(int_t* dst, uint32_t op) {
+__global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3,uint32_t op) {
 	const int_t i = (blockDim.x * blockIdx.x + threadIdx.x);
 	int_t value = i;
 
@@ -2058,7 +2058,11 @@ __global__ void int_branch_kernel(int_t* dst, uint32_t op) {
 	} else if (threadIdx.x == 1023) {
 		value = 1023;
 	}
-	dst[i] = value;
+	dst_1[i] = value;
+
+	dst_2[i] = value;
+
+	dst_3[i] = value;
 
 }
 

@@ -48,7 +48,7 @@ struct Micro {
 		this->grid_size = this->parameters.sm_count * WARP_PER_SM;
 		this->parameters.array_size = this->grid_size * this->block_size;
 
-		this->is_ecc_on = (this->log.get_log_file_name().find("ECC_ON")
+		this->is_ecc_on = (this->log->get_log_file_name().find("ECC_ON")
 				!= std::string::npos);
 		auto start_gen = rad::mysecond();
 		//Set the output size
@@ -70,14 +70,25 @@ struct Micro {
 		read_from_file(this->parameters.gold, this->gold);
 	}
 
-	void save_output() {
+	bool save_output() {
+		this->output_device_1.to_vector(this->gold);
+
+		if (this->is_ecc_on == false) {
+			auto gold_gen_success = this->check_which_one_is_right(
+					this->block_size);
+			if (gold_gen_success == false) {
+				return gold_gen_success;
+			}
+		}
+
 		//save only the first thread result
 		//This will save only the first BLOCK_SIZE of results
 		//which must be equals to the rest of the array
-		std::vector<micro_type_t> output_to_save(this->output_host_1.begin(),
-				this->output_host_1.begin() + this->block_size);
+		std::vector<micro_type_t> output_to_save(this->gold.begin(),
+				this->gold.begin() + this->block_size);
 
 		write_to_file(this->parameters.gold, output_to_save);
+		return true;
 	}
 
 	virtual ~Micro() = default;
@@ -104,21 +115,21 @@ struct Micro {
 		for (size_t i = 0; i < this->output_host_1.size(); i++) {
 			micro_type_t output = this->output_host_1[i];
 			micro_type_t gold_t = this->gold[i % block_size];
-
+			bool check_flag = true;
 			if (this->is_ecc_on == false) {
-				output = this->check_mem_errors(gold_t, memory_errors);
+				std::tie(output, check_flag) = this->check_mem_errors(gold_t, i,
+						memory_errors);
 			}
-			cmp_and_log_diff(output, gold_t, i, errors);
+			cmp_and_log_diff(output, gold_t, i, errors, check_flag);
 		}
-
 
 		if (memory_errors != 0) {
 			if (this->parameters.verbose)
 				std::cout << "M";
 			std::string info_detail = "memory_positions_corrupted:"
 					+ std::to_string(memory_errors);
-			this->log.log_info_detail(info_detail);
-			this->log.update_infos();
+			this->log->log_info_detail(info_detail);
+			this->log->update_infos();
 
 		}
 
@@ -131,8 +142,8 @@ struct Micro {
 
 protected:
 	void inline cmp_and_log_diff(micro_type_t output, micro_type_t gold_t,
-			size_t i, size_t& errors) {
-		if (output != gold_t) {
+			size_t i, size_t& errors, bool check_flag) {
+		if (output != gold_t && check_flag) {
 			std::stringstream error_detail;
 			//20 is from old micro-benchmarks precision
 			error_detail << " p: [" << i << "],";
@@ -145,14 +156,15 @@ protected:
 #pragma omp critical
 			{
 				errors++;
-				this->log.log_error_detail(error_detail.str());
+				this->log->log_error_detail(error_detail.str());
 			}
 		}
 	}
 
-	micro_type_t check_mem_errors(micro_type_t val_gold,
-			size_t& memory_errors) {
+	std::tuple<micro_type_t, bool> check_mem_errors(micro_type_t val_gold,
+			size_t i, size_t& memory_errors) {
 
+		bool check_flag = true;
 		auto val_output_1 = this->output_host_1[i];
 		auto val_output_2 = this->output_host_2[i];
 		auto val_output_3 = this->output_host_3[i];
@@ -216,8 +228,67 @@ protected:
 			}
 		}
 
-		return val_output;
+		return {val_output, check_flag};
 	}
+
+	bool check_which_one_is_right(size_t size_to_check) {
+		size_t nan_count = 0;
+		size_t inf_count = 0;
+		size_t zero_count = 0;
+		bool generate_successful = true;
+
+#pragma omp parallel for default(shared)
+		for (size_t i = 0; i < size_to_check; i++) {
+			auto val_output_1 = this->output_host_1[i];
+			auto val_output_2 = this->output_host_2[i];
+			auto val_output_3 = this->output_host_3[i];
+#pragma omp critical
+			{
+				nan_count += std::isnan(val_output_1);
+				inf_count += std::isinf(val_output_1);
+
+				nan_count += std::isnan(val_output_2);
+				inf_count += std::isinf(val_output_2);
+
+				nan_count += std::isnan(val_output_3);
+				inf_count += std::isinf(val_output_3);
+
+				zero_count += (val_output_1 == 0.0);
+				zero_count += (val_output_2 == 0.0);
+				zero_count += (val_output_3 == 0.0);
+			}
+
+			this->gold[i] = val_output_1;
+			if ((val_output_1 != val_output_2)
+					|| (val_output_1 != val_output_3)) {
+				if (val_output_2 == val_output_3) {
+					// Only value 0 diverge
+					this->gold[i] = val_output_2;
+				} else if (val_output_1 == val_output_3) {
+					// Only value 1 diverge
+					this->gold[i] = val_output_1;
+				} else if (val_output_1 == val_output_2) {
+					// Only value 2 diverge
+					this->gold[i] = val_output_1;
+				}
+			}
+
+			//all three diverge
+			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
+					&& (val_output_1 != val_output_3)) {
+#pragma omp critical
+				{
+					generate_successful = false;
+				}
+			}
+		}
+
+//			std::cout << "FULL PRECISION " << zero_count << " " << nan_count << " "
+//					<< inf_count << std::endl;
+
+		return generate_successful;
+	}
+
 };
 
 #endif /* MicroSpecial_H_ */

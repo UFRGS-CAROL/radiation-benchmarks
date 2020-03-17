@@ -3,7 +3,8 @@
 #include "input_device.h"
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_fma_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_fma_kernel(real_t* dst_1, real_t* dst_2, real_t* dst_3,
+		const uint32_t ops) {
 	real_t acc = common_float_input[threadIdx.x];
 	real_t input_i = common_float_input[threadIdx.x];
 	real_t input_i_neg = -input_i;
@@ -16,11 +17,15 @@ __global__ void real_fma_kernel(real_t *dst, const uint32_t ops) {
 		acc = fma_inline<USEFASTMATH>(input_i_neg, input_i_neg, acc);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_add_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_add_kernel(real_t* dst_1, real_t* dst_2, real_t* dst_3,
+		const uint32_t ops) {
 	real_t acc = common_float_input[threadIdx.x];
 	real_t input_i = common_float_input[threadIdx.x];
 	real_t input_i_neg = -input_i;
@@ -33,11 +38,14 @@ __global__ void real_add_kernel(real_t *dst, const uint32_t ops) {
 		acc = add_inline<USEFASTMATH>(acc, input_i_neg);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_mul_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_mul_kernel(real_t* dst_1, real_t* dst_2, real_t* dst_3,
+		const uint32_t ops) {
 	real_t acc = common_float_input[threadIdx.x];
 	real_t input_i = common_float_input[threadIdx.x];
 	real_t input_i_inv = real_t(1.0f) / input_i;
@@ -50,11 +58,14 @@ __global__ void real_mul_kernel(real_t *dst, const uint32_t ops) {
 		acc = mul_inline<USEFASTMATH>(acc, input_i);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_div_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_div_kernel(real_t* dst_1, real_t* dst_2, real_t* dst_3,
+		const uint32_t ops) {
 	real_t acc = common_float_input[threadIdx.x];
 	real_t input_i = common_float_input[threadIdx.x];
 	real_t input_i_inv = real_t(1) / input_i;
@@ -67,11 +78,14 @@ __global__ void real_div_kernel(real_t *dst, const uint32_t ops) {
 		acc = div_inline<USEFASTMATH>(acc, input_i);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_pythagorean_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_pythagorean_kernel(real_t* dst_1, real_t* dst_2,
+		real_t* dst_3, const uint32_t ops) {
 	real_t acc = 0;
 	//convert to radians first
 	real_t input_i = fabs(common_float_input[threadIdx.x]) * M_PI
@@ -82,11 +96,14 @@ __global__ void real_pythagorean_kernel(real_t *dst, const uint32_t ops) {
 		acc += pythagorean_identity<USEFASTMATH>(input_i);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void real_euler_kernel(real_t *dst, const uint32_t ops) {
+__global__ void real_euler_kernel(real_t* dst_1, real_t* dst_2, real_t* dst_3,
+		const uint32_t ops) {
 	real_t acc = 0;
 	real_t input_i = common_float_input[threadIdx.x];
 
@@ -95,15 +112,18 @@ __global__ void real_euler_kernel(real_t *dst, const uint32_t ops) {
 		acc += euler<USEFASTMATH>(-input_i);
 	}
 
-	dst[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	dst_3[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
 template<typename real_t>
-void execute_kernel(MICROINSTRUCTION& micro, real_t* output, size_t grid_size,
-		size_t block_size, uint32_t operation_num, bool fast_math) {
+void execute_kernel(MICROINSTRUCTION& micro, real_t* output_1, real_t* output_2,
+		real_t* output_3, size_t grid_size, size_t block_size,
+		uint32_t operation_num, bool fast_math) {
 
 	//	real_t, real_t,
-	void (*kernel)(real_t*, uint32_t);
+	void (*kernel)(real_t*, real_t*, real_t*, uint32_t);
 	switch (micro) {
 	case ADD:
 		kernel = real_add_kernel<LOOPING_UNROLL, true>;
@@ -141,12 +161,14 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, size_t grid_size,
 		break;
 	}
 
-	kernel<<<grid_size, block_size>>>(output, operation_num);
+	kernel<<<grid_size, block_size>>>(output_1, output_2, output_3,
+			operation_num);
 }
 
 template<>
 void MicroReal<float>::execute_micro() {
 	execute_kernel(this->parameters.micro, this->output_device_1.data(),
+			this->output_device_2.data(), this->output_device_3.data(),
 			this->parameters.grid_size, this->parameters.block_size,
 			this->parameters.operation_num, this->parameters.fast_math);
 
