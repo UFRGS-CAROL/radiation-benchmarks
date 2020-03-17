@@ -7,8 +7,8 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = 2147483647
 OPERATIONS = 1000000
-SIZES = [1024, 2048]
-BUILDPROFILER = 1
+SIZES = [2048]
+BUILDPROFILER = 0
 
 
 def config(board, debug):
