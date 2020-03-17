@@ -74,6 +74,7 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 			std::cout << "Iteration " << iteration;
 			std::cout << " Kernel time: " << kernel_time;
 			std::cout << " Output errors: " << errors;
+			std::cout << " Memory errors: " << errors;
 			std::cout << " Wasted time (copy + compare + reset): "
 					<< wasted_time;
 			std::cout << " Wasted time percentage: "
@@ -85,7 +86,11 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 	}
 
 	if (test_parameter.generate) {
-		micro_obj.save_output();
+		auto success = micro_obj.save_output();
+		if (success == false) {
+			throw_line(
+					"Could not generate the gold file due memory errors, run it again\n");
+		}
 	}
 }
 
