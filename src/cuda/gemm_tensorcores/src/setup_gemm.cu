@@ -76,7 +76,7 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 						wB, &beta, this->c_dev.data(), wB));
 	}
 
-#if __CUDA_ARCH__ >= 600 // more than titan
+#if __CUDA_ARCH__ >= 550 // more than titan
 
 	void gemm(half alpha, half beta, int wA, int wB,
 			const uint32_t threshold) {
@@ -327,7 +327,7 @@ void setup_execute(Parameters& parameters,
 
 void setup_gemm_unhardened(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ >= 550
 		UnhardenedGemmCaller<half> gemm_obj(parameters.size_matrices,
 				parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
@@ -351,7 +351,7 @@ void setup_gemm_unhardened(Parameters& parameters) {
 
 void setup_gemm_cublas(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ > 550
 		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
 				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
@@ -375,7 +375,7 @@ void setup_gemm_cublas(Parameters& parameters) {
 
 void setup_gemm_cutlass(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ >= 550
 		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
 				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
