@@ -154,22 +154,19 @@ bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
 	return lhs == rhs;
 }
 
-#if __CUDA_ARCH__ >= 600
 static bool equals(half& lhs, half& rhs, const uint32_t threshold = 0) {
 	return float(lhs) == float(rhs);
 }
 
+
 static std::ostream& operator<<(std::ostream& os, half &rhs) {
-	float temp = float(rhs);
-	os << temp;
+	os << float(rhs);
 	return os;
 }
 
 static float fabs(half h) {
 	return fabs(float(h));
 }
-
-#endif
 
 static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	assert(sizeof(float) == sizeof(uint32_t));
@@ -228,7 +225,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		//Is output corrupted
 		bool is_output_diff = !equals(gold_value, full_precision);
 
-		if (gold_value != full_precision) {
+		if (!equals(gold_value, full_precision)) {
 #ifdef OMP
 #pragma omp critical
 			{

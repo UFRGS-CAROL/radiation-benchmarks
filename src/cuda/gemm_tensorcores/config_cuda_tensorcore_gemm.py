@@ -9,7 +9,7 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [8192, 1024]  # 4096
-PRECISIONS = ["float"]  # , "half"]
+PRECISIONS = ["float", "half"]  # , "half"]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [0]
 USE_CUBLAS = [0, 1]

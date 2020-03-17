@@ -76,16 +76,13 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 						wB, &beta, this->c_dev.data(), wB));
 	}
 
-#if __CUDA_ARCH__ >= 550 // more than titan
 
-	void gemm(half alpha, half beta, int wA, int wB,
-			const uint32_t threshold) {
+	void gemm(half alpha, half beta, int wA, int wB, const uint32_t threshold) {
 		rad::checkCublasErrors(
 				cublasHgemm(this->blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, wA, wB,
 						wA, &alpha, this->a_dev.data(), wA, this->b_dev.data(),
 						wB, &beta, this->c_dev.data(), wB));
 	}
-#endif
 
 	std::vector<real_t> memcpy_half_t_mem() {
 		return {};
@@ -96,13 +93,10 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 		rad::checkCublasErrors(cublasCreate(&this->blas_handle));
 
 		if (use_tensor_cores) {
-#if __CUDA_ARCH__ >= 700 // more than titan
 			rad::checkCublasErrors(
 					cublasSetMathMode(this->blas_handle,
 							CUBLAS_TENSOR_OP_MATH));
-#else
-			throw_line("Tensor Cores cannot be used on CUDA_ARCH<7.0");
-#endif
+
 		}
 	} //default constructor
 };
@@ -283,7 +277,8 @@ void setup_execute(Parameters& parameters,
 						<< comparing_time << "s. " << "Time spent on copying: "
 						<< copy_time << "s. " << std::endl;
 				std::cout << "Wasted time " << wasted_time << " ("
-						<< int((wasted_time / full_time) * 100.0f) << "%)"<< std::endl;
+						<< int((wasted_time / full_time) * 100.0f) << "%)"
+						<< std::endl;
 			} else {
 				std::cout << "Iteration: " << it << " DMR errors "
 						<< errors.first << ". " << "Radiation errors: "
@@ -351,15 +346,12 @@ void setup_gemm_unhardened(Parameters& parameters) {
 
 void setup_gemm_cublas(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ > 550
-		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
-				parameters.use_tensor_cores);
+		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices,
+				parameters.size_matrices, parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
-#else
-		throw_line("Half GEMM is not available for CUDA_ARCH<6.0");
-#endif
+
 	}
-//
+
 	if (parameters.precision == "float" || parameters.precision == "single") {
 		CUBLASGemmCaller<float> gemm_obj(parameters.size_matrices,
 				parameters.size_matrices, parameters.use_tensor_cores);
@@ -375,15 +367,12 @@ void setup_gemm_cublas(Parameters& parameters) {
 
 void setup_gemm_cutlass(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ >= 550
 		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
 				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
-#else
-		throw_line("Half GEMM is not available for CUDA_ARCH<6.0");
-#endif
+
 	}
-//
+
 	if (parameters.precision == "float" || parameters.precision == "single") {
 		CUBLASGemmCaller<float> gemm_obj(parameters.size_matrices,
 				parameters.size_matrices, parameters.use_tensor_cores);
