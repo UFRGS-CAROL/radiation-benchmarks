@@ -40,7 +40,7 @@ COMMON=
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
 
-INCLUDE=-I$(CUDAPATH)/include -I../common
+INCLUDE=-I$(CUDAPATH)/include -I../common -Icutlass/include
 
 ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
