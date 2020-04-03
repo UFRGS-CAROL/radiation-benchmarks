@@ -43,9 +43,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256
-#define N_TILES 256
-#define K_TILES 256
+#define M_TILES 128
+#define N_TILES 128
+#define K_TILES 128
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -461,18 +461,18 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
+   // matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
     rad::checkFrameworkErrors(cudaPeekAtLastError());
 
     
-    c_h.to_vector(ch);
-    d_h.to_vector(dh);
+    c_s.to_vector(c);
+    d_h.to_vector(d);
 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
+    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
     }
     // for(auto i : dh){
