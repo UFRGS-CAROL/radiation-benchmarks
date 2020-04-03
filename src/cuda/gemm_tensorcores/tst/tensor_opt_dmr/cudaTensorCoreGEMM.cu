@@ -43,9 +43,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 128
-#define N_TILES 128
-#define K_TILES 128
+#define M_TILES 1 //512 // 256
+#define N_TILES 1 //512 //256
+#define K_TILES 1 //512 //256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -446,7 +446,7 @@ int main(int argc, char **argv){
     	SHMEM_SZ = MAX(
         sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
         M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-            (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+           (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
     };
 
 
@@ -461,7 +461,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-   // matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
     rad::checkFrameworkErrors(cudaPeekAtLastError());
