@@ -43,9 +43,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256
-#define N_TILES 256
-#define K_TILES 256
+#define M_TILES 1 //512 // 256
+#define N_TILES 1 //512 //256
+#define K_TILES 1 //512 //256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -417,11 +417,16 @@ int main(int argc, char **argv){
     constexpr auto n = M_GLOBAL;
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
-    std::vector<half> ah(size, 1.0), bh(size, 1.0), ch(size, 0), dh(size, 0);
-    rad::DeviceVector<half> ad = ah;
-    rad::DeviceVector<half> bd = bh;
-    rad::DeviceVector<half> cd = ch;
-    rad::DeviceVector<half> dd = ch;
+    std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+
+    rad::DeviceVector<half> a_s = a;
+    rad::DeviceVector<half> b_s = b;
+    rad::DeviceVector<half> c_s = c;
+
+    rad::DeviceVector<half> a_h = a;
+    rad::DeviceVector<half> b_h = b;
+    rad::DeviceVector<half> c_h = c;
+    rad::DeviceVector<half> d_h = d;
 
    	cudaStream_t stream1, stream2;
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
@@ -431,42 +436,43 @@ int main(int argc, char **argv){
   	cudaDeviceProp deviceProp;
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-         enum {
+    enum {
     //  // Compute the right amount of shared memory to request.
     // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
     // // per-CTA chunks
     // // of the A and B matrices. Therefore, the right amount to request is the
     // // maximum of those
     // // two numbers.
-    	 SHMEM_SZ = MAX(
-         sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-         M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-             (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-    	 };
+    	SHMEM_SZ = MAX(
+        sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+        M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
+           (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+    };
 
 
 
-     checkCudaErrors(cudaFuncSetAttribute(
-         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-     checkKernelErrors(
-         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                         SHMEM_SZ, stream1>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+    checkCudaErrors(cudaFuncSetAttribute(
+        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    checkKernelErrors(
+        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
-    //uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-   // uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    //auto dim_grid = dim3(grid_cols, grid_rows);
-    //auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    //matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
-    //rad::checkFrameworkErrors(cudaDeviceSynchronize());
-    //rad::checkFrameworkErrors(cudaPeekAtLastError());
+    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    auto dim_grid = dim3(grid_cols, grid_rows);
+    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
+    
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
 
     
-    cd.to_vector(ch);
-    dd.to_vector(dh);
+    c_s.to_vector(c);
+    d_h.to_vector(d);
 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
+    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
     }
     // for(auto i : dh){
