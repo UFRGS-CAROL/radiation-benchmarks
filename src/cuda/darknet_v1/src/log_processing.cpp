@@ -474,7 +474,7 @@ detection load_gold(Args *arg) {
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
-		std::vector<string> line_splited = split(line, ';');
+		std::vector<std::string> line_splited = split(line, ';');
 		strcpy(gold.img_names[i], line_splited[0].c_str());
 
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,

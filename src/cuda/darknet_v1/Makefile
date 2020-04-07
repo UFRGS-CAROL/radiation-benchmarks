@@ -6,11 +6,11 @@ LOGS?=0
 SAFE_MALLOC?=0
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35]
-ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
-ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
-ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
-ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
+#ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
+#ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
+#ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
+#ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
+#ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 
 VPATH=./src/
 TARGET=darknet_v1
