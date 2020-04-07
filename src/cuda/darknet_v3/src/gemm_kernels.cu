@@ -36,7 +36,7 @@ __global__ void MatrixMulKernel(tested_type *a, tested_type *b, tested_type *c,
 }
 
 // Defines cutlass::gemm::device::Gemm, the generic Gemm computation template class.
-#include "cutlass/gemm/device/gemm.h"
+//#include "cutlass/gemm/device/gemm.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -48,7 +48,7 @@ __global__ void MatrixMulKernel(tested_type *a, tested_type *b, tested_type *c,
 /// Define a CUTLASS GEMM template and launch a GEMM kernel.
 cudaError_t CutlassSgemmNN(int M, int N, int K, float alpha, float const *A,
 		int lda, float const *B, int ldb, float beta, float *C, int ldc) {
-
+/*
 	// Define type definition for single-precision CUTLASS GEMM with column-major
 	// input matrices and 128x128x8 threadblock tile size (chosen by default).
 	//
@@ -103,6 +103,7 @@ cudaError_t CutlassSgemmNN(int M, int N, int K, float alpha, float const *A,
 
 	// Return success, if no errors were encountered.
 	return cudaSuccess;
+*/
 }
 
 #if __CUDA_ARCH__ > 600

@@ -5,14 +5,14 @@ OPENMP=1
 DEBUG?=0
 REAL_TYPE?=float
 LOGS?=1
-OPENGEMM?=1
+OPENGEMM?=0
 BUILDPROFILER=0
 
 OPENBLAS=1
 
-HOMEDIR=/home/fernando
-#RADIATIONDIR=$(HOME)/radiation-benchmarks/
-RADIATIONDIR=$(HOME)/git_pesquisa/radiation-benchmarks/
+HOMEDIR=/home/carol
+RADIATIONDIR=$(HOME)/radiation-benchmarks/
+#RADIATIONDIR=$(HOME)/git_pesquisa/radiation-benchmarks/
 
 CUTLASSDIR=$(HOME)/cutlass/include
 
@@ -169,10 +169,10 @@ demo:
 
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			../../../data/networks_img_list/caltech.pedestrians.10.txt \
+			../../../data/networks_img_list/fault_injection.txt \
 			-generate 1 -gold ./test.csv -tensor_cores 0
 
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			../../../data/networks_img_list/caltech.pedestrians.10.txt \
+			../../../data/networks_img_list/fault_injection.txt \
 			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
