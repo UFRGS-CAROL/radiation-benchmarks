@@ -176,7 +176,8 @@ function generate_radiation_test(arg_size)
 
       -- Get the all class indexes and probabilities
       local probs, indexes = output:topk(N, true, true)
-      for pb,10 do
+      iter = 10
+      for pb = 1, iter do
         print(" ", probs[pb])
       end
       print("\n")
