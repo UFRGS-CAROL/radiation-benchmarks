@@ -43,9 +43,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 1 //512 // 256
-#define N_TILES 1 //512 //256
-#define K_TILES 1 //512 //256
+#define M_TILES 256 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 256 //
+#define K_TILES 256 //
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -417,8 +417,11 @@ int main(int argc, char **argv){
     constexpr auto n = M_GLOBAL;
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
+    // host matrices
     std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
 
+
+    //device matrices  - a,b,c duplicated 
     rad::DeviceVector<half> a_s = a;
     rad::DeviceVector<half> b_s = b;
     rad::DeviceVector<half> c_s = c;
@@ -428,7 +431,14 @@ int main(int argc, char **argv){
     rad::DeviceVector<half> c_h = c;
     rad::DeviceVector<half> d_h = d;
 
-   	cudaStream_t stream1, stream2;
+    cudaEvent_t start, stop;
+
+    checkCudaErrors(cudaEventCreate(&start));
+    checkCudaErrors(cudaEventCreate(&stop));
+    checkCudaErrors(cudaEventRecord(start));
+
+   	//streams for parallel execution 
+    cudaStream_t stream1, stream2;
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
   	checkKernelErrors(cudaStreamCreate(&stream2));
 
@@ -451,34 +461,49 @@ int main(int argc, char **argv){
 
 
 
+    //TENSOR CORES FUNCTION CALL
     checkCudaErrors(cudaFuncSetAttribute(
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
     checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                         SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
+
+
+    // SW MXM PARAMETERS AND CALLING 
     uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
     matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
+    
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
     rad::checkFrameworkErrors(cudaPeekAtLastError());
+
+
 
     
     c_s.to_vector(c);
     d_h.to_vector(d);
 
+    checkCudaErrors(cudaEventRecord(stop));
+    checkCudaErrors(cudaEventSynchronize(stop));
+
+    float milliseconds = 0;
+
+    checkCudaErrors(cudaEventElapsedTime(&milliseconds, start, stop));
+
+    printf("Time: %f ms\n", milliseconds);
+
+
+
+    //print first 5 values of each execution 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
+    	printf("sw  == %.6f || hw == %.6f \n", float(c[i]), float(d[i]));
 
     }
-    // for(auto i : dh){
-    //     if(float(i) != float(n))
-    //         throw "Bad result\n";
-    // }
-    // std::cout << "Good result\n";
+  
   
 }
