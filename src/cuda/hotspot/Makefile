@@ -59,7 +59,7 @@ endif
 
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
-TEST_SIM_TIME=1000
+TEST_SIM_TIME=10000
 DATA_DIR=../../../data/hotspot
 DEF_INPUT_POWER=$(DATA_DIR)/power_$(DEF_SIZE)
 DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(DEF_SIZE)
@@ -76,7 +76,7 @@ clean:
 generate: $(TARGET)
 	./$(TARGET) -generate -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
-				-sim_time=$(TEST_SIM_TIME) -verbose -iterations=1
+				-sim_time=$(TEST_SIM_TIME) -verbose -iterations=1 -streams=1
 
 test: $(TARGET) generate
 	./$(TARGET) -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
