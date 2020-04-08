@@ -518,6 +518,20 @@ int main(int argc, char **argv){
     	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
     }
-  
+
+    free(a);
+    free(b);
+    free(c);
+    free(d);
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(a_s)));
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(b_s)));
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(c_s)));
+   
+
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(a_h)));
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(b_h)));
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(c_h)));
+    checkCudaErrors(cudaFree(reinterpret_cast<void *>(d_h)));
+        
   
 }
