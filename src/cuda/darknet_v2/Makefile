@@ -7,13 +7,13 @@ DEBUG=0
 LOGS?=0
 GEN_IMG?=0 #if you want to generate images on gold generator execution
 
-ARCH=  -gencode arch=compute_30,code=[sm_30,compute_30] 
+#ARCH=  -gencode arch=compute_30,code=[sm_30,compute_30] 
 ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]
-ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
-ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
-ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
-ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
+#ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
+#ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
+#ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
+#ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
+#ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH=  -gencode arch=compute_52,code=compute_52
@@ -131,9 +131,9 @@ test_pure_yolo:
 generate:
 	./$(TARGET) test_radiation  -c $(RAD_DIR)/data/darknet/yolo_v2.cfg \
 								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
-								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
-								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0 -t 1
+								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 0 -l   \
+								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0 -t 0
 
 test:
-	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 10 -s 0 -a 0 -t 0
+	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 0 -a 0 -t 0
 
