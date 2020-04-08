@@ -93,6 +93,8 @@
 #define SHMEM_STRIDE (N * BLOCK_ROW_TILES)
 #define SHMEM_OFFSET (N * WARP_ROW_TILES)
 
+
+
 // The macro below is used to shift rows of the A matrix and columns of the B
 // matrix in shared memory to minimize possible bank conflicts. Before
 // performing the nvcuda::wmma::mma_sync operation, the warp must load the
@@ -419,8 +421,16 @@ int main(int argc, char **argv){
     std::cout << "Size " << n << " elements " << size << std::endl;
     // host matrices
     // std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+
+
+    // get a number in the range 0.1 - 1.0
+    std::random_device rd; //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<real_t> dis(0.0, 1000.0);
+
+    half input  = (half)dis(gen); 
     
-    half input = (half)(rand() % 100);
+   
     std::cout << "input value = " << (float)input << std::endl;
     std::vector<half> a(size, input), b(size, input), c(size, 0), d(size, 0);    
 
