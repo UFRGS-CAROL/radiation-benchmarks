@@ -420,7 +420,9 @@ int main(int argc, char **argv){
     // host matrices
     // std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
     
-    std::vector<half> a(size, ((half)(rand() % 100))), b(size, ((half)(rand() % 100))), c(size, 0), d(size, 0);    
+    half input = (half)(rand() % 100);
+    std::cout << "input value = " << (float)input << std::endl;
+    std::vector<half> a(size, input), b(size, input), c(size, 0), d(size, 0);    
 
 
     //device matrices  - a,b,c duplicated 
