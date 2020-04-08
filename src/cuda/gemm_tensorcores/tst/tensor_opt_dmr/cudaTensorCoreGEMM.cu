@@ -420,7 +420,7 @@ int main(int argc, char **argv){
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
     // host matrices
-    // std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+    //std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
 
 
     // get a number in the range 0.1 - 1.0
