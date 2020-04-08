@@ -426,7 +426,7 @@ int main(int argc, char **argv){
     // get a number in the range 0.1 - 1.0
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.0, 1000.0);
+    std::uniform_real_distribution<float> dis(0.0, 10.0);
 
     half input  = (half)dis(gen); 
     
@@ -515,7 +515,7 @@ int main(int argc, char **argv){
     //print first 5 values of each execution 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("sw  == %.6f || hw == %.6f \n", float(c[i]), float(d[i]));
+    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
     }
   
