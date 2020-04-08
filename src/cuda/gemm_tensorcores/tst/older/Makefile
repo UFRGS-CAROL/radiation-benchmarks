@@ -291,7 +291,7 @@ endif
 # Target rules
 all: build
 
-build: cudaTensorCoreGemm
+build: cudaTensorCoreGEMM
 
 check.deps:
 ifeq ($(SAMPLE_ENABLED),0)
@@ -300,19 +300,19 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cudaTensorCoreGemm.o:cudaTensorCoreGemm.cu
+cudaTensorCoreGEMM.o:cudaTensorCoreGEMM.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-cudaTensorCoreGemm: cudaTensorCoreGemm.o
+cudaTensorCoreGEMM: cudaTensorCoreGEMM.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 	$(EXEC) mkdir -p ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 	$(EXEC) cp $@ ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 
 run: build
-	$(EXEC) ./cudaTensorCoreGemm
+	$(EXEC) ./cudaTensorCoreGEMM
 
 clean:
-	rm -f cudaTensorCoreGemm cudaTensorCoreGemm.o
-	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/cudaTensorCoreGemm
+	rm -f cudaTensorCoreGEMM cudaTensorCoreGEMM.o
+	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/cudaTensorCoreGEMM
 
 clobber: clean
