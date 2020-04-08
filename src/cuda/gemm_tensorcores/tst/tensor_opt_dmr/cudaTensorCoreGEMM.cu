@@ -420,13 +420,13 @@ int main(int argc, char **argv){
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
     // host matrices
-    // std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+    //std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
 
 
     // get a number in the range 0.1 - 1.0
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.0, 10.0);
+    std::uniform_real_distribution<float> dis(0.0, 5.0);
 
     half input  = (half)dis(gen); 
     
@@ -480,7 +480,7 @@ int main(int argc, char **argv){
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
     checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
+                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
 
 
@@ -489,7 +489,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
@@ -518,6 +518,8 @@ int main(int argc, char **argv){
     	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
     }
-  
+
+    
+        
   
 }
