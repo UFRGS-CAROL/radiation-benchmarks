@@ -103,9 +103,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256
-#define N_TILES 256
-#define K_TILES 256
+#define M_TILES 64 //512 //256
+#define N_TILES 64 //512 //256
+#define K_TILES 64 //512 //256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)

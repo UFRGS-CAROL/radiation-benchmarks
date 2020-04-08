@@ -1,4 +1,3 @@
-
 #include "/home/carol/radiation-benchmarks/src/cuda/common/include/device_vector.h"
 #include <vector>
 #include <iostream>
@@ -46,6 +45,7 @@
 #define M_TILES 256 // 128 for 2k, 512 for 8k etc 
 #define N_TILES 256 //
 #define K_TILES 256 //
+
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -418,7 +418,9 @@ int main(int argc, char **argv){
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
     // host matrices
-    std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+    // std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
+    
+    std::vector<half> a(size, ((half)(rand() % 100))), b(size, ((half)(rand() % 100))), c(size, 0), d(size, 0);    
 
 
     //device matrices  - a,b,c duplicated 
@@ -466,7 +468,7 @@ int main(int argc, char **argv){
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
     checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
+                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
 
 
 
@@ -475,7 +477,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
