@@ -6,7 +6,7 @@
 #include <cuda.h>
 #include <mma.h>
 #include <stdio.h>
-
+#include <random>
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
@@ -426,7 +426,7 @@ int main(int argc, char **argv){
     // get a number in the range 0.1 - 1.0
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<real_t> dis(0.0, 1000.0);
+    std::uniform_real_distribution<float> dis(0.0, 1000.0);
 
     half input  = (half)dis(gen); 
     
