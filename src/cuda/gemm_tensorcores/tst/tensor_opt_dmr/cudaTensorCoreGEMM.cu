@@ -42,9 +42,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 256 //512 //
-#define K_TILES 256 //512 //
+#define M_TILES 512 //256 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 512 //256 //512 //
+#define K_TILES 512 //256 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
@@ -534,7 +534,7 @@ int main(int argc, char **argv){
     printf("Time: %f ms\n", milliseconds);
 
 
-    relative_error<<<<1,1>>>>(c_s.data(), d_h.data(), relErrorDevice.data());
+    relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
