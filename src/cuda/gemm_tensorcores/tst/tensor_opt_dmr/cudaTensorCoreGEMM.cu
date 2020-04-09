@@ -457,7 +457,7 @@ int main(int argc, char **argv){
     std::cout << "Size " << n << " elements " << size << std::endl;
 
     //host inputs
-    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
+    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(2, 0);    
     generate_input_matrices (a, b);
 
     for (int i = 0; i < 5; ++i)        
@@ -557,18 +557,18 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    relErrorDevice.to_vector(relError);
+    
 
     
 
-       relative_error_sort<<<1,1>>>(relError.data(), realErrorMinMax.data());
-
+    relative_error_sort<<<1,1>>>(relErrorDevice.data(), realErrorMinMax.data());
+    realErrorMinMax.to_vector(relError);
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(realErrorMinMax[0]), float(realErrorMinMax[1]));
+    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(relError[0]), float(relError[1]));
 
 
     }
