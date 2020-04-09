@@ -578,10 +578,8 @@ int main(int argc, char **argv){
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
-    {
-        
+    {        
     	printf("sw  == %f || hw == %f  || min == %f || max == %f \n", float(c[i]), float(d[i]), float(min), float(max));
-
 
     }
 
