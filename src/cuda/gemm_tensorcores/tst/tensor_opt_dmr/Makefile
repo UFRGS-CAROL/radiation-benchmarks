@@ -226,7 +226,7 @@ else
       BUILD_TYPE := release
 endif
 
-ALL_CCFLAGS := -std=c++11 
+ALL_CCFLAGS :=
 ALL_CCFLAGS += $(NVCCFLAGS)
 ALL_CCFLAGS += $(EXTRA_NVCCFLAGS)
 ALL_CCFLAGS += $(addprefix -Xcompiler ,$(CCFLAGS))

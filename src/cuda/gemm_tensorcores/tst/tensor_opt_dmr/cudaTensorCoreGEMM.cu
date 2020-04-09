@@ -553,16 +553,17 @@ int main(int argc, char **argv){
 
     
 
-    auto minmax = std::minmax_element(relError.begin(), relError.end());
-    half min = *minmax.first;
-    half max = *minmax.second;  
+    
+    half maxElement = *std::max_element(v.begin(), v.end());
+    half minElement = *std::min_element(v.begin(), v.end());
+    
 
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(min), float(max));
+    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(minElement), float(maxElement));
 
 
     }
