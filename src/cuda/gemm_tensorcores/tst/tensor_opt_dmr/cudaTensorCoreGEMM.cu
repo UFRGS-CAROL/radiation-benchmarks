@@ -516,8 +516,8 @@ int main(int argc, char **argv){
     for (int i = 0; i < 10; ++i)
     {
 
-    	printf("sw  == %f || hw == %f \n || diff = %f", float(c[i]), float(d[i]), (float(d[i])- float(c[i])));
-        
+    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), (float(d[i])- float(c[i])));
+
 
     }
 
