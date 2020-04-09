@@ -8,6 +8,7 @@
 #include <mma.h>
 #include <stdio.h>
 #include <random>
+#include <algorithm>
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
@@ -551,12 +552,14 @@ int main(int argc, char **argv){
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
 
+    auto minmax = std::minmax_element(relError.begin(), relError.end());
+
 
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
-        ;
-    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), float(relError[i]));
+        
+    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(*minmax.first), float(*minmax.second));
 
 
     }
