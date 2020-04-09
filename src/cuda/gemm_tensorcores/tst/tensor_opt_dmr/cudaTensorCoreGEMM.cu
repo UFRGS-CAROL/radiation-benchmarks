@@ -420,31 +420,43 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     for (int i = 0; i < 10; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
-    }
-    
-      
+    }       
 }
+
+
+void generate_input_matrices(std::vector<half>& a_vector,
+        std::vector<half>& b_vector) {
+
+    std::random_device rd; //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<float> dis(0.0, 1.0);
+
+    a_vector.resize(M_GLOBAL * M_GLOBAL);
+    b_vector.resize(M_GLOBAL * M_GLOBAL);
+    c_vector.resize(M_GLOBAL * M_GLOBAL);
+
+#pragma omp parallel for
+    for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
+        a_vector[i] = (half)dis(gen);
+        b_vector[i] = (half)dis(gen);
+       
+}
+
 
 
 int main(int argc, char **argv){
     constexpr auto n = M_GLOBAL;
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
-    // host matrices
-    //std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
 
+    //host inputs
+    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
+    generate_input_matrices (a, b);
 
-    // get a number in the range 0.1 - 3.5
-    std::random_device rd; //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.0, 3.5);
-
-    half input  = 3.17773; //(half)dis(gen); 
-    
-   
-    std::cout << "input value = " << (float)input << std::endl;
-    std::vector<half> a(size, input), b(size, input), c(size, 0), d(size, 0), relError(size, 0);    
-
+    for (int i = 0; i < 5; ++i)        
+    {
+        std::cout << "a = " << a[i] << "b = " << b[i]  << std:endl; 
+    }
 
     //device matrices  - a,b,c duplicated 
     rad::DeviceVector<half> a_s = a;
