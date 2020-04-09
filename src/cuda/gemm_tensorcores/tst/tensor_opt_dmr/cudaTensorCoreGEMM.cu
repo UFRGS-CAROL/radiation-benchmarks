@@ -43,9 +43,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 256 //512 //
-#define K_TILES 256 //512 //
+#define M_TILES 8 // 256 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 8 // 256 //512 //
+#define K_TILES 8 // 256 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
@@ -417,7 +417,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < M_GLOBAL; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
     }       
@@ -456,7 +456,7 @@ int main(int argc, char **argv){
 
     for (int i = 0; i < 5; ++i)        
     {
-        std::cout << "a = " << float(a[i]) << "b = " << float(b[i])  << std::endl; 
+        std::cout << "a = " << float(a[i]) << " b = " << float(b[i])  << std::endl; 
     }
 
     //device matrices  - a,b,c duplicated 
@@ -550,6 +550,8 @@ int main(int argc, char **argv){
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
+
+    
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
