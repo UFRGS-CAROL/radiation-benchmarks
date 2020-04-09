@@ -415,10 +415,13 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ float relative_error(float lhs, float rhs) {
-    float relative = __fdividef(lhs, rhs);
-    return relative;
+__global__ float relative_error(half *lhs, half *rhs, half *relative ) {
+    for (int i = 0; i < M_GLOBAL; ++i)
+    {
+         relative[i] = __hdiv(lhs[i], rhs[i]);    
+    }
     
+      
 }
 
 
@@ -439,7 +442,7 @@ int main(int argc, char **argv){
     
    
     std::cout << "input value = " << (float)input << std::endl;
-    std::vector<half> a(size, input), b(size, input), c(size, 0), d(size, 0);    
+    std::vector<half> a(size, input), b(size, input), c(size, 0), d(size, 0), relError(size, 0);    
 
 
     //device matrices  - a,b,c duplicated 
@@ -451,6 +454,8 @@ int main(int argc, char **argv){
     rad::DeviceVector<half> b_h = b;
     rad::DeviceVector<half> c_h = c;
     rad::DeviceVector<half> d_h = d;
+
+    rad::DeviceVector<half> relErrorDevice = d;
 
     cudaEvent_t start, stop;
 
@@ -529,12 +534,13 @@ int main(int argc, char **argv){
     printf("Time: %f ms\n", milliseconds);
 
 
-
+    relative_error(c_s.data(), d_h.data(), relErrorDevice.data());
+    relErrorDevice.to_vector(relError);
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
-
-    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), relative_error(float(d[i]),float(c[i])));
+        ;
+    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), relError[i]);
 
 
     }
