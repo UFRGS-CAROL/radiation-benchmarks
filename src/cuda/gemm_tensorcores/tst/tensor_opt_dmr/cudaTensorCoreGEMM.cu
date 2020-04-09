@@ -423,7 +423,7 @@ int main(int argc, char **argv){
     //std::vector<half> a(size, 1.0), b(size, 1.0), c(size, 0), d(size, 0);
 
 
-    // get a number in the range 0.1 - 1.0
+    // get a number in the range 0.1 - 5.0
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_real_distribution<float> dis(0.0, 5.0);
@@ -451,7 +451,7 @@ int main(int argc, char **argv){
     checkCudaErrors(cudaEventCreate(&stop));
     checkCudaErrors(cudaEventRecord(start));
 
-   	//streams for parallel execution 
+   	 
     cudaStream_t stream1, stream2;
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
   	checkKernelErrors(cudaStreamCreate(&stream2));
@@ -460,6 +460,8 @@ int main(int argc, char **argv){
   	cudaDeviceProp deviceProp;
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
+    
+    //TENSOR CORES PARAMETERS
     enum {
     //  // Compute the right amount of shared memory to request.
     // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
@@ -475,25 +477,34 @@ int main(int argc, char **argv){
 
 
 
-    //TENSOR CORES FUNCTION CALL
+ 
     checkCudaErrors(cudaFuncSetAttribute(
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
 
 
-    // SW MXM PARAMETERS AND CALLING 
+    // SW MXM PARAMETERS
     uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+
+
+    int count = 100;
+    for (int i = 0; i < count; i++)
+    {
+    
+    checkKernelErrors(
+        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                        SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
+
     matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
     rad::checkFrameworkErrors(cudaPeekAtLastError());
+    }
+  
 
 
 
@@ -513,7 +524,7 @@ int main(int argc, char **argv){
 
 
     //print first 5 values of each execution 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 5; ++i)
     {
 
     	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), (float(d[i])- float(c[i])));
