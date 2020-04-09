@@ -415,7 +415,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ float relative_error(half *lhs, half *rhs, half *relative ) {
+__global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     for (int i = 0; i < M_GLOBAL; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
@@ -540,7 +540,7 @@ int main(int argc, char **argv){
     for (int i = 0; i < 5; ++i)
     {
         ;
-    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), relError[i]);
+    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), float(relError[i]));
 
 
     }
