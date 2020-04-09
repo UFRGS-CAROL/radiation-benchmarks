@@ -456,7 +456,7 @@ int main(int argc, char **argv){
 
     for (int i = 0; i < 5; ++i)        
     {
-        std::cout << "a = " << a[i] << "b = " << b[i]  << std:endl; 
+        std::cout << "a = " << float(a[i]) << "b = " << float(b[i])  << std::endl; 
     }
 
     //device matrices  - a,b,c duplicated 
