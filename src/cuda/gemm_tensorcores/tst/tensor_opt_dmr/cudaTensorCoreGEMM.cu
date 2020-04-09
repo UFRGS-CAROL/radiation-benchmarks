@@ -424,12 +424,6 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     }       
 }
 
-__global__ void relative_error_sort(half *relError, half *vectorMinMax) {
-       auto minmax = std::minmax_element(relError.begin(), relError.end());
-       vectorMinMax[0] = *minmax.first;
-       vectorMinMax[1] = *minmax.second;      
-}
-
 void generate_input_matrices(std::vector<half>& a_vector,
         std::vector<half>& b_vector) {
 
@@ -457,7 +451,7 @@ int main(int argc, char **argv){
     std::cout << "Size " << n << " elements " << size << std::endl;
 
     //host inputs
-    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(2, 0);    
+    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
     generate_input_matrices (a, b);
 
     for (int i = 0; i < 5; ++i)        
@@ -474,8 +468,6 @@ int main(int argc, char **argv){
     rad::DeviceVector<half> b_h = b;
     rad::DeviceVector<half> c_h = c;
     rad::DeviceVector<half> d_h = d;
-
-    rad::DeviceVector<half>realErrorMinMax(2, 0);
 
     rad::DeviceVector<half> relErrorDevice = d;
 
@@ -557,18 +549,20 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    
+    relErrorDevice.to_vector(relError);
 
     
 
-    relative_error_sort<<<1,1>>>(relErrorDevice.data(), realErrorMinMax.data());
-    realErrorMinMax.to_vector(relError);
+    auto minmax = std::minmax_element(relError.begin(), relError.end());
+    half min = *minmax.first;
+    half max = *minmax.second;  
+
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(relError[0]), float(relError[1]));
+    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(min), float(max));
 
 
     }
