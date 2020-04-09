@@ -430,6 +430,15 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
            
 }
 
+__host__ void relative_error_max(half *relative) {
+ 
+    half maxElement = *std::max_element(relative.begin(), relative.end());
+    half minElement = *std::min_element(relative.begin(), relative.end());
+    printf(" max = %f || min = %f \n", float(maxElement), float(minElement));
+
+           
+}
+
 void generate_input_matrices(std::vector<half>& a_vector,
         std::vector<half>& b_vector) {
 
@@ -558,7 +567,7 @@ int main(int argc, char **argv){
     relErrorDevice.to_vector(relError);
 
     
-
+    relative_error_max(relError);
     
 
 
