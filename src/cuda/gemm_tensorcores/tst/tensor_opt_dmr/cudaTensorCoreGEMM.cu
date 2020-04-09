@@ -515,7 +515,9 @@ int main(int argc, char **argv){
     //print first 5 values of each execution 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
+
+    	printf("sw  == %f || hw == %f \n || diff = %f", float(c[i]), float(d[i]), (float(d[i])- float(c[i])));
+        
 
     }
 
