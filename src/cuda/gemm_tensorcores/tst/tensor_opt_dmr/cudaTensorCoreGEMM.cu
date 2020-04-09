@@ -426,15 +426,6 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
            
 }
 
-void relative_error_max(std::vector<half>&relative) {
- 
-    half maxElement = *std::max_element(relative.begin(), relative.end());
-    half minElement = *std::min_element(relative.begin(), relative.end());
-    printf(" max = %f || min = %f \n", float(maxElement), float(minElement));
-
-           
-}
-
 void generate_input_matrices(std::vector<half>& a_vector,
         std::vector<half>& b_vector) {
 
@@ -563,8 +554,25 @@ int main(int argc, char **argv){
     relErrorDevice.to_vector(relError);
 
     
-    relative_error_max(relError);
     
+    half min = relError[0] ;
+    half max = relError[0] ;
+
+    for (int i = 0; i < M_GLOBAL; ++i)
+
+    {
+        if(relError[i] > max)
+            max = relError[i];
+        // If current element is smaller than min
+        if(relError[i] < min)
+            min = relError[i];
+    }   
+    
+
+    
+
+
+
 
 
  
@@ -572,7 +580,7 @@ int main(int argc, char **argv){
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
+    	printf("sw  == %f || hw == %f  || min == %f || max == %f \n", float(c[i]), float(d[i]), float(min), float(max));
 
 
     }
