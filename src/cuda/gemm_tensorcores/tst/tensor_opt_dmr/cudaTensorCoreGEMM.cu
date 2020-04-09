@@ -423,14 +423,10 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
     }
 
-    half maxElement = *std::max_element(relative.begin(), relative.end());
-    half minElement = *std::min_element(relative.begin(), relative.end());
-    printf(" max = %f || min = %f \n", float(maxElement), float(minElement));
-
            
 }
 
-__host__ void relative_error_max(half *relative) {
+__host__ void relative_error_max(std::vector<half>&relative) {
  
     half maxElement = *std::max_element(relative.begin(), relative.end());
     half minElement = *std::min_element(relative.begin(), relative.end());
