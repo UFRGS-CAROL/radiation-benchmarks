@@ -416,7 +416,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
-    for (int i = 0; i < M_GLOBAL; ++i)
+    for (int i = 0; i < 10; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
     }
@@ -534,7 +534,7 @@ int main(int argc, char **argv){
     printf("Time: %f ms\n", milliseconds);
 
 
-    relative_error<<dim_grid,dim_block>>(c_s.data(), d_h.data(), relErrorDevice.data());
+    relative_error<<1,1>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
