@@ -493,7 +493,7 @@ int main(int argc, char **argv){
    
 
 
-    int count = 100;
+    int count = 1;
     for (int i = 0; i < count; i++)
     {
     
@@ -510,12 +510,12 @@ int main(int argc, char **argv){
         M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
            (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
     }; 
-   // checkCudaErrors(cudaFuncSetAttribute(
-   //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+   checkCudaErrors(cudaFuncSetAttribute(
+       compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-  //  checkKernelErrors(
-  //       (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-  //                     SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
+   checkKernelErrors(
+        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
 
     
 
@@ -551,7 +551,7 @@ int main(int argc, char **argv){
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
 
-    
+
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
