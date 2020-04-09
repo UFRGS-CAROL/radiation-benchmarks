@@ -461,6 +461,16 @@ int main(int argc, char **argv){
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
     
+
+
+
+   
+
+
+    int count = 100;
+    for (int i = 0; i < count; i++)
+    {
+    
     //TENSOR CORES PARAMETERS
     enum {
     //  // Compute the right amount of shared memory to request.
@@ -469,35 +479,25 @@ int main(int argc, char **argv){
     // // of the A and B matrices. Therefore, the right amount to request is the
     // // maximum of those
     // // two numbers.
-    	SHMEM_SZ = MAX(
+    SHMEM_SZ = MAX(
         sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
         M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
            (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-    };
-
-
-
- 
+    }; 
     checkCudaErrors(cudaFuncSetAttribute(
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-
-
-    // SW MXM PARAMETERS
-    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    auto dim_grid = dim3(grid_cols, grid_rows);
-    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-
-
-    int count = 3;
-    for (int i = 0; i < count; i++)
-    {
-    
     //checkKernelErrors(
     //    (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
     //                   SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
+    
+
+     // SW MXM PARAMETERS
+    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    auto dim_grid = dim3(grid_cols, grid_rows);
+    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
     matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
     
