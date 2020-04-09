@@ -424,6 +424,11 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     }       
 }
 
+__global__ void relative_error_sort(half *lhs, half *max, half *min) {
+       auto minmax = std::minmax_element(relError.begin(), relError.end());
+       min = *minmax.first;
+       max = *minmax.second;      
+}
 
 void generate_input_matrices(std::vector<half>& a_vector,
         std::vector<half>& b_vector) {
@@ -552,14 +557,16 @@ int main(int argc, char **argv){
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
 
-    auto minmax = std::minmax_element(relError.begin(), relError.end());
+    half minRelError = 0;
+    half maxRelError = 0; 
+    relative_error_sort<<<1,1>>>(relError.data(), maxRelError, minRelError);
 
-
+ 
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(*minmax.first), float(*minmax.second));
+    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(minRelError), float(maxRelError));
 
 
     }
