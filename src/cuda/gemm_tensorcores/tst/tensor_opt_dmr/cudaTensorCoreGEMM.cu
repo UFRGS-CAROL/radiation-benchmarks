@@ -415,6 +415,13 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
+__device__ float relative_error(float lhs, float rhs) {
+    float relative = __fdividef(lhs, rhs);
+    return relative;
+    
+}
+
+
 int main(int argc, char **argv){
     constexpr auto n = M_GLOBAL;
     constexpr auto size = n * n;
@@ -527,7 +534,7 @@ int main(int argc, char **argv){
     for (int i = 0; i < 5; ++i)
     {
 
-    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), (float(d[i])- float(c[i])));
+    	printf("sw  == %f || hw == %f  || diff = %f \n", float(c[i]), float(d[i]), relative_error(float(d[i]) float(c[i])));
 
 
     }
