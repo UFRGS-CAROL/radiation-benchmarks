@@ -554,8 +554,8 @@ int main(int argc, char **argv){
     
 
     
-    half maxElement = *std::max_element(v.begin(), v.end());
-    half minElement = *std::min_element(v.begin(), v.end());
+    half maxElement = *std::max_element(relError.begin(), relError.end());
+    half minElement = *std::min_element(relError.begin(), relError.end());
     
 
  
