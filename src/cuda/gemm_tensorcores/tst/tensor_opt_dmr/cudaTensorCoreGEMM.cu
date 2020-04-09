@@ -421,7 +421,13 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     for (int i = 0; i < M_GLOBAL; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
-    }       
+    }
+
+    half maxElement = *std::max_element(relative.begin(), relative.end());
+    half minElement = *std::min_element(relative.begin(), relative.end());
+    printf(" max = %f || min = %f \n", float(maxElement), float(minElement));
+
+           
 }
 
 void generate_input_matrices(std::vector<half>& a_vector,
@@ -554,16 +560,14 @@ int main(int argc, char **argv){
     
 
     
-    half maxElement = *std::max_element(relError.begin(), relError.end());
-    half minElement = *std::min_element(relError.begin(), relError.end());
-    
+
 
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {
         
-    	printf("sw  == %f || hw == %f  || diff_min = %f  || diff_max = %f \n", float(c[i]), float(d[i]), float(minElement), float(maxElement));
+    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
 
 
     }
