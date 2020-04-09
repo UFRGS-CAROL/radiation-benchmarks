@@ -534,7 +534,7 @@ int main(int argc, char **argv){
     printf("Time: %f ms\n", milliseconds);
 
 
-    relative_error<<1,1>>(c_s.data(), d_h.data(), relErrorDevice.data());
+    relative_error<<<<1,1>>>>(c_s.data(), d_h.data(), relErrorDevice.data());
     relErrorDevice.to_vector(relError);
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
