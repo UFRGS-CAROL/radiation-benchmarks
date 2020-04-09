@@ -433,12 +433,13 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
-    c_vector.resize(M_GLOBAL * M_GLOBAL);
+    
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
         a_vector[i] = (half)dis(gen);
         b_vector[i] = (half)dis(gen);
+    }    
        
 }
 
