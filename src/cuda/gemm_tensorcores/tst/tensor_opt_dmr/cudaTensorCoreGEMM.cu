@@ -426,7 +426,7 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
            
 }
 
-__host__ void relative_error_max(std::vector<half>&relative) {
+void relative_error_max(std::vector<half>&relative) {
  
     half maxElement = *std::max_element(relative.begin(), relative.end());
     half minElement = *std::min_element(relative.begin(), relative.end());
