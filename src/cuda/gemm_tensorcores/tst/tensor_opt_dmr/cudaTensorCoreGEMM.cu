@@ -429,11 +429,11 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
             max = relative[i];
         
         if(relative[i] < min)
-            min = relative[i];
+            min = relative[i];    
     }
 
-    printf("MIN == %f || MAX == %f\n", float(min), float(max));  
-              
+   relative[0] =min;
+   relative[1]=max;              
 }
 
 void generate_input_matrices(std::vector<half>& a_vector,
@@ -489,14 +489,14 @@ int main(int argc, char **argv){
     checkCudaErrors(cudaEventCreate(&stop));
     checkCudaErrors(cudaEventRecord(start));
 
-   	 
+     
     cudaStream_t stream1, stream2;
-  	checkKernelErrors(cudaStreamCreate(&stream1)); 
-  	checkKernelErrors(cudaStreamCreate(&stream2));
+    checkKernelErrors(cudaStreamCreate(&stream1)); 
+    checkKernelErrors(cudaStreamCreate(&stream2));
 
-  	int dev = findCudaDevice(argc, (const char **) argv);
-  	cudaDeviceProp deviceProp;
-	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
+    int dev = findCudaDevice(argc, (const char **) argv);
+    cudaDeviceProp deviceProp;
+    checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
     
 
@@ -573,7 +573,7 @@ int main(int argc, char **argv){
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {        
-    	printf("sw  == %f || hw == %f  \n", float(c[i]), float(d[i]));
+        printf("sw  == %f || hw == %f || max == %f || min == %f \n", float(c[i]), float(d[i]), float(relError[0]),float(relError[1]));
 
     }
 
