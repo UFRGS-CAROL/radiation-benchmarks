@@ -379,11 +379,11 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 		// each thread computes one element
 		// of the block sub-matrix
 #pragma unroll
-		for (int k = 0; k < BLOCK_SIZE; k += 2) {
-			auto a = __halves2half2(As[ty][k], As[ty][k + 1]);
-			auto b = __halves2half2(Bs[k][tx], Bs[k + 1][tx]);
-			Csub_h2 = __hfma2(a, b, Csub_h2);
-			//Csub += As[ty][k] * Bs[k][tx];
+		for (int k = 0; k < BLOCK_SIZE; k++) {
+//			auto a = __halves2half2(As[ty][k], As[ty][k + 1]);
+//			auto b = __halves2half2(Bs[k][tx], Bs[k + 1][tx]);
+//			Csub_h2 = __hfma2(a, b, Csub_h2);
+			Csub += As[ty][k] * Bs[k][tx];
 		}
 
 		// Synchronize to make sure that the preceding
