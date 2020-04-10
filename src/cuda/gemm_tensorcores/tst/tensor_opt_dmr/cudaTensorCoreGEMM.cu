@@ -420,8 +420,8 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 
 __global__ void relative_error_min_max(half *relative, half *minMax) {
    
-    half min = 0.0 ;
-    half max = 0.0 ;
+    half min = relative[0] ;
+    half max = relative[0] ;
 
    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
