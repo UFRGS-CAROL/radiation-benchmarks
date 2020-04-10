@@ -418,32 +418,23 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ void relative_error_min_max(half *relative, half *minMax) {
-   
+
+__global__ void relative_error(half *lhs, half *rhs, half *relative, half *minMax) {
+
     half min = relative[0] ;
     half max = relative[0] ;
-
-   for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
-    {
-       if (relative[i] < min) 
-           min = relative[i]; 
-       if (relative[i] > max) 
-            max = relative[i];
-    }
-    minMax[0] = min;
-    minMax[1] = max; 
-
-}
-
-
-__global__ void relative_error(half *lhs, half *rhs, half *relative ) {
-
     
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
         relative[i] = __hdiv(lhs[i], rhs[i]);
-   
+
+        if (relative[i] < min) 
+            min = relative[i]; 
+        if (relative[i] > max)
+            max = relative[i];   
     }
+    minMax[0] = min;
+    minMax[1] = max; 
 }
 
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
@@ -560,15 +551,19 @@ int main(int argc, char **argv){
     printf("Time: %f ms\n", milliseconds);
 
 
-    relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-
-    relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
+    relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data(),relMinMaxDevice.data());
 
     relMinMaxDevice.to_vector(relMinMax); 
     
-            
-    printf(" min == %f || max == %f \n", float(relMinMax[0]),float(relMinMax[1]));    
+    printf("printing first 5 elements of results matrices: \n");
 
+    for (int i = 0; i < 5; i++)
+    {
+        printf("Tensor == %f || MxM == %f \n", float(c_host), float(d_host));            
+    } 
+
+
+    printf("Relative Errors: min == %f || max == %f \n", float(relMinMax[0]),float(relMinMax[1]));  
     
         
   
