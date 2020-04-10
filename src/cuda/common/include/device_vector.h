@@ -63,6 +63,12 @@ public:
 		this->alloc_data(size);
 	}
 
+	DeviceVector(size_t size, const T val) {
+		std::vector<T> temp_array(size, 0);
+		*this = temp_array;
+	}
+
+
 	virtual ~DeviceVector() {
 		this->free_data();
 	}

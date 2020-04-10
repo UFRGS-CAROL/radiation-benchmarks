@@ -416,46 +416,39 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
 }
 
-int main(int argc, char **argv) {
-	constexpr auto n = M_GLOBAL;
-	constexpr auto size = n * n;
-	std::cout << "Size " << n << " elements " << size << std::endl;
+template<typename T>
+void cublas(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
+		rad::DeviceVector<T>& c, T alpha, T beta, int n,
+		cublasMath_t cublas_tensor) {
 
-	//host inputs
-	std::vector<half> a_host(size, 0);
-	std::vector<half> b_host(size, 0);
-	std::vector<half> c_host(size, 0);
-	std::vector<half> d_host(size, 0);
-	generate_input_matrices(a_host, b_host);
+	cublasHandle_t handle;
+	rad::checkCublasErrors(cublasCreate(&handle));
+	rad::checkCublasErrors(cublasSetMathMode(handle, cublas_tensor));
+	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, a.data(), n,
+			b.data(), n, &beta, c.data(), n);
 
-	//device matrices
-	rad::DeviceVector<half> a_device = a_host;
-	rad::DeviceVector<half> b_device = b_host;
-	rad::DeviceVector<half> c_device_sw = c_host;
-	rad::DeviceVector<half> c_device_hw = c_host;
-	rad::DeviceVector<half> d_device_hw = d_host;
+	rad::checkCublasErrors(cublasDestroy(handle));
+}
 
-	cudaEvent_t start, stop;
-
-	rad::checkFrameworkErrors(cudaEventCreate(&start));
-	rad::checkFrameworkErrors(cudaEventCreate(&stop));
-	rad::checkFrameworkErrors(cudaEventRecord(start));
-
-	cudaStream_t stream1, stream2;
-	checkKernelErrors(cudaStreamCreate(&stream1));
-	checkKernelErrors(cudaStreamCreate(&stream2));
+template<typename T>
+void mxm_no_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
+		rad::DeviceVector<T>& c, T alpha, T beta, int n) {
 
 	// SW MXM PARAMETERS
 	uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	auto dim_grid = dim3(grid_cols, grid_rows);
 	auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+	matrix_mult_kernel_unhardened<<<dim_grid, dim_block>>>(a.data(), b.data(),
+			c.data(), alpha, beta, n, n);
+}
 
-	int dev = 0;
+template<typename T>
+void mxm_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
+		rad::DeviceVector<T>& c, rad::DeviceVector<T>& d, T alpha, T beta,
+		int n) {
 	cudaDeviceProp deviceProp;
-	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
-	half alpha = 1.0;
-	half beta = 0.0;
+	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, 0));
 
 	//TENSOR CORES PARAMETERS
 	enum {
@@ -474,61 +467,62 @@ int main(int argc, char **argv) {
 	rad::checkFrameworkErrors(cudaFuncSetAttribute(
 					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			stream1>>>(a_device.data(), b_device.data(), c_device_sw.data(),
-			d_device_hw.data(), alpha, beta);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(
+			a.data(), b.data(), c.data(), d.data(), alpha, beta);
+}
 
-	cublasHandle_t handle, handle2;
-	rad::checkCublasErrors(cublasCreate(&handle));
-	rad::checkCublasErrors(cublasSetStream(handle, stream1));
-	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
-	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-	                           n, n, n,
-	                            &alpha,
-	                           a_device.data(), n,
-	                           b_device.data(), n,
-	                           &beta,
-	                           c_device_hw.data(), n);
+int main(int argc, char **argv) {
+	constexpr auto n = M_GLOBAL;
+	constexpr auto size = n * n;
+	std::cout << "Size " << n << " elements " << size << std::endl;
 
-//	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
-//			a_device.data(), b_device.data(), c_device_sw.data(), alpha,
-//			beta, n, n);
+	//host inputs
+	std::vector<half> a_host(size, 0);
+	std::vector<half> b_host(size, 0);
+	generate_input_matrices(a_host, b_host);
 
-//	rad::checkCublasErrors(cublasCreate(&handle2));
-//	rad::checkCublasErrors(cublasSetStream(handle2, stream2));
-//	rad::checkCublasErrors(cublasSetMathMode(handle2, CUBLAS_DEFAULT_MATH));
-//	cublasHgemm(handle2, CUBLAS_OP_N, CUBLAS_OP_N,
-//		                           n, n, n,
-//		                            &alpha,
-//		                           a_device.data(), n,
-//		                           b_device.data(), n,
-//		                           &beta,
-//		                           c_device_sw.data(), n);
-//
-	rad::checkCublasErrors(cublasDestroy(handle));
-//	rad::checkCublasErrors(cublasDestroy(handle2));
+	//device matrices
+	const rad::DeviceVector<half> a_device = a_host;
+	const rad::DeviceVector<half> b_device = b_host;
+	rad::DeviceVector<half> c_device_cublas_tensor(size, 0);
+	rad::DeviceVector<half> c_device_cublas_default(size, 0);
+	rad::DeviceVector<half> c_device_mxm_sw(size, 0);
+	rad::DeviceVector<half> c_device_mxm_hw(size, 0);
+	rad::DeviceVector<half> d_device_mxm_hw(size, 0);
+
+
+	half alpha = 1.0;
+	half beta = 0.0;
+
+	//---- CUBLAS
+	//Software
+	cublas(a_device, b_device, c_device_cublas_default, alpha, beta, n, CUBLAS_DEFAULT_MATH);
+	//Tensor
+	cublas(a_device, b_device, c_device_cublas_tensor, alpha, beta, n, CUBLAS_TENSOR_OP_MATH);
+
+	//MXM
+	//Software
+	mxm_no_tensor(a_device, b_device, c_device_mxm_sw, alpha, beta, n);
+	//Tensor
+	mxm_tensor(a_device, b_device, c_device_mxm_hw, d_device_mxm_hw, alpha, beta, n);
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
-	d_device_hw.to_vector(c_host);
-	c_device_hw.to_vector(d_host);
-//	d_device_hw.to_vector(d_host);
 
-	rad::checkFrameworkErrors(cudaEventRecord(stop));
-	rad::checkFrameworkErrors(cudaEventSynchronize(stop));
+	auto output_cublas_tensor = c_device_cublas_tensor.to_vector();
+	auto output_cublas_default = c_device_cublas_default.to_vector();
+	auto output_mxm_sw = c_device_mxm_sw.to_vector();
+	auto output_mxm_hw = d_device_mxm_hw.to_vector();
 
-	float milliseconds = 0;
+	for (auto i = 0; i < output_cublas_default.size(); i++) {
+		auto cublas_tensor = float(output_cublas_tensor[i]);
+		auto cublas_default = float(output_cublas_default[i]);
+		auto mxm_tensor = float(output_mxm_hw[i]);
+		auto mxm_default = float(output_mxm_sw[i]);
 
-	rad::checkFrameworkErrors(cudaEventElapsedTime(&milliseconds, start, stop));
-
-	std::cout << "Time: " << milliseconds << "ms\n";
-
-	for (auto i = 0; i < c_host.size(); i++) {
-		auto hw = float(d_host[i]);
-		auto sw = float(c_host[i]);
-		auto diff = fabs(hw - sw) / sw;
+		auto diff = fabs(mxm_tensor - cublas_default) / cublas_default;
 		if (diff > 0.005) {
-			std::cout << "I: " << i << " hw " << hw << " sw " << sw
+			std::cout << "I: " << i << " hw " << cublas_default << " sw " << mxm_tensor
 					<< std::endl;
 		}
 	}
