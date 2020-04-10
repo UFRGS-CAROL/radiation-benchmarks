@@ -441,7 +441,7 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-        relative[i] = 1.0 ;//__hdiv(lhs[i], rhs[i]);
+        relative[i] = half(__fdividef(float(lhs[i]), float(rhs[i]))); //__hdiv(lhs[i], rhs[i]);
    
     }
 }
