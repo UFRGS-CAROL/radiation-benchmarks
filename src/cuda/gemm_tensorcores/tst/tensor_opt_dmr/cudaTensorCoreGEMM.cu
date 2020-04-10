@@ -448,7 +448,7 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.000001, 1.0);
+    std::uniform_real_distribution<float> dis(0.0, 3.5);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
@@ -456,8 +456,8 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = 1.0; //(half)dis(gen);
-        b_vector[i] = 1.0; //(half)dis(gen);
+        a_vector[i] = (half)dis(gen);
+        b_vector[i] = (half)dis(gen);
     }    
        
 }
