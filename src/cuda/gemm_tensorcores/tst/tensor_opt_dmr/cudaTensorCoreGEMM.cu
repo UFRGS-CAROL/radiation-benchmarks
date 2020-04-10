@@ -451,7 +451,7 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> dis(0.9, 1.0);
+    std::uniform_real_distribution<> dis(0.1, 1.0);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
