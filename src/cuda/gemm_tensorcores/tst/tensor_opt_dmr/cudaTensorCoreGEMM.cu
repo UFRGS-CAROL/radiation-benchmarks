@@ -449,8 +449,8 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = (half)dis(gen);
-        b_vector[i] = (half)dis(gen);
+        a_vector[i] = 1.0; // (half)dis(gen);
+        b_vector[i] = 1.0; //(half)dis(gen);
     }    
        
 }
@@ -527,7 +527,7 @@ int main(int argc, char **argv){
 
    checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(0.5), half(0.5))));
+                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
 
     
 
@@ -536,7 +536,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(0.5), half(0.5), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
