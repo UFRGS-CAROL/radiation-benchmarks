@@ -427,10 +427,6 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
         relative[i] = __hdiv(lhs[i], rhs[i]);
    
     }
-    for (int j = 0; j < 10; ++j)
-    {
-        printf(" relative == %f \n", relative[j]);        
-    }
 }
 
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
