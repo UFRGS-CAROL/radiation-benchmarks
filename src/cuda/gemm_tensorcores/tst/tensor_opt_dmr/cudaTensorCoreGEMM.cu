@@ -418,19 +418,24 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
-    for (int i = 0; i < M_GLOBAL; ++i)
+    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
     }
 
-           
-}
+    half min = relative[0] ;
+    half max = relative[0] ;
 
-void relative_error_max(std::vector<half>&relative) {
- 
-    half maxElement = *std::max_element(relative.begin(), relative.end());
-    half minElement = *std::min_element(relative.begin(), relative.end());
-    printf(" max = %f || min = %f \n", float(maxElement), float(minElement));
+    for (int i = 0; i < M_GLOBAL * M_GLOBAL; ++i)
+
+    {
+        if(relative[i] > max)
+            max = relative[i];
+        
+        if(relative[i] < min)
+            min = relative[i];
+    } 
+    printf("MIN == %f || MAX == %f\n", float(min), float(max));  
 
            
 }
@@ -465,10 +470,10 @@ int main(int argc, char **argv){
     std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
     generate_input_matrices (a, b);
 
-    for (int i = 0; i < 5; ++i)        
-    {
-        std::cout << "a = " << float(a[i]) << " b = " << float(b[i])  << std::endl; 
-    }
+   // for (int i = 0; i < 5; ++i)        
+   // {
+   //     std::cout << "a = " << float(a[i]) << " b = " << float(b[i])  << std::endl; 
+   // }
 
     //device matrices  - a,b,c duplicated 
     rad::DeviceVector<half> a_s = a;
@@ -560,20 +565,19 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    relErrorDevice.to_vector(relError);
+    relErrorDevice.to_vector(relError); 
 
     
-    relative_error_max(relError);
-    
+
+
+
 
 
  
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
-    {
-        
-    	printf("sw  == %f || hw == %f \n", float(c[i]), float(d[i]));
-
+    {        
+    	printf("sw  == %f || hw == %f  \n", float(c[i]), float(d[i]));
 
     }
 
@@ -581,3 +585,4 @@ int main(int argc, char **argv){
         
   
 }
+
