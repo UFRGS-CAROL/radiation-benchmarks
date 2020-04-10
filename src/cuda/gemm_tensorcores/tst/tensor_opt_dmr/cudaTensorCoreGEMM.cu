@@ -418,20 +418,20 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ void relative_error_min_max(half *relative ) {
+__global__ void relative_error_min_max(half *relative, half *minMax) {
    
-    half min = relative[0] ;
-    half max = relative[0] ;
+    half min = 0.0 ;
+    half max = 0.0 ;
 
    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-       // if (relative[i] < min) 
-       //     min = relative[i]; 
+        if (relative[i] < min) 
+            min = relative[i]; 
         if (relative[i] > max) 
             max = relative[i];
     }
-    //relative[0] = min;
-    relative[1] = max; 
+    minMax[0] = min;
+    minMax[1] = max; 
 
 }
 
@@ -474,7 +474,7 @@ int main(int argc, char **argv){
     std::cout << "Size " << n << " elements " << size << std::endl;
 
     //host inputs
-    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
+    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0), relMinMax(2,0);    
     generate_input_matrices (a, b);
 
     for (int i = 0; i < 5; ++i)
@@ -492,6 +492,7 @@ int main(int argc, char **argv){
     rad::DeviceVector<half> d_h = d;
 
     rad::DeviceVector<half> relErrorDevice = d;
+    rad::DeviceVector<half> relMinMaxDevice = relMinMax;
 
     cudaEvent_t start, stop;
 
@@ -537,7 +538,7 @@ int main(int argc, char **argv){
 
     
 
-     // SW MXM PARAMETERS
+    // SW MXM PARAMETERS
     uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
@@ -547,11 +548,7 @@ int main(int argc, char **argv){
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
     rad::checkFrameworkErrors(cudaPeekAtLastError());
-    }
-  
-
-
-
+    } 
     
     c_s.to_vector(c);
     d_h.to_vector(d);
@@ -568,16 +565,15 @@ int main(int argc, char **argv){
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
 
-    relative_error_min_max<<<1,1>>>(relErrorDevice.data());
-    relErrorDevice.to_vector(relError); 
+    relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
+    relMinMaxDevice.to_vector(relMinMax); 
 
 
-    
- 
+   
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {        
-        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relError[0]),float(relError[1]));
+        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relMinMax[1]));
 
     }
 
