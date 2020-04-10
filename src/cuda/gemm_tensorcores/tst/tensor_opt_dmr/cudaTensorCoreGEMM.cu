@@ -425,12 +425,12 @@ __global__ void relative_error_min_max(half *relative ) {
 
    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-        if (relative[i] < min) 
-            min = relative[i]; 
+       // if (relative[i] < min) 
+       //     min = relative[i]; 
         if (relative[i] > max) 
             max = relative[i];
     }
-    relative[0] = min;
+    //relative[0] = min;
     relative[1] = max; 
 
 }
