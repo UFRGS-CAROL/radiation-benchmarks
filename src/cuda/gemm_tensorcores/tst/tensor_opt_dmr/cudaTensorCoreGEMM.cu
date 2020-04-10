@@ -431,7 +431,7 @@ __global__ void relative_error_min_max(half *relative, half *minMax) {
             max = relative[i];
     }
     minMax[0] = min;
-    minMax[1] = max; 
+    relative[0] = max; 
 
 }
 
@@ -564,18 +564,19 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    relErrorDevice.to_vector(relError);
-
+    
     
     relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
     relMinMaxDevice.to_vector(relMinMax); 
-      printf("teste == %f \n", float(relMinMax[1]));
+    relErrorDevice.to_vector(relError);
+
+  
 
    
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {        
-        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relMinMax[1]));
+        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relError[0]));
 
     }
 
