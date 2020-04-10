@@ -451,7 +451,7 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.3, 1.0);
+    std::uniform_real_distribution<float> dis(0.0, 1.0);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
@@ -459,8 +459,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = half(dis(gen));
-        b_vector[i] = half(dis(gen));
+        a_vector[i] = 1.0; //half(dis(gen));
+        b_vector[i] = 1.0; //half(dis(gen));
 
     }    
        
@@ -564,10 +564,12 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
+    relErrorDevice.to_vector(relError);
 
+    
     relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
     relMinMaxDevice.to_vector(relMinMax); 
-
+      printf("teste == %f \n", float(relMinMax[1]));
 
    
     //print first 5 values of each execution 
