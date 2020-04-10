@@ -425,16 +425,12 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
         relative[i] = __hdiv(lhs[i], rhs[i]);
-        
-        if(relative[i] > max)
-            max = relative[i];
-        
-        if(relative[i] < min)
-            min = relative[i];    
+   
     }
-
-   relative[0] =min;
-   relative[1]=max;              
+    for (int j = 0; j < 10; ++j)
+    {
+        printf(" relative == %f \n", relative[j]);        
+    }
 }
 
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
@@ -558,6 +554,7 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
+
     relErrorDevice.to_vector(relError); 
 
     
