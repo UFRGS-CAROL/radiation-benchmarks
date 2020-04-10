@@ -45,9 +45,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 8 //256 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 8 //256 //512 //
-#define K_TILES 8 //256 //512 //
+#define M_TILES 256 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 256 //512 //
+#define K_TILES 256 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
@@ -440,9 +440,9 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
         std::vector<half>& b_vector) {
 
-    // std::random_device rd; //Will be used to obtain a seed for the random number engine
-    // std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    // std::uniform_real_distribution<float> dis(0.0, 1.0);
+    std::random_device rd; //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<float> dis(0.3, 1.0);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
@@ -450,8 +450,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = half(rand() % 1) ; //half(dis(gen));
-        b_vector[i] = half(rand() % 1) ; //half(dis(gen));
+        a_vector[i] = half(dis(gen));
+        b_vector[i] = half(dis(gen));
 
     }    
        
