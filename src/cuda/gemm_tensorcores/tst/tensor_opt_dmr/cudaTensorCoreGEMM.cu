@@ -473,24 +473,22 @@ int main(int argc, char **argv){
     std::cout << "Size " << n << " elements " << size << std::endl;
 
     //host inputs
-    std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0), relMinMax(2,0);    
-    generate_input_matrices (a, b);
+    std::vector<half> a_host(size, 0), b_host(size, 0), c_host(size, 0), d_host(size, 0), relError(size, 0), relMinMax(2,0);    
+    generate_input_matrices (a_host, b_host);
 
-    for (int i = 0; i < 5; ++i)
-    {
-        std::cout << "a ==  " << float(a[i])  << " b === " << float(b[i]) << std::endl; 
-    }
-    //device matrices  - a,b,c duplicated 
-    rad::DeviceVector<half> a_s = a;
-    rad::DeviceVector<half> b_s = b;
-    rad::DeviceVector<half> c_s = c;
 
-    rad::DeviceVector<half> a_h = a;
-    rad::DeviceVector<half> b_h = b;
-    rad::DeviceVector<half> c_h = c;
-    rad::DeviceVector<half> d_h = d;
+    //device matrices
+    rad::DeviceVector<half> a = a_host;
+    rad::DeviceVector<half> b = b_host;
+    rad::DeviceVector<half> c_s = c_host;
 
-    rad::DeviceVector<half> relErrorDevice = d;
+    // rad::DeviceVector<half> a_h = a;
+    // rad::DeviceVector<half> b_h = b;
+
+    rad::DeviceVector<half> c_h = c_host;
+    rad::DeviceVector<half> d_h = d_host;
+
+    rad::DeviceVector<half> relErrorDevice = d_host;
     rad::DeviceVector<half> relMinMaxDevice = relMinMax;
 
     cudaEvent_t start, stop;
@@ -533,7 +531,7 @@ int main(int argc, char **argv){
 
    checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.1f), half(1.2f))));
+                      SHMEM_SZ, stream1>>>(a.data(), b.data(), c_h.data(), d_h.data(), half(1.1f), half(1.2f))));
 
     
 
@@ -542,7 +540,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.1f), half(1.2f), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a.data(), b.data(), c_s.data(), half(1.1f), half(1.2f), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
@@ -563,21 +561,13 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    
-    
+
     relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
+
     relMinMaxDevice.to_vector(relMinMax); 
     
-
-  
-
-   
-    //print first 5 values of each execution 
-    for (int i = 0; i < 5; ++i)
-    {        
-        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relMinMax[1]));
-
-    }
+            
+    printf(" min == %f || max == %f \n", float(relMinMax[0]),float(relMinMax[1]));    
 
     
         
