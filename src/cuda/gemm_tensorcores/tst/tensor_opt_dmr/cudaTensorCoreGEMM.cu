@@ -419,6 +419,66 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 
+__global__ void simple_wmma_gemm(half *a, half *b, half *c, half *d, int m_ld,
+                                 int n_ld, int k_ld, half alpha, half beta) {
+  // Leading dimensions. Packed with no transpositions.
+  int lda = m_ld;
+  int ldb = k_ld;
+  int ldc = n_ld;
+
+  // Tile using a 2D grid
+  int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
+  int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
+
+  // Declare the fragments
+  wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::row_major>
+      a_frag;
+  wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major>
+      b_frag;
+  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> acc_frag;
+  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
+
+  wmma::fill_fragment(acc_frag, 0.0f);
+
+  // Loop over k
+  for (int i = 0; i < k_ld; i += WMMA_K) {
+    int aCol = i;
+    int aRow = warpM * WMMA_M;
+
+    int bCol = i;
+    int bRow = warpN * WMMA_N;
+
+    // Bounds checking
+    if (aRow < m_ld && aCol < k_ld && bRow < k_ld && bCol < n_ld) {
+      // Load the inputs
+      wmma::load_matrix_sync(a_frag, a + aCol + aRow * lda, lda);
+      wmma::load_matrix_sync(b_frag, b + bCol + bRow * ldb, ldb);
+
+      // Perform the matrix multiplication
+      wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+    }
+  }
+
+  // Load in the current value of c, scale it by beta, and add this our result
+  // scaled by alpha
+  int cCol = warpN * WMMA_N;
+  int cRow = warpM * WMMA_M;
+
+  if (cRow < m_ld && cCol < n_ld) {
+    wmma::load_matrix_sync(c_frag, c + cCol + cRow * ldc, ldc,
+                           wmma::mem_row_major);
+
+    for (int i = 0; i < c_frag.num_elements; i++) {
+      c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+    }
+
+    // Store the output
+    wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
+                            wmma::mem_row_major);
+  }
+}
+
+
 __global__ void relative_error(half *lhs, half *rhs, half *relative, half *minMax) {
 
     half min = relative[0] ;
@@ -504,33 +564,36 @@ int main(int argc, char **argv){
     for (int i = 0; i < count; i++)
     {
     
-    //TENSOR CORES PARAMETERS
-    enum {
-    //  // Compute the right amount of shared memory to request.
-    // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-    // // per-CTA chunks
-    // // of the A and B matrices. Therefore, the right amount to request is the
-    // // maximum of those
-    // // two numbers.
-    SHMEM_SZ = MAX(
-        sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-        M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-           (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-    }; 
-   checkCudaErrors(cudaFuncSetAttribute(
-       compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+   //  //TENSOR CORES PARAMETERS
+   //  enum {
+   //  //  // Compute the right amount of shared memory to request.
+   //  // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+   //  // // per-CTA chunks
+   //  // // of the A and B matrices. Therefore, the right amount to request is the
+   //  // // maximum of those
+   //  // // two numbers.
+   //  SHMEM_SZ = MAX(
+   //      sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+   //      M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
+   //         (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+   //  }; 
+   // checkCudaErrors(cudaFuncSetAttribute(
+   //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-   checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                      SHMEM_SZ, stream1>>>(a.data(), b.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
-
-    
+   // checkKernelErrors(
+   //      (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+   //                    SHMEM_SZ, stream1>>>(a.data(), b.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
+   
 
     // SW MXM PARAMETERS
     uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+
+    simple_wmma_gemm<<<dim_grid, dim_block, 0, stream1>>>(a.data(), b.data(), c_h.data(), d_h.data(), M_GLOBAL, N_GLOBAL,
+                                            K_GLOBAL, half(1.0), half(0.0));
+
     matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a.data(), b.data(), c_s.data(), half(1.0), half(0.0), n, n);
     
     
