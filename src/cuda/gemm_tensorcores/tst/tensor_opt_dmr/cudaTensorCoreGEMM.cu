@@ -45,9 +45,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 32 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 32 //512 //
-#define K_TILES 32 //512 //
+#define M_TILES 8 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 8 //512 //
+#define K_TILES 8 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
@@ -425,13 +425,13 @@ __global__ void relative_error_min_max(half *relative, half *minMax) {
 
    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-      //  if (relative[i] < min) 
-      //      min = relative[i]; 
-        if (relative[i] > max) 
+       if (relative[i] < min) 
+           min = relative[i]; 
+       if (relative[i] > max) 
             max = relative[i];
     }
-    //minMax[0] = min;
-    relative[0] = max; 
+    minMax[0] = min;
+    minMax[1] = max; 
 
 }
 
@@ -451,7 +451,7 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.0, 1.0);
+    std::uniform_real_distribution<> dis(0.9, 1.0);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
@@ -459,8 +459,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = 1.0; //half(dis(gen));
-        b_vector[i] = 1.0; //half(dis(gen));
+        a_vector[i] = half(dis(gen));
+        b_vector[i] = half(dis(gen));
 
     }    
        
@@ -534,7 +534,7 @@ int main(int argc, char **argv){
 
    checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(1.0))));
+                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.1f), half(1.2f))));
 
     
 
@@ -543,7 +543,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(1.0), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.1f), half(1.2f), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
@@ -568,7 +568,7 @@ int main(int argc, char **argv){
     
     relative_error_min_max<<<1,1>>>(relErrorDevice.data(), relMinMaxDevice.data());
     relMinMaxDevice.to_vector(relMinMax); 
-    relErrorDevice.to_vector(relError);
+    
 
   
 
@@ -576,7 +576,7 @@ int main(int argc, char **argv){
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {        
-        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relError[0]));
+        printf("sw  == %f || hw == %f || min == %f || max == %f \n", float(c[i]), float(d[i]), float(relMinMax[0]),float(relMinMax[1]));
 
     }
 
@@ -584,4 +584,5 @@ int main(int argc, char **argv){
         
   
 }
+
 
