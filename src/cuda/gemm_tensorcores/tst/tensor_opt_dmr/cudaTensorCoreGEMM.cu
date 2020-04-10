@@ -547,8 +547,8 @@ int main(int argc, char **argv){
     rad::checkFrameworkErrors(cudaPeekAtLastError());
     } 
     
-    c_s.to_vector(c);
-    d_h.to_vector(d);
+    c_s.to_vector(c_host);
+    d_h.to_vector(d_host);
 
     checkCudaErrors(cudaEventRecord(stop));
     checkCudaErrors(cudaEventSynchronize(stop));
