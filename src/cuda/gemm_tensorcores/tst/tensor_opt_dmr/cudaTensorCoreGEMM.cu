@@ -418,10 +418,27 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ void relative_error(half *lhs, half *rhs, half *relative ) {
-
+__global__ void relative_error_min_max(half *relative ) {
+   
     half min = relative[0] ;
     half max = relative[0] ;
+
+   for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
+    {
+        if (relative[i] < min) 
+            min = relative[i]; 
+        if (relative[i] > max) 
+            max = relative[i];
+    }
+    relative[0] = min;
+    relative[1] = max; 
+
+}
+
+
+__global__ void relative_error(half *lhs, half *rhs, half *relative ) {
+
+    
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
         relative[i] = __hdiv(lhs[i], rhs[i]);
@@ -551,7 +568,9 @@ int main(int argc, char **argv){
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
 
+    relative_error_min_max<<<1,1>>>(relErrorDevice.data());
     relErrorDevice.to_vector(relError); 
+
 
     
  
