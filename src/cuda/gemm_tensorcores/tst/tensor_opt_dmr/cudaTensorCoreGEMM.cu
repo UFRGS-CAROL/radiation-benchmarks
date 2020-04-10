@@ -429,10 +429,10 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
             max = relative[i];
         
         if(relative[i] < min)
-            min = relative[i]    
+            min = relative[i];
     }
 
-   // printf("MIN == %f || MAX == %f\n", float(min), float(max));  
+    printf("MIN == %f || MAX == %f\n", float(min), float(max));  
               
 }
 
