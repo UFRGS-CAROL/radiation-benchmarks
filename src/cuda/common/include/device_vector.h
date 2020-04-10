@@ -65,7 +65,10 @@ public:
 
 	DeviceVector(size_t size, const T val) {
 		std::vector<T> temp_array(size, 0);
-		*this = temp_array;
+		this->alloc_data(size);
+		checkFrameworkErrors(
+				cudaMemcpy(this->data_, temp_array.data(), sizeof(T) * this->v_size,
+						cudaMemcpyHostToDevice));
 	}
 
 
