@@ -44,9 +44,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 256 //512 //
-#define K_TILES 256 //512 //
+#define M_TILES 8 //256 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 8 //256 //512 //
+#define K_TILES 8 //256 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
@@ -441,7 +441,7 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
     std::random_device rd; //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<float> dis(0.0, 3.5);
+    std::uniform_real_distribution<float> dis(0.000001, 1.0);
 
     a_vector.resize(M_GLOBAL * M_GLOBAL);
     b_vector.resize(M_GLOBAL * M_GLOBAL);
@@ -527,7 +527,7 @@ int main(int argc, char **argv){
 
    checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
+                      SHMEM_SZ, stream1>>>(a_h.data(), b_h.data(), c_h.data(), d_h.data(), half(0.5), half(0.5))));
 
     
 
@@ -536,7 +536,7 @@ int main(int argc, char **argv){
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     auto dim_grid = dim3(grid_cols, grid_rows);
     auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(1.0), half(0.0), n, n);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(a_s.data(), b_s.data(), c_s.data(), half(0.5), half(0.5), n, n);
     
     
     rad::checkFrameworkErrors(cudaDeviceSynchronize());
