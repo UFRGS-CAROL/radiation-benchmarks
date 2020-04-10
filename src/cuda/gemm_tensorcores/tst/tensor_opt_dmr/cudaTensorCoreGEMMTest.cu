@@ -458,25 +458,25 @@ int main(int argc, char **argv) {
 	half beta = 0.0;
 
 	//TENSOR CORES PARAMETERS
-//	enum {
-//		//  // Compute the right amount of shared memory to request.
-//		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-//		// // per-CTA chunks
-//		// // of the A and B matrices. Therefore, the right amount to request is the
-//		// // maximum of those
-//		// // two numbers.
-//		SHMEM_SZ = std::max(
-//				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
-//						* 2,
-//				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-//						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-//	};
-//	rad::checkFrameworkErrors(cudaFuncSetAttribute(
-//					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-//
-//	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-//			stream1>>>(a_device.data(), b_device.data(), c_device_hw.data(),
-//			d_device_hw.data(), alpha, beta);
+	enum {
+		//  // Compute the right amount of shared memory to request.
+		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+		// // per-CTA chunks
+		// // of the A and B matrices. Therefore, the right amount to request is the
+		// // maximum of those
+		// // two numbers.
+		SHMEM_SZ = std::max(
+				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
+						* 2,
+				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+	};
+	rad::checkFrameworkErrors(cudaFuncSetAttribute(
+					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+			stream1>>>(a_device.data(), b_device.data(), c_device_sw.data(),
+			d_device_hw.data(), alpha, beta);
 
 	cublasHandle_t handle, handle2;
 	rad::checkCublasErrors(cublasCreate(&handle));
@@ -490,9 +490,9 @@ int main(int argc, char **argv) {
 	                           &beta,
 	                           c_device_hw.data(), n);
 
-	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
-			a_device.data(), b_device.data(), c_device_sw.data(), alpha,
-			beta, n, n);
+//	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
+//			a_device.data(), b_device.data(), c_device_sw.data(), alpha,
+//			beta, n, n);
 
 //	rad::checkCublasErrors(cublasCreate(&handle2));
 //	rad::checkCublasErrors(cublasSetStream(handle2, stream2));
@@ -510,7 +510,7 @@ int main(int argc, char **argv) {
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
-	c_device_sw.to_vector(c_host);
+	d_device_hw.to_vector(c_host);
 	c_device_hw.to_vector(d_host);
 //	d_device_hw.to_vector(d_host);
 
