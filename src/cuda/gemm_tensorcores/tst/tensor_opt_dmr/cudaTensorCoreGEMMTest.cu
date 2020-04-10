@@ -478,8 +478,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 	b_vector.resize(M_GLOBAL * M_GLOBAL);
 
 	for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-		a_vector[i] = 1.0; //half(dis(gen));
-		b_vector[i] = 1.0; //half(dis(gen));
+		a_vector[i] = half(dis(gen));
+		b_vector[i] = half(dis(gen));
 
 	}
 
