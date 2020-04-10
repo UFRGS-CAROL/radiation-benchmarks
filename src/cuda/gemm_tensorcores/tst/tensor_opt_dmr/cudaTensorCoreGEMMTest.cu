@@ -455,7 +455,7 @@ int main(int argc, char **argv) {
 	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
 	//TENSOR CORES PARAMETERS
-	enum {
+	/*enum {
 		//  // Compute the right amount of shared memory to request.
 		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
 		// // per-CTA chunks
@@ -479,6 +479,19 @@ int main(int argc, char **argv) {
 					d_device_hw.data(),
 					half(1.0),
 					half(0.0));
+					*/
+	cublasHandle_t handle;
+	half alpha = 1.0;
+	half beta = 0.0;
+	rad::checkCublasErrors(cublasCreate(&handle));
+	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
+	                           n, n, n,
+	                            &alpha,
+	                           a_device.data(), n,
+	                           b_device.data(), n,
+	                           &beta,
+	                           c_device_hw.data(), n);
+
 
 	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
 			a_device.data(), b_device.data(), c_device_sw.data(), half(1.0),
@@ -486,6 +499,7 @@ int main(int argc, char **argv) {
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkCublasErrors(cublasDestroy(handle));
 
 	c_device_sw.to_vector(c_host);
 	d_device_hw.to_vector(d_host);
