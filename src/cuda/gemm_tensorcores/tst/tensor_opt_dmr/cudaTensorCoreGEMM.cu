@@ -423,6 +423,20 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
          relative[i] = __hdiv(lhs[i], rhs[i]);    
     }
 
+    half min = relative[0] ;
+    half max = relative[0] ;
+
+    for (int i = 0; i < size; ++i)
+
+    {
+        if(relative[i] > max)
+            max = relative[i];
+        
+        if(relative[i] < min)
+            min = relative[i];
+    } 
+    printf("MIN == %f || MAX == %f\n", float(min), float(max  );
+
            
 }
 
@@ -439,8 +453,8 @@ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = (half)dis(gen);
-        b_vector[i] = (half)dis(gen);
+        a_vector[i] = 1.0 //(half)dis(gen);
+        b_vector[i] = 1.0 //(half)dis(gen);
     }    
        
 }
@@ -551,23 +565,7 @@ int main(int argc, char **argv){
 
 
     relative_error<<<1,1>>>(c_s.data(), d_h.data(), relErrorDevice.data());
-    relErrorDevice.to_vector(relError);
-
-    
-    
-    half min = relError[0] ;
-    half max = relError[0] ;
-
-    for (int i = 0; i < M_GLOBAL; ++i)
-
-    {
-        if(relError[i] > max)
-            max = relError[i];
-        // If current element is smaller than min
-        if(relError[i] < min)
-            min = relError[i];
-    }   
-    
+    relErrorDevice.to_vector(relError); 
 
     
 
@@ -579,7 +577,7 @@ int main(int argc, char **argv){
     //print first 5 values of each execution 
     for (int i = 0; i < 5; ++i)
     {        
-    	printf("sw  == %f || hw == %f  || min == %f || max == %f \n", float(c[i]), float(d[i]), float(min), float(max));
+    	printf("sw  == %f || hw == %f  \n", float(c[i]), float(d[i]));
 
     }
 
