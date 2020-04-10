@@ -559,7 +559,7 @@ int main(int argc, char **argv){
 
     for (int i = 0; i < 5; i++)
     {
-        printf("Tensor == %f || MxM == %f \n", float(c_host), float(d_host));            
+        printf("Tensor == %f || MxM == %f \n", float(c_host[i]), float(d_host[i]));            
     } 
 
 
