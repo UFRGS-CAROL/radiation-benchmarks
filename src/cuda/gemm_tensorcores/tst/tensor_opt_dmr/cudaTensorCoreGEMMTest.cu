@@ -107,18 +107,6 @@
 // nvcuda::wmma::load_matrix_sync.
 #define SKEW_HALF 8
 
-//#define checkKernelErrors(expr)                             \
-//  do {                                                      \
-//    expr;                                                   \
-//                                                            \
-//    cudaError_t __err = cudaGetLastError();                 \
-//    if (__err != cudaSuccess) {                             \
-//      printf("Line %d: '%s' failed: %s\n", __LINE__, #expr, \
-//             cudaGetErrorString(__err));                    \
-//      abort();                                              \
-//    }                                                       \
-//  } while (0)
-
 #define checkKernelErrors(expr) rad::checkFrameworkErrors(expr);
 
 using namespace nvcuda;
@@ -410,63 +398,6 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 	C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-__global__ void simple_wmma_gemm(half *a, half *b, half *c, half *d, int m_ld,
-		int n_ld, int k_ld, half alpha, half beta) {
-	// Leading dimensions. Packed with no transpositions.
-	int lda = m_ld;
-	int ldb = k_ld;
-	int ldc = n_ld;
-
-	// Tile using a 2D grid
-	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
-	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
-
-	// Declare the fragments
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::row_major> a_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> acc_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
-
-	wmma::fill_fragment(acc_frag, 0.0f);
-
-	// Loop over k
-	for (int i = 0; i < k_ld; i += WMMA_K) {
-		int aCol = i;
-		int aRow = warpM * WMMA_M;
-
-		int bCol = i;
-		int bRow = warpN * WMMA_N;
-
-		// Bounds checking
-		if (aRow < m_ld && aCol < k_ld && bRow < k_ld && bCol < n_ld) {
-			// Load the inputs
-			wmma::load_matrix_sync(a_frag, a + aCol + aRow * lda, lda);
-			wmma::load_matrix_sync(b_frag, b + bCol + bRow * ldb, ldb);
-
-			// Perform the matrix multiplication
-			wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-		}
-	}
-
-	// Load in the current value of c, scale it by beta, and add this our result
-	// scaled by alpha
-	int cCol = warpN * WMMA_N;
-	int cRow = warpM * WMMA_M;
-
-	if (cRow < m_ld && cCol < n_ld) {
-		wmma::load_matrix_sync(c_frag, c + cCol + cRow * ldc, ldc,
-				wmma::mem_row_major);
-
-		for (int i = 0; i < c_frag.num_elements; i++) {
-			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-		}
-
-		// Store the output
-		wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
-				wmma::mem_row_major);
-	}
-}
-
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
 		std::vector<half>& b_vector) {
 
@@ -549,15 +480,6 @@ int main(int argc, char **argv) {
 					half(1.0),
 					half(0.0));
 
-//	simple_wmma_gemm<<<dim_grid, dim_block, 0, stream1>>>(
-//			a_device.data(),
-//			b_device.data(),
-//			c_device_hw.data(),
-//			d_device_hw.data(),
-//			M_GLOBAL,
-//			N_GLOBAL,
-//			K_GLOBAL, half(1.0), half(0.0));
-
 	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
 			a_device.data(), b_device.data(), c_device_sw.data(), half(1.0),
 			half(0.0), n, n);
@@ -580,7 +502,7 @@ int main(int argc, char **argv) {
 	for (auto i = 0; i < c_host.size(); i++) {
 		auto hw = float(d_host[i]);
 		auto sw = float(c_host[i]);
-		auto diff = fabs(hw - sw);
+		auto diff = fabs(hw - sw) / sw;
 		if (diff > 0.005) {
 			std::cout << "I: " << i << " hw " << hw << " sw " << sw
 					<< std::endl;
