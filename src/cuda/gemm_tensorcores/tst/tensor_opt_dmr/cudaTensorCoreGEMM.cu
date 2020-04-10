@@ -450,8 +450,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
 
 #pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = ((half) rand()) / (half) RAND_MAX; //half(dis(gen));
-        b_vector[i] = ((half) rand()) / (half) RAND_MAX; //half(dis(gen));
+        a_vector[i] = half(rand() % 1) ; //half(dis(gen));
+        b_vector[i] = half(rand() % 1) ; //half(dis(gen));
 
     }    
        
@@ -468,6 +468,10 @@ int main(int argc, char **argv){
     std::vector<half> a(size, 0), b(size, 0), c(size, 0), d(size, 0), relError(size, 0);    
     generate_input_matrices (a, b);
 
+    for (int i = 0; i < 5; ++i)
+    {
+        std::cout << "a ==  " << float(a[i])  << " b === " << float(b[i]) << std::endl; 
+    }
     //device matrices  - a,b,c duplicated 
     rad::DeviceVector<half> a_s = a;
     rad::DeviceVector<half> b_s = b;
