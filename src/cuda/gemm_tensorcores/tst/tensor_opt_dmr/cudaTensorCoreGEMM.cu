@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <random>
 #include <algorithm>
+#include <stdlib.h>
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
