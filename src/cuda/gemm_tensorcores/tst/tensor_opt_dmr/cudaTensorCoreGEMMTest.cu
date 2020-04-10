@@ -395,7 +395,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
+	C[index] = alpha * Csub + beta * C[index];
 }
 
 __host__ void generate_input_matrices(std::vector<half>& a_vector,
@@ -458,37 +458,37 @@ int main(int argc, char **argv) {
 	half beta = 0.0;
 
 	//TENSOR CORES PARAMETERS
-	enum {
-		//  // Compute the right amount of shared memory to request.
-		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-		// // per-CTA chunks
-		// // of the A and B matrices. Therefore, the right amount to request is the
-		// // maximum of those
-		// // two numbers.
-		SHMEM_SZ = std::max(
-				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
-						* 2,
-				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-	};
-	rad::checkFrameworkErrors(cudaFuncSetAttribute(
-					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+//	enum {
+//		//  // Compute the right amount of shared memory to request.
+//		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+//		// // per-CTA chunks
+//		// // of the A and B matrices. Therefore, the right amount to request is the
+//		// // maximum of those
+//		// // two numbers.
+//		SHMEM_SZ = std::max(
+//				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
+//						* 2,
+//				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+//						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+//	};
+//	rad::checkFrameworkErrors(cudaFuncSetAttribute(
+//					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+//
+//	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+//			stream1>>>(a_device.data(), b_device.data(), c_device_hw.data(),
+//			d_device_hw.data(), alpha, beta);
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			stream1>>>(a_device.data(), b_device.data(), c_device_hw.data(),
-			d_device_hw.data(), alpha, beta);
-
-//	cublasHandle_t handle, handle2;
-//	rad::checkCublasErrors(cublasCreate(&handle));
-//	rad::checkCublasErrors(cublasSetStream(handle, stream1));
-//	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
-//	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-//	                           n, n, n,
-//	                            &alpha,
-//	                           a_device.data(), n,
-//	                           b_device.data(), n,
-//	                           &beta,
-//	                           c_device_hw.data(), n);
+	cublasHandle_t handle, handle2;
+	rad::checkCublasErrors(cublasCreate(&handle));
+	rad::checkCublasErrors(cublasSetStream(handle, stream1));
+	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
+	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
+	                           n, n, n,
+	                            &alpha,
+	                           a_device.data(), n,
+	                           b_device.data(), n,
+	                           &beta,
+	                           c_device_hw.data(), n);
 
 	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
 			a_device.data(), b_device.data(), c_device_sw.data(), alpha,
@@ -505,14 +505,14 @@ int main(int argc, char **argv) {
 //		                           &beta,
 //		                           c_device_sw.data(), n);
 //
-//	rad::checkCublasErrors(cublasDestroy(handle));
+	rad::checkCublasErrors(cublasDestroy(handle));
 //	rad::checkCublasErrors(cublasDestroy(handle2));
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	c_device_sw.to_vector(c_host);
-//	c_device_hw.to_vector(d_host);
-	d_device_hw.to_vector(d_host);
+	c_device_hw.to_vector(d_host);
+//	d_device_hw.to_vector(d_host);
 
 	rad::checkFrameworkErrors(cudaEventRecord(stop));
 	rad::checkFrameworkErrors(cudaEventSynchronize(stop));
