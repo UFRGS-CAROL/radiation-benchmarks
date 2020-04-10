@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <random>
 #include <algorithm>
-#include <stdlib.h>
+
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
@@ -441,7 +441,7 @@ __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
     
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-        relative[i] = half(__fdividef(float(lhs[i]), float(rhs[i]))); //__hdiv(lhs[i], rhs[i]);
+        relative[i] = __hdiv(lhs[i], rhs[i]);
    
     }
 }
@@ -457,10 +457,9 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
     b_vector.resize(M_GLOBAL * M_GLOBAL);
     
 
-#pragma omp parallel for
     for (int i = 0; i < M_GLOBAL * M_GLOBAL; i++) {
-        a_vector[i] = half(dis(gen));
-        b_vector[i] = half(dis(gen));
+        a_vector[i]= half(dis(gen));
+        b_vector[i] =half(dis(gen));
 
     }    
        
