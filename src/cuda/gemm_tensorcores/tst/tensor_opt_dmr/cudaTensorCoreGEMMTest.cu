@@ -379,7 +379,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 		// each thread computes one element
 		// of the block sub-matrix
 #pragma unroll
-		for (int k = 0; k < BLOCK_SIZE / 2; ++k) {
+		for (int k = 0; k < BLOCK_SIZE; k += 2) {
 			auto a = __halves2half2(As[ty][k], As[ty][k + 1]);
 			auto b = __halves2half2(Bs[k][tx], Bs[k + 1][tx]);
 			Csub_h2 = __hfma2(a, b, Csub_h2);
@@ -422,15 +422,16 @@ int main(int argc, char **argv) {
 	std::cout << "Size " << n << " elements " << size << std::endl;
 
 	//host inputs
-	std::vector<half> a_host(size, 0), b_host(size, 0), c_host(size, 0), d_host(
-			size, 0), relError(size, 0), relMinMax(2, 0);
+	std::vector<half> a_host(size, 0);
+	std::vector<half> b_host(size, 0);
+	std::vector<half> c_host(size, 0);
+	std::vector<half> d_host(size, 0);
 	generate_input_matrices(a_host, b_host);
 
 	//device matrices
 	rad::DeviceVector<half> a_device = a_host;
 	rad::DeviceVector<half> b_device = b_host;
 	rad::DeviceVector<half> c_device_sw = c_host;
-
 	rad::DeviceVector<half> c_device_hw = c_host;
 	rad::DeviceVector<half> d_device_hw = d_host;
 
@@ -453,9 +454,11 @@ int main(int argc, char **argv) {
 	int dev = 0;
 	cudaDeviceProp deviceProp;
 	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
+	half alpha = 1.0;
+	half beta = 0.0;
 
 	//TENSOR CORES PARAMETERS
-	/*enum {
+	enum {
 		//  // Compute the right amount of shared memory to request.
 		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
 		// // per-CTA chunks
@@ -471,52 +474,45 @@ int main(int argc, char **argv) {
 	rad::checkFrameworkErrors(cudaFuncSetAttribute(
 					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm
-			<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ, stream1>>>(
-					a_device.data(),
-					b_device.data(),
-					c_device_hw.data(),
-					d_device_hw.data(),
-					half(1.0),
-					half(0.0));
-					*/
-	cublasHandle_t handle, handle2;
-	half alpha = 1.0;
-	half beta = 0.0;
-	rad::checkCublasErrors(cublasCreate(&handle));
-	rad::checkCublasErrors(cublasSetStream(handle, stream1));
-	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
-	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-	                           n, n, n,
-	                            &alpha,
-	                           a_device.data(), n,
-	                           b_device.data(), n,
-	                           &beta,
-	                           c_device_hw.data(), n);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+			stream1>>>(a_device.data(), b_device.data(), c_device_hw.data(),
+			d_device_hw.data(), alpha, beta);
 
+//	cublasHandle_t handle, handle2;
+//	rad::checkCublasErrors(cublasCreate(&handle));
+//	rad::checkCublasErrors(cublasSetStream(handle, stream1));
+//	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
+//	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
+//	                           n, n, n,
+//	                            &alpha,
+//	                           a_device.data(), n,
+//	                           b_device.data(), n,
+//	                           &beta,
+//	                           c_device_hw.data(), n);
 
-//	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
-//			a_device.data(), b_device.data(), c_device_sw.data(), half(1.0),
-//			half(0.0), n, n);
+	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
+			a_device.data(), b_device.data(), c_device_sw.data(), alpha,
+			beta, n, n);
 
-	rad::checkCublasErrors(cublasCreate(&handle2));
-	rad::checkCublasErrors(cublasSetStream(handle2, stream2));
-	rad::checkCublasErrors(cublasSetMathMode(handle2, CUBLAS_DEFAULT_MATH));
-	cublasHgemm(handle2, CUBLAS_OP_N, CUBLAS_OP_N,
-		                           n, n, n,
-		                            &alpha,
-		                           a_device.data(), n,
-		                           b_device.data(), n,
-		                           &beta,
-		                           c_device_sw.data(), n);
+//	rad::checkCublasErrors(cublasCreate(&handle2));
+//	rad::checkCublasErrors(cublasSetStream(handle2, stream2));
+//	rad::checkCublasErrors(cublasSetMathMode(handle2, CUBLAS_DEFAULT_MATH));
+//	cublasHgemm(handle2, CUBLAS_OP_N, CUBLAS_OP_N,
+//		                           n, n, n,
+//		                            &alpha,
+//		                           a_device.data(), n,
+//		                           b_device.data(), n,
+//		                           &beta,
+//		                           c_device_sw.data(), n);
+//
+//	rad::checkCublasErrors(cublasDestroy(handle));
+//	rad::checkCublasErrors(cublasDestroy(handle2));
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
-	rad::checkCublasErrors(cublasDestroy(handle));
-	rad::checkCublasErrors(cublasDestroy(handle2));
-
 	c_device_sw.to_vector(c_host);
-	c_device_hw.to_vector(d_host);
+//	c_device_hw.to_vector(d_host);
+	d_device_hw.to_vector(d_host);
 
 	rad::checkFrameworkErrors(cudaEventRecord(stop));
 	rad::checkFrameworkErrors(cudaEventSynchronize(stop));
