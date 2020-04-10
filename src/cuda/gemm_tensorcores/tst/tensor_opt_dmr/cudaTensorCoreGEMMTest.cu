@@ -500,6 +500,8 @@ int main(int argc, char **argv) {
 	//Tensor
 	cublas(a_device, b_device, c_device_cublas_tensor, alpha, beta, n, CUBLAS_TENSOR_OP_MATH);
 
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	//MXM
 	//Software
 	mxm_no_tensor(a_device, b_device, c_device_mxm_sw, alpha, beta, n);
