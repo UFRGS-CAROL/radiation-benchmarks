@@ -443,8 +443,8 @@ __host__ void generate_input_matrices(std::vector<half>& a_vector,
     // std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     // std::uniform_real_distribution<float> dis(0.000001, 1.0);
 
-    // a_vector.resize(M_GLOBAL * M_GLOBAL);
-    // b_vector.resize(M_GLOBAL * M_GLOBAL);
+    a_vector.resize(M_GLOBAL * M_GLOBAL);
+    b_vector.resize(M_GLOBAL * M_GLOBAL);
     
 
 #pragma omp parallel for
