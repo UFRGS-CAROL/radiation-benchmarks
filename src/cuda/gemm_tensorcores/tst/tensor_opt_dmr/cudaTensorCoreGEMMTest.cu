@@ -484,6 +484,8 @@ int main(int argc, char **argv) {
 	half alpha = 1.0;
 	half beta = 0.0;
 	rad::checkCublasErrors(cublasCreate(&handle));
+	rad::checkCublasErrors(cublasSetStream(handle, stream1));
+	rad::checkCublasErrors(cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH));
 	cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
 	                           n, n, n,
 	                            &alpha,
