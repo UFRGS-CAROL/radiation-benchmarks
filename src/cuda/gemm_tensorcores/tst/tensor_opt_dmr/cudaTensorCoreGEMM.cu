@@ -44,9 +44,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 8 // 256 //512 // 128 for 2k, 512 for 8k etc 
-#define N_TILES 8 // 256 //512 //
-#define K_TILES 8 // 256 //512 //
+#define M_TILES 256 //512 // 128 for 2k, 512 for 8k etc 
+#define N_TILES 256 //512 //
+#define K_TILES 256 //512 //
 
 
 #define M_GLOBAL (M * M_TILES)
