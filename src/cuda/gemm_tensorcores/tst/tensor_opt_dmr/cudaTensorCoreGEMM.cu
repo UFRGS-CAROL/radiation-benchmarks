@@ -481,10 +481,12 @@ __global__ void simple_wmma_gemm(half *a, half *b, half *c, half *d, int m_ld,
 
 __global__ void relative_error(half *lhs, half *rhs, half *relative, half *minMax) {
 
+
+    relative[0] = __hdiv(lhs[0], rhs[0]);
     half min = relative[0] ;
     half max = relative[0] ;
     
-    for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
+    for (int i = 1; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
         relative[i] = __hdiv(lhs[i], rhs[i]);
 
