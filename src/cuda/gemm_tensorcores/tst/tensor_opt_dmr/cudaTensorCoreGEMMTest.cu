@@ -513,50 +513,53 @@ int main(int argc, char **argv) {
 	checkKernelErrors(cudaStreamCreate(&stream1));
 	checkKernelErrors(cudaStreamCreate(&stream2));
 
-	int dev = 0;
-	cudaDeviceProp deviceProp;
-	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
-
-	//  //TENSOR CORES PARAMETERS
-	//  enum {
-	//  //  // Compute the right amount of shared memory to request.
-	//  // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-	//  // // per-CTA chunks
-	//  // // of the A and B matrices. Therefore, the right amount to request is the
-	//  // // maximum of those
-	//  // // two numbers.
-	//  SHMEM_SZ = MAX(
-	//      sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-	//      M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-	//         (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-	//  };
-	// rad::checkFrameworkErrors(cudaFuncSetAttribute(
-	//     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-
-	// checkKernelErrors(
-	//      (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-	//                    SHMEM_SZ, stream1>>>(a.data(), b.data(), c_h.data(), d_h.data(), half(1.0), half(0.0))));
-
 	// SW MXM PARAMETERS
 	uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	auto dim_grid = dim3(grid_cols, grid_rows);
 	auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
-	simple_wmma_gemm<<<dim_grid, dim_block, 0, stream1>>>(
-			a_device.data(),
-			b_device.data(),
-			c_device_hw.data(),
-			d_device_hw.data(),
-			M_GLOBAL,
-			N_GLOBAL,
-			K_GLOBAL, half(1.0), half(0.0));
+	int dev = 0;
+	cudaDeviceProp deviceProp;
+	rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
+
+	//TENSOR CORES PARAMETERS
+	enum {
+		//  // Compute the right amount of shared memory to request.
+		// // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+		// // per-CTA chunks
+		// // of the A and B matrices. Therefore, the right amount to request is the
+		// // maximum of those
+		// // two numbers.
+		SHMEM_SZ = std::max(
+				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
+						* 2,
+				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+	};
+	rad::checkFrameworkErrors(cudaFuncSetAttribute(
+					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+
+	compute_gemm
+			<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ, stream1>>>(
+					a_device.data(),
+					b_device.data(),
+					c_device_hw.data(),
+					d_device_hw.data(),
+					half(1.0),
+					half(0.0));
+
+//	simple_wmma_gemm<<<dim_grid, dim_block, 0, stream1>>>(
+//			a_device.data(),
+//			b_device.data(),
+//			c_device_hw.data(),
+//			d_device_hw.data(),
+//			M_GLOBAL,
+//			N_GLOBAL,
+//			K_GLOBAL, half(1.0), half(0.0));
 
 	matrix_mult_kernel_unhardened<<<dim_grid, dim_block, 0, stream2>>>(
-			a_device.data(),
-			b_device.data(),
-			c_device_sw.data(),
-			half(1.0),
+			a_device.data(), b_device.data(), c_device_sw.data(), half(1.0),
 			half(0.0), n, n);
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
