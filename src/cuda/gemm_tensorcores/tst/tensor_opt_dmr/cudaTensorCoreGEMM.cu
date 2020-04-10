@@ -418,29 +418,22 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 __global__ void relative_error(half *lhs, half *rhs, half *relative ) {
+
+    half min = relative[0] ;
+    half max = relative[0] ;
     for (int i = 0; i < M_GLOBAL * M_GLOBAL ; ++i)
     {
-        relative[i] = __hdiv(lhs[i], rhs[i]);    
+        relative[i] = __hdiv(lhs[i], rhs[i]);
+        
+        if(relative[i] > max)
+            max = relative[i];
+        
+        if(relative[i] < min)
+            min = relative[i]    
     }
 
-   //  half min = relative[0] ;
-   //  half max = relative[0] ;
-
-
-   //  for (int i = 0; i < M_GLOBAL * M_GLOBAL; ++i)
-   // {
-   //      if(relative[i] > max)
-   //          max = relative[i];
-        
-   //      if(relative[i] < min)
-   //          min = relative[i];
-   //  } 
-
    // printf("MIN == %f || MAX == %f\n", float(min), float(max));  
-   
-
-
-           
+              
 }
 
 void generate_input_matrices(std::vector<half>& a_vector,
