@@ -461,10 +461,8 @@ void mxm_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
 		// // maximum of those
 		// // two numbers.
 		SHMEM_SZ = MAX(
-				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
-						* 2,
-				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N * (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
 	};
 	rad::checkFrameworkErrors(
 			cudaFuncSetAttribute(compute_gemm,
@@ -527,10 +525,13 @@ int main(int argc, char **argv) {
 		auto mxm_tensor = float(output_mxm_hw[i]);
 		auto mxm_default = float(output_mxm_sw[i]);
 
-		auto diff = fabs(mxm_tensor - cublas_default) / cublas_default;
+		auto diff = fabs(mxm_tensor - cublas_tensor) / cublas_tensor;
 		if (diff > 0.005) {
-			std::cout << "I: " << i << " hw " << cublas_default << " sw "
-					<< mxm_tensor << std::endl;
+			std::cout << "I: " << i;
+			std::cout << " mxm_tensor " << mxm_tensor << " cublas_tensor "
+					<< cublas_tensor;
+			std::cout << " mxm_default " << mxm_default << " cublas_default "
+					<< cublas_default << std::endl;
 		}
 	}
 
