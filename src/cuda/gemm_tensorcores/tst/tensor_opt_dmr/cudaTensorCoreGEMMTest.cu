@@ -443,6 +443,8 @@ void mxm_no_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
 			c.data(), alpha, beta, n, n);
 }
 
+#define MAX(a,b) ((a > b) ? a:b)
+
 template<typename T>
 void mxm_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
 		rad::DeviceVector<T>& c, rad::DeviceVector<T>& d, T alpha, T beta,
@@ -458,14 +460,15 @@ void mxm_tensor(const rad::DeviceVector<T>& a, const rad::DeviceVector<T>& b,
 		// // of the A and B matrices. Therefore, the right amount to request is the
 		// // maximum of those
 		// // two numbers.
-		SHMEM_SZ = std::max(
+		SHMEM_SZ = MAX(
 				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
 						* 2,
 				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
 						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
 	};
-	rad::checkFrameworkErrors(cudaFuncSetAttribute(
-					compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+	rad::checkFrameworkErrors(
+			cudaFuncSetAttribute(compute_gemm,
+					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
 	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(
 			a.data(), b.data(), c.data(), d.data(), alpha, beta);
@@ -490,15 +493,16 @@ int main(int argc, char **argv) {
 	rad::DeviceVector<half> c_device_mxm_hw(size, 0);
 	rad::DeviceVector<half> d_device_mxm_hw(size, 0);
 
-
 	half alpha = 1.0;
 	half beta = 0.0;
 
 	//---- CUBLAS
 	//Software
-	cublas(a_device, b_device, c_device_cublas_default, alpha, beta, n, CUBLAS_DEFAULT_MATH);
+	cublas(a_device, b_device, c_device_cublas_default, alpha, beta, n,
+			CUBLAS_DEFAULT_MATH);
 	//Tensor
-	cublas(a_device, b_device, c_device_cublas_tensor, alpha, beta, n, CUBLAS_TENSOR_OP_MATH);
+	cublas(a_device, b_device, c_device_cublas_tensor, alpha, beta, n,
+			CUBLAS_TENSOR_OP_MATH);
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
@@ -506,7 +510,8 @@ int main(int argc, char **argv) {
 	//Software
 	mxm_no_tensor(a_device, b_device, c_device_mxm_sw, alpha, beta, n);
 	//Tensor
-	mxm_tensor(a_device, b_device, c_device_mxm_hw, d_device_mxm_hw, alpha, beta, n);
+	mxm_tensor(a_device, b_device, c_device_mxm_hw, d_device_mxm_hw, alpha,
+			beta, n);
 
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
@@ -524,8 +529,8 @@ int main(int argc, char **argv) {
 
 		auto diff = fabs(mxm_tensor - cublas_default) / cublas_default;
 		if (diff > 0.005) {
-			std::cout << "I: " << i << " hw " << cublas_default << " sw " << mxm_tensor
-					<< std::endl;
+			std::cout << "I: " << i << " hw " << cublas_default << " sw "
+					<< mxm_tensor << std::endl;
 		}
 	}
 
