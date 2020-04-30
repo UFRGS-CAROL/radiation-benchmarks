@@ -5,6 +5,7 @@ NVCC=/usr/local/cuda/bin/nvcc
 FORJETSON=0
 TYPE=fma
 PRECISION=single
+TMRMEM=0
 
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -39,7 +40,14 @@ NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
 endif
 
 SOURCES=./cuda_trip_micro.cu
+
+ifeq ($(TMRMEM), 1)
 EXEC_RADIX=./cuda_trip_micro-
+NVCC_FLAGS+= -DTMRMEM=1
+else
+EXEC_RADIX=./cuda_micro-
+endif 
+
 EXEC=$(EXEC_RADIX)$(LOWERCASED_TYPE)_$(LOWERCASED_PRECISION)
 
 all: $(EXEC)
@@ -50,7 +58,9 @@ check-benchtype:
 	test $(PRECISION)
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -Dtest_type_$(LOWERCASED_TYPE) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) \
+			-DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -Dtest_type_$(LOWERCASED_TYPE) \
+			-O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
 clean:
 	rm -rf $(EXEC_RADIX)*

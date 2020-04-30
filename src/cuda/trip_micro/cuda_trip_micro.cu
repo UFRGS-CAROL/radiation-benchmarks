@@ -262,12 +262,20 @@ __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, 
 	
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #elif defined(test_precision_half)
 	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #endif
 }
 
@@ -309,12 +317,20 @@ __global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, 
 	
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #elif defined(test_precision_half)
 	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #endif
 }
 
@@ -356,12 +372,20 @@ __global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0, tested_type *d_R1, 
 	
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #elif defined(test_precision_half)
 	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+
+#ifdef TMRMEM
 	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+
 #endif
 }
 
@@ -373,16 +397,20 @@ void usage(int argc, char* argv[]) {
 // Set votedOutput pointer to retrieve the voted matrix
 bool checkOutputErrors() {
 	int host_errors = 0;
+#ifdef TMRMEM
 	int memory_errors = 0;
+#endif
 
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < r_size; i++) {
 		register bool checkFlag = true;
 		register tested_type_host valGold = tested_type_host(OUTPUT_R);
 		register tested_type_host valOutput0 = R[0][i];
+		register tested_type_host valOutput = valOutput0;
+#ifdef TMRMEM
+
 		register tested_type_host valOutput1 = R[1][i];
 		register tested_type_host valOutput2 = R[2][i];
-		register tested_type_host valOutput = valOutput0;
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #pragma omp critical
 			{
@@ -438,6 +466,8 @@ bool checkOutputErrors() {
 				valOutput = valOutput0;
 			}
 		}
+#endif
+
 		// if ((fabs((tested_type_host)(valOutput-OUTPUT_R)/OUTPUT_R) > 1e-10)||(fabs((tested_type_host)(valOutput-OUTPUT_R)/OUTPUT_R) > 1e-10)) {
 		if (valGold != valOutput) {
 			if (checkFlag) {
