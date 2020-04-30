@@ -204,20 +204,26 @@ void* safe_cudaMalloc(size_t size) {
 
 void allocCudaMemory() {
 	d_R[0] = (tested_type*) safe_cudaMalloc(r_size * sizeof(tested_type));
+#ifdef TMRMEM
 	d_R[1] = (tested_type*) safe_cudaMalloc(r_size * sizeof(tested_type));
 	d_R[2] = (tested_type*) safe_cudaMalloc(r_size * sizeof(tested_type));
+#endif
 }
 
 void freeCudaMemory() {
 	checkFrameworkErrors(cudaFree(d_R[0]));
+#ifdef TMRMEM
 	checkFrameworkErrors(cudaFree(d_R[1]));
 	checkFrameworkErrors(cudaFree(d_R[2]));
+#endif
 }
 
 void setCudaMemory() {
 	checkFrameworkErrors(cudaMemset(d_R[0], 0x00, r_size * sizeof(tested_type)));
+#ifdef TMRMEM
 	checkFrameworkErrors(cudaMemset(d_R[1], 0x00, r_size * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMemset(d_R[2], 0x00, r_size * sizeof(tested_type)));
+#endif
 }
 
 __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
@@ -627,7 +633,7 @@ int main(int argc, char* argv[]) {
 		checkFrameworkErrors(
 				cudaMemcpy(R[0], d_R[0], r_size * sizeof(tested_type),
 						cudaMemcpyDeviceToHost));
-
+#ifdef TMRMEM
 		checkFrameworkErrors(
 				cudaMemcpy(R[1], d_R[1], r_size * sizeof(tested_type),
 						cudaMemcpyDeviceToHost));
@@ -635,7 +641,7 @@ int main(int argc, char* argv[]) {
 		checkFrameworkErrors(
 				cudaMemcpy(R[2], d_R[2], r_size * sizeof(tested_type),
 						cudaMemcpyDeviceToHost));
-						
+#endif
 		checkOutputErrors();
 		//====================================
 
