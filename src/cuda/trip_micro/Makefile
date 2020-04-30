@@ -1,5 +1,5 @@
-OPS?=1000000000
-
+#OPS?=1000000000
+OPS=100000000
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 FORJETSON=0
