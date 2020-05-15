@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# No half operations
+export TORCH_NVCC_FLAGS="-D__CUDA_NO_HALF_OPERATORS__"
+
 SKIP_RC=0
 BATCH_INSTALL=0
 
@@ -122,6 +125,7 @@ cd ${THIS_DIR}/pkg/dok       && $PREFIX/bin/luarocks make rocks/dok-scm-1.rocksp
 cd ${THIS_DIR}/exe/trepl     && $PREFIX/bin/luarocks make trepl-scm-1.rockspec         || exit 1
 cd ${THIS_DIR}/pkg/sys       && $PREFIX/bin/luarocks make sys-1.1-0.rockspec           || exit 1
 cd ${THIS_DIR}/pkg/xlua      && $PREFIX/bin/luarocks make xlua-1.0-0.rockspec          || exit 1
+cd ${THIS_DIR}/extra/moses   && $PREFIX/bin/luarocks make rockspec/moses-1.6.1-1.rockspec || exit 1
 cd ${THIS_DIR}/extra/nn      && $PREFIX/bin/luarocks make rocks/nn-scm-1.rockspec      || exit 1
 cd ${THIS_DIR}/extra/graph   && $PREFIX/bin/luarocks make rocks/graph-scm-1.rockspec   || exit 1
 cd ${THIS_DIR}/extra/nngraph && $PREFIX/bin/luarocks make nngraph-scm-1.rockspec       || exit 1

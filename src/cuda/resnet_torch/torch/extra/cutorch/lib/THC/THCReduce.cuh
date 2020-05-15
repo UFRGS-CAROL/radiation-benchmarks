@@ -27,7 +27,7 @@ template <typename ModifyOp,
           typename IndexType,
           int ADims, int BDims>
 #if __CUDA_ARCH__ >= 350
-__launch_bounds__(32 * 16, 4)
+C10_LAUNCH_BOUNDS_2(32 * 16, 4)
 #endif
 __global__ void
 kernelReduceNoncontigDim_shared(TensorInfo<T, IndexType> out,
@@ -120,7 +120,7 @@ template <typename ModifyOp,
           typename IndexType,
           int ADims, int BDims>
 #if __CUDA_ARCH__ >= 350
-__launch_bounds__(32 * 16, 4)
+C10_LAUNCH_BOUNDS_2(32 * 16, 4)
 #endif
 __global__ void
 kernelReduceNoncontigDim(TensorInfo<T, IndexType> out,

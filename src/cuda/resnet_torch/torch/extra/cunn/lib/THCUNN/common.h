@@ -82,4 +82,15 @@ inline int GET_BLOCKS(const int N)
     THArgCheck(COND, ARG, FORMAT, s1.str);           \
   }
 
+
+#if CUDA_VERSION >= 9000
+#define  THCUNN_SHFL(value, laneMask, width)      __shfl_sync(0xffffffff, value, laneMask, width)
+#define  THCUNN_SHFL_XOR(value, laneMask, width)  __shfl_xor_sync(0xffffffff, value, laneMask, width)
+#define  THCUNN_ANY(value)                        __any_sync(0xffffffff, value)
+#else
+#define  THCUNN_SHFL(value, laneMask, width)      __shfl(value, laneMask, width)
+#define  THCUNN_SHFL_XOR(value, laneMask, width)  __shfl_xor(value, laneMask, width)
+#define  THCUNN_ANY(value)                        __any(value)
+#endif
+
 #endif
