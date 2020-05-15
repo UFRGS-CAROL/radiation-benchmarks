@@ -1,10 +1,2 @@
-/home/carol/radiation-benchmarks/scripts/json_files/cudaACCL.json
-/home/carol/radiation-benchmarks/scripts/json_files/cudaBFS.json
-/home/carol/radiation-benchmarks/scripts/json_files/cudaGaussian.json
-/home/carol/radiation-benchmarks/scripts/json_files/cuda_lava.json
-/home/carol/radiation-benchmarks/scripts/json_files/cudaLUD.json
+/home/carol/radiation-benchmarks/scripts/json_files/cudaMicro.json
 /home/carol/radiation-benchmarks/scripts/json_files/cudaMicroIntLDST.json
-/home/carol/radiation-benchmarks/scripts/json_files/cudaPathFinder.json
-/home/carol/radiation-benchmarks/scripts/json_files/mergesort.json
-/home/carol/radiation-benchmarks/scripts/json_files/nw.json
-/home/carol/radiation-benchmarks/scripts/json_files/quicksort.json

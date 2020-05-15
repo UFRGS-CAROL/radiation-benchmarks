@@ -111,7 +111,7 @@ static bool set_countains(std::vector<int> check, std::vector<std::vector<int> >
 }
 #endif //CXX
 
-static double mysecond() {
+double mysecond() {
     struct timeval tp;
     struct timezone tzp;
     gettimeofday(&tp, &tzp);

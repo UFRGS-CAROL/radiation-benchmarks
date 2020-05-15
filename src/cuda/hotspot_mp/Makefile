@@ -13,6 +13,7 @@ CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
 ARCH= -gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35]	# 
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
 NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11

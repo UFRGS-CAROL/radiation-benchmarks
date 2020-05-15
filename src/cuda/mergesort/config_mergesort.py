@@ -10,7 +10,7 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [134217728]
 ITERATIONS = int(1e9)
-BUILDPROFILER = 1
+BUILDPROFILER = 0
 
 
 def config(board, debug):
