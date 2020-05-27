@@ -6,6 +6,7 @@ FORJETSON=0
 TYPE=fma
 PRECISION=single
 TMRMEM=0
+BUILDPROFILER=1
 
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -32,13 +33,6 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/,../common
 LOGHELPER_LIB=../../include/,../common/lib
 
-ifeq ($(FORJETSON), 1)
-NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
-else
-NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
-
-endif
-
 SOURCES=./cuda_trip_micro.cu
 
 ifeq ($(TMRMEM), 1)
@@ -47,6 +41,16 @@ NVCC_FLAGS+= -DTMRMEM=1
 else
 EXEC_RADIX=./cuda_micro-
 endif 
+
+ifeq ($(BUILDPROFILER), 1)
+
+ifeq ($(FORJETSON), 1)
+NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
+else
+NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+endif
+
+endif
 
 EXEC=$(EXEC_RADIX)$(LOWERCASED_TYPE)_$(LOWERCASED_PRECISION)
 
