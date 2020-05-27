@@ -29,7 +29,7 @@ __device__ __forceinline__ bool warpHasCollision(int val)
   #pragma unroll
   for (int i = 1; i <= 16; i++)
   {
-    dup |= (__shfl(val, (laneId + i) % 32) == val);
+    dup |= (THCUNN_SHFL(val, (laneId + i) % 32, WARP_SIZE) == val);
   }
 
 #else
@@ -46,7 +46,7 @@ __device__ __forceinline__ bool warpHasCollision(int val)
 
 #endif
 
-  return __any(dup) != 0;
+  return THCUNN_ANY(dup) != 0;
 }
 
 template <typename Dtype>

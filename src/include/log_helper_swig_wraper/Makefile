@@ -10,7 +10,7 @@ CXX = g++
 CC = gcc
 SWIG = swig
 
-LUA_INCLUDE?=-I/usr/include/lua5.1
+LUA_INCLUDE?=-I/usr/include/lua5.1 -I/home/carol/radiation-benchmarks/src/cuda/resnet_torch/torch_old/install/include
 LUA_LIB?=-L/usr/lib/lua5.1
 
 PYTHON_INCLUDE=/usr/include/python2.7/

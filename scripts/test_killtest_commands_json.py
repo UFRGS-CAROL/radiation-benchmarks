@@ -19,7 +19,7 @@ timestampMaxDiff = 30 # Time in seconds to wait for the timestamp update
 
 maxKill = 5 # Max number of kills allowed
 
-timeWindowCommand = 10 # * 60 * 60 # How long each command will execute, time window in seconds
+timeWindowCommand = 60 * 10 # How long each command will execute, time window in seconds
 
 # Log messages adding timestamp before the message
 def logMsg(msg):

@@ -94,6 +94,7 @@ static inline __device__ void atomicAdd(long *address, long val) {
 }
 
 #ifdef CUDA_HALF_TENSOR
+#if !(__CUDA_ARCH__ >= 700 || !defined(__CUDA_ARCH__) )
 static inline  __device__ void atomicAdd(half *address, half val) {
   unsigned int * address_as_ui =
       (unsigned int *) ((char *)address - ((size_t)address & 2));
@@ -116,6 +117,7 @@ static inline  __device__ void atomicAdd(half *address, half val) {
     old = atomicCAS(address_as_ui, assumed, old);
    } while (assumed != old);
 }
+#endif
 #endif
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 600 || CUDA_VERSION < 8000)

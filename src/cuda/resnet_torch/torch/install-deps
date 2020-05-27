@@ -175,8 +175,12 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             echo "Some portion of the update is failed"
         fi
         # python-software-properties is required for apt-add-repository
-        sudo apt-get install -y python-software-properties
         echo "==> Found Ubuntu version ${ubuntu_major_version}.xx"
+	if [[ $ubuntu_major_version -lt '18' ]]; then
+            sudo apt-get install -y python-software-properties
+	else
+	    sudo apt-get install -y software-properties-common
+	fi
         if [[ $ubuntu_major_version -lt '12' ]]; then
             echo '==> Ubuntu version not supported.'
             exit 1
@@ -288,12 +292,12 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             ipython qt4 qt5-webkit || exit 1
         pacman -Sl multilib &>/dev/null
         if [[ $? -ne 0 ]]; then
-            gcc_package="gcc"
+            multilib=
         else
-            gcc_package="gcc-multilib"
+            multilib=-multilib
         fi
         sudo pacman -S --quiet --noconfirm --needed \
-            ${gcc_package} gcc-fortran || exit 1
+            gcc${multilib} gcc-fortran${multilib} || exit 1
         # if openblas is not installed yet
         pacman -Qs openblas &> /dev/null
         if [[ $? -ne 0 ]]; then
@@ -312,17 +316,9 @@ elif [[ "$(uname)" == 'Linux' ]]; then
                                 qt-devel qtwebkit-devel sox-plugins-freeworld \
                                 ipython
             install_openblas || true
-        elif [[ $fedora_major_version == '22' ||  $fedora_major_version == '23' ]]; then
+        elif [[ $fedora_major_version -ge '22' ||  $fedora_major_version -le '26' ]]; then
             #using dnf - since yum has been deprecated
             #sox-plugins-freeworld is not yet available in repos for F22
-            sudo dnf install -y make cmake curl readline-devel ncurses-devel \
-                                gcc-c++ gcc-gfortran git gnuplot unzip \
-                                libjpeg-turbo-devel libpng-devel \
-                                ImageMagick GraphicsMagick-devel fftw-devel \
-                                sox-devel sox qt-devel qtwebkit-devel \
-                                python-ipython czmq czmq-devel
-            install_openblas || true
-        elif [[ $fedora_major_version == '24' ||  $fedora_major_version == '25' ]]; then
             sudo dnf install -y make cmake curl readline-devel ncurses-devel \
                                 gcc-c++ gcc-gfortran git gnuplot unzip \
                                 libjpeg-turbo-devel libpng-devel \
