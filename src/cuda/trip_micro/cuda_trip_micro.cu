@@ -31,12 +31,11 @@
 // The timestamp is updated on every log_helper function call.
 
 // helper functions
-#include "helper_string.h"
-#include "helper_cuda.h"
+#include <helper_string.h>
 
-#define HALF_ROUND_STYLE 1
-#define HALF_ROUND_TIES_TO_EVEN 1
-#include "half.hpp"
+//#define HALF_ROUND_STYLE 1
+//#define HALF_ROUND_TIES_TO_EVEN 1
+//#include "half.hpp"
 
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
@@ -78,7 +77,14 @@ typedef float tested_type_host;
 #define OUTPUT_R 4.44 // 0x4471
 const char test_precision_description[] = "half";
 typedef half tested_type;
-typedef half_float::half tested_type_host;
+//typedef half_float::half tested_type_host;
+typedef half tested_type_host;
+
+#ifndef __CUDA_ARCH__
+bool operator!=(const half& lhs, const half& rhs){
+	return (float(lhs) != float(rhs));
+}
+#endif
 
 #else 
 #error TEST PRECISION NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
@@ -122,25 +128,26 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	log_error_detail((char *)errorDescription); end_log_file();
 #endif
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
-	exit (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
-cudaDeviceProp GetDevice(){
+cudaDeviceProp GetDevice() {
 //================== Retrieve and set the default CUDA device
 	cudaDeviceProp prop;
-	int count=0;
+	int count = 0;
 	printf("Get device:");
-	checkFrameworkErrors( cudaGetDeviceCount(&count) );
-	for (int i=0; i< count; i++) {
-		checkFrameworkErrors( cudaGetDeviceProperties( &prop, i ));
-		printf( "Name: %s\n", prop.name );
+	checkFrameworkErrors(cudaGetDeviceCount(&count));
+	for (int i = 0; i < count; i++) {
+		checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+		printf("Name: %s\n", prop.name);
 	}
-	int *ndevice; int dev = 0;
+	int *ndevice;
+	int dev = 0;
 	ndevice = &dev;
-	checkFrameworkErrors( cudaGetDevice(ndevice) );
+	checkFrameworkErrors(cudaGetDevice(ndevice));
 
-	checkFrameworkErrors( cudaSetDevice(0) );
-	checkFrameworkErrors( cudaGetDeviceProperties( &prop, 0 ) );
+	checkFrameworkErrors(cudaSetDevice(0));
+	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
 	return prop;
 }
@@ -165,7 +172,7 @@ void* safe_cudaMalloc(size_t size) {
 		log_error_detail((char *) "error host malloc");
 		end_log_file();
 		printf("error host malloc\n");
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	// ===> FIRST PHASE: CHECK SETTING BITS TO 10101010
@@ -222,15 +229,16 @@ void freeCudaMemory() {
 }
 
 void setCudaMemory() {
-	checkFrameworkErrors(cudaMemset(d_R[0], 0x00, r_size * sizeof(tested_type)));
+	checkFrameworkErrors(
+			cudaMemset(d_R[0], 0x00, r_size * sizeof(tested_type)));
 #ifdef TMRMEM
 	checkFrameworkErrors(cudaMemset(d_R[1], 0x00, r_size * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMemset(d_R[2], 0x00, r_size * sizeof(tested_type)));
 #endif
 }
 
-__global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
-{
+__global__ void MicroBenchmarkKernel_FMA(tested_type *d_R0, tested_type *d_R1,
+		tested_type *d_R2) {
 // ========================================== Double and Single precision
 #if defined(test_precision_double) or defined(test_precision_single)
 	register tested_type acc = OUTPUT_R;
@@ -245,12 +253,17 @@ __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, 
 	register half2 input_a_neg = __float2half2_rn(-INPUT_A);
 	register half2 input_b_neg = __float2half2_rn(-INPUT_B);
 	register half2 *d_R0_half2 = (half2*)d_R0;
+
+#ifdef TMRMEM
 	register half2 *d_R1_half2 = (half2*)d_R1;
 	register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
+#endif
+
 #pragma unroll 512
-	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+	for (register unsigned int count = 0;
+			count < (OPS / (4 * OPS_PER_THREAD_OPERATION)); count++) {
 #if defined(test_precision_double)
 		acc = fma(input_a, input_b, acc);
 		acc = fma(input_a_neg, input_b, acc);
@@ -268,7 +281,7 @@ __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, 
 		acc = __hfma2(input_a_neg, input_b_neg, acc);
 #endif
 	}
-	
+
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 
@@ -288,8 +301,8 @@ __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, 
 #endif
 }
 
-__global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
-{
+__global__ void MicroBenchmarkKernel_ADD(tested_type *d_R0, tested_type *d_R1,
+		tested_type *d_R2) {
 // ========================================== Double and Single precision
 #if defined(test_precision_double) or defined(test_precision_single)
 	register tested_type acc = OUTPUT_R;
@@ -300,12 +313,17 @@ __global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, 
 	register half2 input_a = __float2half2_rn(OUTPUT_R);
 	register half2 input_a_neg = __float2half2_rn(-OUTPUT_R);
 	register half2 *d_R0_half2 = (half2*)d_R0;
+
+#ifdef TMRMEM
 	register half2 *d_R1_half2 = (half2*)d_R1;
 	register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
+#endif
+
 #pragma unroll 512
-	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+	for (register unsigned int count = 0;
+			count < (OPS / (4 * OPS_PER_THREAD_OPERATION)); count++) {
 #if defined(test_precision_double)
 		acc = __dadd_rn(acc, input_a);
 		acc = __dadd_rn(acc, input_a_neg);
@@ -323,7 +341,7 @@ __global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, 
 		acc = __hadd2(acc, input_a);
 #endif
 	}
-	
+
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 
@@ -343,8 +361,8 @@ __global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, 
 #endif
 }
 
-__global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
-{
+__global__ void MicroBenchmarkKernel_MUL(tested_type *d_R0, tested_type *d_R1,
+		tested_type *d_R2) {
 // ========================================== Double and Single precision
 #if defined(test_precision_double) or defined(test_precision_single)
 	register tested_type acc = OUTPUT_R;
@@ -355,12 +373,17 @@ __global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0, tested_type *d_R1, 
 	register half2 input_a = __float2half2_rn(INPUT_B);
 	register half2 input_a_inv = __float2half2_rn(1.0/INPUT_B);
 	register half2 *d_R0_half2 = (half2*)d_R0;
+
+#ifdef TMRMEM
 	register half2 *d_R1_half2 = (half2*)d_R1;
 	register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
+#endif
+
 #pragma unroll 512
-	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+	for (register unsigned int count = 0;
+			count < (OPS / (4 * OPS_PER_THREAD_OPERATION)); count++) {
 #if defined(test_precision_double)
 		acc = __dmul_rn(acc, input_a);
 		acc = __dmul_rn(acc, input_a_inv);
@@ -378,7 +401,7 @@ __global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0, tested_type *d_R1, 
 		acc = __hmul2(acc, input_a);
 #endif
 	}
-	
+
 #if defined(test_precision_double) or defined(test_precision_single)
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 
@@ -426,11 +449,11 @@ bool checkOutputErrors() {
 				char info_detail[150];
 				snprintf(info_detail, 150,
 						"m: [%d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-						i, 
+						i,
 						(double)valOutput0, (double)valOutput1,
 						(double)valOutput2);
 				if (verbose && (memory_errors < 10))
-					printf("%s\n", info_detail);
+				printf("%s\n", info_detail);
 
 #ifdef LOGS
 				log_info_detail(info_detail);
@@ -456,7 +479,7 @@ bool checkOutputErrors() {
 								i, (double)valOutput0,
 								(double)valOutput1, (double)valOutput2, (double)valGold);
 						if (verbose && (host_errors < 10))
-							printf("%s\n", error_detail);
+						printf("%s\n", error_detail);
 
 #ifdef LOGS
 						log_error_detail(error_detail);
@@ -483,9 +506,8 @@ bool checkOutputErrors() {
 #pragma omp critical
 				{
 					char error_detail[150];
-					snprintf(error_detail, 150,
-							"p: [%d], r: %1.20e, e: %1.20e",
-							i, (double)valOutput, (double)valGold);
+					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
+							i, (double) valOutput, (double) valGold);
 					if (verbose && (host_errors < 10))
 						printf("%s\n", error_detail);
 #ifdef LOGS
@@ -551,7 +573,6 @@ int main(int argc, char* argv[]) {
 	snprintf(test_name, 250, "cuda_trip_%s_micro-%s", test_precision_description, test_type_description);
 	start_log_file(test_name, test_info);
 
-
 #ifdef BUILDPROFILER
 	std::string log_file_name(get_log_file_name());
 	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
@@ -579,7 +600,8 @@ int main(int argc, char* argv[]) {
 	total_kernel_time = 0;
 	min_kernel_time = UINT_MAX;
 	max_kernel_time = 0;
-	printf("cuda_trip_micro-%s_%s\n", test_type_description, test_precision_description);
+	printf("cuda_trip_micro-%s_%s\n", test_type_description,
+			test_precision_description);
 	fflush(stdout);
 //====================================
 
@@ -592,7 +614,7 @@ int main(int argc, char* argv[]) {
 		//================== Global test loop
 
 		global_time = mysecond();
-		
+
 		setCudaMemory();
 
 		if (verbose)
@@ -676,8 +698,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	double gflops = r_size * OPS * OPS_PER_THREAD_OPERATION / 1000000000; // Bilion FLoating-point OPerationS
-	double averageKernelTime = total_kernel_time
-			/ iterations;
+	double averageKernelTime = total_kernel_time / iterations;
 	printf("\n-- END --\n"
 			"Total kernel time: %.3fs\n"
 			"Iterations: %d\n"

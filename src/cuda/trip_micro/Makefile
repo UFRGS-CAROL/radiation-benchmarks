@@ -1,20 +1,21 @@
+CUDA_DIR=/usr/local/cuda
 #OPS?=1000000000
 OPS=100000000
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC=$(CUDA_DIR)/bin/nvcc
 FORJETSON=0
 TYPE=fma
 PRECISION=single
 TMRMEM=0
-BUILDPROFILER=1
+BUILDPROFILER=0
 
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
 ifeq ($(LOWERCASED_PRECISION),half)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
+#ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
+#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
+#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 else
 ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]  	# Tesla K40
@@ -28,8 +29,8 @@ endif
 
 NVCC_FLAGS= $(ARCH)
 
-NVIDIA_INC=/usr/local/cuda/include/,./
-NVIDIA_LIB=/usr/local/cuda/lib64/
+NVIDIA_INC=$(CUDA_DIR)/include/,./,$(CUDA_DIR)/samples/common/inc
+NVIDIA_LIB=$(CUDA_DIR)/lib64/
 LOGHELPER_INC=../../include/,../common
 LOGHELPER_LIB=../../include/,../common/lib
 
@@ -47,7 +48,7 @@ ifeq ($(BUILDPROFILER), 1)
 ifeq ($(FORJETSON), 1)
 NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
 else
-NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+NVCC_FLAGS += -L$(CUDA_DIR)/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
 endif
 
 endif
