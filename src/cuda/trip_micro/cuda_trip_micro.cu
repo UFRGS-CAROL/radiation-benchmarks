@@ -80,12 +80,6 @@ typedef half tested_type;
 //typedef half_float::half tested_type_host;
 typedef half tested_type_host;
 
-#ifndef __CUDA_ARCH__
-bool operator!=(const half& lhs, const half& rhs){
-	return (float(lhs) != float(rhs));
-}
-#endif
-
 #else 
 #error TEST PRECISION NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
@@ -425,6 +419,13 @@ void usage(int argc, char* argv[]) {
 	printf("Usage: %s [-iterations=N] [-verbose]\n", argv[0]);
 }
 
+template<typename T> bool equal(const T& lhs, const T& rhs) {
+	return lhs == rhs;
+}
+bool equal(const half& lhs, const half& rhs) {
+	return float(lhs) == float(rhs);
+}
+
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
 bool checkOutputErrors() {
@@ -443,7 +444,7 @@ bool checkOutputErrors() {
 
 		register tested_type_host valOutput1 = R[1][i];
 		register tested_type_host valOutput2 = R[2][i];
-		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
+		if (!equal(valOutput0, valOutput1) || !equal(valOutput0, valOutput2)) {
 #pragma omp critical
 			{
 				char info_detail[150];
@@ -460,13 +461,13 @@ bool checkOutputErrors() {
 #endif
 				memory_errors += 1;
 			}
-			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2) && (valOutput0 != valOutput2)) {
+			if (!equal(valOutput0, valOutput1) && !equal(valOutput1, valOutput2) && !equal(valOutput0, valOutput2)) {
 				// All 3 values diverge
-				if (valOutput0 == valGold) {
+				if (equal(valOutput0, valGold)) {
 					valOutput = valOutput0;
-				} else if (valOutput1 == valGold) {
+				} else if (equal(valOutput1, valGold)) {
 					valOutput = valOutput1;
-				} else if (valOutput2 == valGold) {
+				} else if (equal(valOutput2, valGold)) {
 					valOutput = valOutput2;
 				} else {
 					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
@@ -487,13 +488,13 @@ bool checkOutputErrors() {
 						host_errors++;
 					}
 				}
-			} else if (valOutput1 == valOutput2) {
+			} else if (equal(valOutput1, valOutput2)) {
 				// Only value 0 diverge
 				valOutput = valOutput1;
-			} else if (valOutput0 == valOutput2) {
+			} else if (equal(valOutput0, valOutput2)) {
 				// Only value 1 diverge
 				valOutput = valOutput0;
-			} else if (valOutput0 == valOutput1) {
+			} else if (equal(valOutput0, valOutput1)) {
 				// Only value 2 diverge
 				valOutput = valOutput0;
 			}
@@ -501,7 +502,7 @@ bool checkOutputErrors() {
 #endif
 
 		// if ((fabs((tested_type_host)(valOutput-OUTPUT_R)/OUTPUT_R) > 1e-10)||(fabs((tested_type_host)(valOutput-OUTPUT_R)/OUTPUT_R) > 1e-10)) {
-		if (valGold != valOutput) {
+		if (!equal(valGold, valOutput)) {
 			if (checkFlag) {
 #pragma omp critical
 				{
