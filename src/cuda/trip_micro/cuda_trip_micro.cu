@@ -542,12 +542,18 @@ int main(int argc, char* argv[]) {
 	double time;
 	double kernel_time, global_time;
 	double total_kernel_time, min_kernel_time, max_kernel_time;
+	int blocksize = 256;
 //====================================
 
 //================== Read test parameters
 	if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
 		iterations = getCmdLineArgumentInt(argc, (const char **) argv,
 				"iterations");
+	}
+
+	if (checkCmdLineFlag(argc, (const char **) argv, "blocksize")) {
+		blocksize = getCmdLineArgumentInt(argc, (const char **) argv,
+				"blocksize");
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "verbose")) {
@@ -558,7 +564,6 @@ int main(int argc, char* argv[]) {
 //================== Set block and grid size for MxM kernel
 	cudaDeviceProp prop = GetDevice();
 	int gridsize = prop.multiProcessorCount;
-	int blocksize = 256;
 
 	printf("grid size = %d ; block size = %d\n", gridsize, blocksize);
 
