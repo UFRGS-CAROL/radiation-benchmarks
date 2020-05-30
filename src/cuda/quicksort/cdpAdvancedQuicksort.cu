@@ -632,7 +632,7 @@ int checkKeys(parameters_t *params) { // Magicas que a semana anterior ao teste 
 #ifdef LOGS
                 if (!(params->generate)) log_error_detail(error_detail);
 #endif
-                printf("ERROR : %s\n", error_detail);
+                if(errors <= 10) printf("ERROR : %s\n", error_detail);
                 errors++;
                 flag = 0;
             }
@@ -655,7 +655,7 @@ int checkKeys(parameters_t *params) { // Magicas que a semana anterior ao teste 
 #ifdef LOGS
             if (!(params->generate)) log_error_detail(error_detail);
 #endif
-            printf("ERROR: %s\n", error_detail);
+            if(errors <= 10) printf("ERROR : %s\n", error_detail);
             errors++;
             flag = 0;
         }
