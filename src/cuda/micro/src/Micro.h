@@ -105,11 +105,11 @@ struct Micro {
 	size_t compare_output() {
 		size_t errors = 0;
 		size_t memory_errors = 0;
-		auto& block_size = this->parameters.block_size;
+
 #pragma omp parallel for default(shared)
 		for (size_t i = 0; i < this->output_host_1.size(); i++) {
 			micro_type_t output = this->output_host_1[i];
-			micro_type_t gold_t = this->gold[i % block_size];
+			micro_type_t gold_t = this->gold[i % this->block_size];
 			bool check_flag = true;
 			if (this->is_ecc_on == false) {
 				std::tie(output, check_flag) = this->check_mem_errors(gold_t, i,
@@ -141,7 +141,7 @@ protected:
 		if (output != gold_t && check_flag) {
 			std::stringstream error_detail;
 			//20 is from old micro-benchmarks precision
-			error_detail << " p: [" << i << "],";
+			error_detail << "p: [" << i << "],";
 			error_detail << std::scientific << std::setprecision(20);
 			error_detail << " e: " << gold_t << ", r: " << output;
 			if (this->parameters.verbose && i < 10) {

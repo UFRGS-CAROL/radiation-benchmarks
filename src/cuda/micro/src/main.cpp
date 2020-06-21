@@ -53,14 +53,15 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 		size_t errors = 0;
 		if (test_parameter.generate == false) {
 			errors = micro_obj.compare_output();
+			//update errors
+			micro_obj.log->update_errors();
+			micro_obj.log->update_infos();
 		}
-		//update errors
-		micro_obj.log->update_errors();
-		micro_obj.log->update_infos();
 		auto end_cmp = rad::mysecond();
 
 		auto start_reset_output = rad::mysecond();
-		micro_obj.reset_output_device();
+		if (test_parameter.generate == false)
+			micro_obj.reset_output_device();
 		auto end_reset_output = rad::mysecond();
 
 		if (test_parameter.verbose) {
