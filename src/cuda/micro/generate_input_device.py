@@ -18,7 +18,7 @@ with open("src/input_device.h", "w") as fp:
     fp.write("#ifndef INPUT_DEVICE_H_\n")
     fp.write("#define INPUT_DEVICE_H_\n\n")
 
-    fp.write("__device__  __constant__ float common_float_input[MAX_THREAD_BLOCK] = {\n\t")
+    fp.write("__device__  __constant__ float common_float_input[] = {\n\t")
     random_list = [float(random.uniform(-RANGE, RANGE)) for _ in range(0, MAXBLOCK)]
 
     for i in range(0, MAXBLOCK, NUMBERS_PER_LINE):
@@ -29,7 +29,7 @@ with open("src/input_device.h", "w") as fp:
 
     fp.write("};\n\n")
 
-    fp.write("__device__ __constant__ __restrict__ int32_t common_int_input[MAX_THREAD_BLOCK] = {\n\t")
+    fp.write("__device__ __constant__ __restrict__ int32_t common_int_input[] = {\n\t")
 
     for i in range(0, MAXBLOCK, NUMBERS_PER_LINE_INT):
         for number in range(0, NUMBERS_PER_LINE_INT):
@@ -39,7 +39,7 @@ with open("src/input_device.h", "w") as fp:
 
     fp.write("};\n\n")
 
-    fp.write("__device__  __constant__ __restrict__ int32_t inverse_mul_input[MAX_THREAD_BLOCK] = {\n\t")
+    fp.write("__device__  __constant__ __restrict__ int32_t inverse_mul_input[] = {\n\t")
 
     for i in range(0, MAXBLOCK, NUMBERS_PER_LINE_INT):
         for number in range(0, NUMBERS_PER_LINE_INT):
