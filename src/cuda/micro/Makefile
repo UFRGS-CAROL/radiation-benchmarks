@@ -3,15 +3,16 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp
 EXEC=cudaMicro
 LOGS=1
 BUILDPROFILER=0
-MICRO=ldst
+MICRO=mad
 ITERATIONS=10
 #     10000000
 #     100000000
-OPNUM=100000000
+OPNUM=10000000
 #100000
 PRECISION=int32
 FASTMATH=0
 BLOCK_SIZE=256
+SMMUL=1
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -76,7 +77,7 @@ clean:
 generate:
 	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \
 			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
-			  --generate --gold ./gold_$(MICRO).data
+			  --generate --gold ./gold_$(MICRO).data --blocksize $(BLOCK_SIZE) --smmul $(SMMUL)
 			  
 test:
 	./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose  \

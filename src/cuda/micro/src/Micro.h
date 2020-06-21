@@ -40,11 +40,9 @@ struct Micro {
 	Micro();
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
-			parameters(parameters), log(log), block_size(parameters.block_size) {
-		//multiplies the grid size by the maximum number of warps per SM
-		this->grid_size = this->parameters.sm_count * WARP_PER_SM;
+			parameters(parameters), log(log), block_size(parameters.block_size), grid_size(
+					parameters.grid_size) {
 		this->parameters.array_size = this->grid_size * this->block_size;
-
 		this->is_ecc_on = (this->log->get_log_file_name().find("ECC_ON")
 				!= std::string::npos);
 		auto start_gen = rad::mysecond();

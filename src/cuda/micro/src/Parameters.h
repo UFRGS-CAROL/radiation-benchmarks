@@ -33,6 +33,7 @@ struct Parameters {
 	size_t grid_size;
 	size_t block_size;
 	size_t array_size;
+	size_t sm_multiplier;
 
 	bool verbose;
 	bool generate;
