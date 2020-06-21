@@ -46,7 +46,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	}
 
 	//both benchmarks will use MAX_THREAD_BLOCK size
-	this->block_size = MAX_THREAD_BLOCK;
+	this->block_size = rad::find_int_arg(argc, argv, "--blocksize",
+			MAX_THREAD_BLOCK);
 
 	//multiplies the grid size by the maximum number of warps per SM
 	this->grid_size = this->sm_count * WARP_PER_SM;

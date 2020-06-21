@@ -40,10 +40,7 @@ struct Micro {
 	Micro();
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
-			parameters(parameters), log(log) {
-		//all benchmarks will use MAX_THREAD_BLOCK size
-		//Max thread block size set
-		this->block_size = MAX_THREAD_BLOCK;
+			parameters(parameters), log(log), block_size(parameters.block_size) {
 		//multiplies the grid size by the maximum number of warps per SM
 		this->grid_size = this->parameters.sm_count * WARP_PER_SM;
 		this->parameters.array_size = this->grid_size * this->block_size;
