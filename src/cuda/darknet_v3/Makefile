@@ -8,7 +8,7 @@ LOGS?=1
 OPENGEMM?=0
 BUILDPROFILER=0
 
-OPENBLAS=1
+OPENBLAS=0
 
 HOMEDIR=/home/carol
 RADIATIONDIR=$(HOME)/radiation-benchmarks/
@@ -170,9 +170,9 @@ demo:
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/fault_injection.txt \
-			-generate 1 -gold ./test.csv -tensor_cores 0
+			-generate 1 -gold ./test_$(REAL_TYPE).csv -tensor_cores 0
 
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/fault_injection.txt \
-			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
+			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations 1 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
