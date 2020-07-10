@@ -12,23 +12,22 @@
 
 #include <assert.h>
 
-extern "C"{
+extern "C" {
 #include "cuda.h"
 }
 
-#if __CUDA_ARCH__ > 600
-
-extern void hgemm(int b_operation, int a_operation, int N, int M, int K,
-		half *alpha, half* b_gpu, int ldb, half* a_gpu, int lda, half* beta,
-		half* c_gpu, int ldc);
-#endif
+//#if __CUDA_ARCH__ > 600
+//
+//extern void hgemm(int b_operation, int a_operation, int N, int M, int K,
+//		half *alpha, half* b_gpu, int ldb, half* a_gpu, int lda, half* beta,
+//		half* c_gpu, int ldc);
+//#endif
 
 typedef half real_t_fp16;
 
 //extern "C" void check_error(cudaError_t status);
 //extern "C" dim3 cuda_gridsize(size_t n);
 //extern void check_error(cudaError_t status);
-
 
 __global__ void cuda_f32_to_f16(real_t *X, size_t N, real_t_fp16 *Y) {
 	size_t i = (blockIdx.x + blockIdx.y * gridDim.x) * blockDim.x + threadIdx.x;
@@ -74,20 +73,20 @@ void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N,
 		check_error(cudaPeekAtLastError());
 	}
 
-#if __CUDA_ARCH__ > 600
+//#if __CUDA_ARCH__ > 600
 	real_t_fp16 alpha = real_t_fp16(ALPHA);
 	real_t_fp16 beta = real_t_fp16(BETA);
-#ifndef OPENGEMM
+//#ifndef OPENGEMM
 
 	cudaError_t status = (cudaError_t) cublasHgemm(handle,
 			(TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N),
 			N, M, K, &alpha, b, ldb, a, lda, &beta, c, ldc);
 	check_error(status);
-#else
-	hgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &alpha, b, ldb,
-			a, lda, &beta, c, ldc);
-#endif
-#endif
+//#else
+//	hgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &alpha, b, ldb,
+//			a, lda, &beta, c, ldc);
+//#endif
+//#endif
 
 //	printf("Executed the hgemm\n");
 	cuda_f16_to_f32<<<cuda_gridsize(siz_c), BLOCK, 0, st>>>(c, siz_c, C_gpu);
