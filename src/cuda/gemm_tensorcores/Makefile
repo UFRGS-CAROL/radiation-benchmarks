@@ -1,8 +1,8 @@
-GPU?=1
-DEBUG?=0
+GPU=1
+DEBUG=0
 #for radiation setup
-LOGS?=1
-OMP?=1
+LOGS=1
+OMP=1
 
 ALPHA=1.0
 BETA=0.0
@@ -46,7 +46,7 @@ ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
 endif
 
-ifeq ($(TENSOR_CORES)), 1)
+ifeq ($(TENSOR_CORES), 1)
 USETENSORS= --tensor_cores
 endif
 
