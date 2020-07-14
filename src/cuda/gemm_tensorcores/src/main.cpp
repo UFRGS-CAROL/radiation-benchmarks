@@ -16,13 +16,11 @@ int main(int argc, char** argv) {
 		std::cout << parameters << std::endl;
 
 	if (parameters.use_cublas) {
-		if (parameters.use_tensor_cores)
-			throw_line("Open source tensor cores not ready yet!!!");
-		else
-			setup_gemm_cublas(parameters);
-
+		setup_gemm_cublas(parameters);
 	} else if (parameters.use_cutlass) {
 		throw_line("CUTLASS not ready yet!!!");
+	} else  if (parameters.use_tensor_cores) {
+		throw_line("Open source tensor cores not ready yet!!!");
 	} else {
 		if (parameters.dmr == "none") {
 			setup_gemm_unhardened(parameters);
