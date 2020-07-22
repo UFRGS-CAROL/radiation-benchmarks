@@ -1,13 +1,12 @@
-
+IMG_LIST=fault_injection.txt
+RADPATH=/home/carol/radiation-benchmarks
+BIN=$(RADPATH)/src/cuda/py-faster-rcnn
+GOLD=$(RADPATH)/data/py_faster_rcnn/fault_injection.test
 
 test:
-	tools/py_faster_rcnn.py --ite 2000 --iml /home/carol/radiation-benchmarks/data/networks_img_list/urban.street.1.1K.txt --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_urban.street.1.1.test --log daniel_logs --net zf
+	$(BIN)/tools/py_faster_rcnn.py --ite 1 --iml $(RADPATH)/data/networks_img_list/$(IMG_LIST) --gld $(GOLD) --log daniel_logs --net zf
 
 generate:
-	tools/py_faster_rcnn.py  --ite 200 --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt  --gen /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_caltech10.test --net zf
+	$(BIN)/tools/py_faster_rcnn.py  --ite 1 --iml $(RADPATH)/data/networks_img_list/$(IMG_LIST) --gen $(GOLD) --net zf
 
-
-
-
-#	tools/py_faster_rcnn.py  --ite 200 --iml /home/carol/radiation-benchmarks/data/networks_img_list/urban.street.1.1K.txt  --gen /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_urban.street.1.1.test --net zf
 
