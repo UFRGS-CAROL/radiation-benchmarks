@@ -161,7 +161,11 @@ struct Log {
 	}
 
 	std::string get_log_file_name(){
+#ifndef LOGS
+		return "";
+#else
 		return std::string(::get_log_file_name());
+#endif
 	}
 private:
 	//Hide copy constructor to avoid copies

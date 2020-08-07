@@ -25,19 +25,20 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
+
 NVCC_FLAGS= $(ARCH) -O3 -std=c++11
-INCLUDE= -I$(CUDAPATH)/include -I../common/include
+INCLUDE= -I$(CUDAPATH)/include -I../common/include  -I$(LOGHELPER_INC)
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
 
 TARGET=cuda_hotspot_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_hotspot.cu
 
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
 
 ifeq ($(LOGS), 1)
-INCLUDE+= -I$(LOGHELPER_INC)
+#INCLUDE+= -I$(LOGHELPER_INC)
 NVCC_FLAGS+= -DLOGS -lLogHelper 
 LIBRARY+= -L$(LOGHELPER_LIB) 
 CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper 
