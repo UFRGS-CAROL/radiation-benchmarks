@@ -6,6 +6,7 @@ DEBUG?=0
 REAL_TYPE?=float
 LOGS?=1
 OPENGEMM?=0
+EXTRACT_GEMM_DATA=1
 BUILDPROFILER=0
 
 OPENBLAS=0
@@ -111,7 +112,6 @@ COMMON+= -I/opt/OpenBLAS/include/ -L/opt/OpenBLAS/lib
 LDFLAGS+= -lopenblas -lpthread -lgfortran 
 endif
 
-
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o \
 network.o connected_layer.o cost_layer.o parser.o option_list.o detection_layer.o route_layer.o upsample_layer.o \
@@ -128,6 +128,10 @@ LDFLAGS+= -lstdc++
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o \
 blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o \
 gemm_kernels.o
+endif
+
+ifeq ($(EXTRACT_GEMM_DATA), 1)
+EXECOBJA+= parse_gemm_layer.o
 endif
 
 EXECOBJ = $(addprefix $(OBJDIR), $(EXECOBJA))
