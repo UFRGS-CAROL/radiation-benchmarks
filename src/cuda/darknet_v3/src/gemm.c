@@ -197,7 +197,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 #ifdef GPU
 
-extern void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+extern void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 		int lda, float *B, int ldb, float BETA, float *C, int ldc);
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
@@ -207,7 +207,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 	cublasSetStream(handle, st);
 	//Matteo project
 	// save the matrixes file
-	parse_entry_cpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+	parse_entry_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 
 #ifndef OPENGEMM
 
