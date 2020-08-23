@@ -12,7 +12,10 @@
 extern "C" {
 #endif
 
-void parse_entry(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+		int lda, float *B, int ldb, float BETA, float *C, int ldc);
+
+void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 		int lda, float *B, int ldb, float BETA, float *C, int ldc);
 
 void inject_fault(int TA, int TB, int M, int N, int K, float *C);

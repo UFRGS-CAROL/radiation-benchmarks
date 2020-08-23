@@ -197,15 +197,18 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 #ifdef GPU
 
+extern void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+		int lda, float *B, int ldb, float BETA, float *C, int ldc);
+
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
 		unsigned char use_tensor_cores, cudaStream_t st) {
 	cublasHandle_t handle = blas_handle(use_tensor_cores);
 	cublasSetStream(handle, st);
-//	if(TB || TA)
-//	{
-//		printf("Matrix need to be transposed %d %d\n", TB, TA);
-//	}
+	//Matteo project
+	// save the matrixes file
+	parse_entry_cpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+
 #ifndef OPENGEMM
 
 #if REAL_TYPE == HALF
