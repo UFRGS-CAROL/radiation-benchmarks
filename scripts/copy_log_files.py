@@ -15,8 +15,8 @@ LOGS_DIR = "logs"
 TAR_COMMAND = "tar czf {} {}"
 TAR_DIR_FINAL = "/home/fernando/Dropbox/ChipIR202002"
 
-TIMEDELTA_DROPBOX = timedelta(hours=8)
-TIMEDELTA_DOWNLOAD = timedelta(minutes=20)
+TIMEDELTA_DROPBOX = timedelta(minutes=1)
+TIMEDELTA_DOWNLOAD = timedelta(minutes=1)
 MAX_SCP_TRIES = 10
 
 
