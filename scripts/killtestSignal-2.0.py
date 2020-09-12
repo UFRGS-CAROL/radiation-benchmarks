@@ -11,16 +11,18 @@ import re
 import shutil
 import signal
 import json
-from datetime import datetime
+# from datetime import datetime
 
-timestampMaxDiffDefault = 30  # Time in seconds to wait for the timestamp update
+import logging
 
-maxKill = 5  # Max number of kills allowed
+timestamp_max_diff_default = 30  # Time in seconds to wait for the timestamp update
 
-timeWindowCommands = 1 * 60 * 60  # How long each command will execute, time window in seconds
+max_kill = 5  # Max number of kills allowed
 
-sockServerIP = "192.168.1.5"
-sockServerPORT = 8080
+time_window_commands = 1 * 60 * 60  # How long each command will execute, time window in seconds
+
+sock_server_ip = "192.168.1.5"
+sock_server_port = 8080
 
 
 # Connect to server and close connection, kind of ping
@@ -29,126 +31,106 @@ def sockConnect():
         # create an INET, STREAMing socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Now, connect with IP (or hostname) and PORT
-        s.connect((sockServerIP, sockServerPORT))
+        s.connect((sock_server_ip, sock_server_port))
         s.close()
-    except socket.error as eDetail:
+    except socket.error:
         print("could not connect to remote server, socket error")
     # logMsg("socket connect error: "+str(eDetail))
 
 
-# Log messages adding timestamp before the message
-def logMsg(msg):
-    now = datetime.now()
-    # fp = open(logFile, 'a')
-    date_str = str(now.ctime()) + ": " + str(msg)
-    with open(logFile, 'a') as fp:
-        fp.write(date_str + '\n')
-
-    # fp.close()
-    print(date_str)
-
-
-# Update the timestamp file with machine current timestamp
-def updateTimestamp():
-    command = "echo " + str(int(time.time())) + " > " + timestampFile
-    retcode = os.system(command)
-    global timestampSignal
-    timestampSignal = int(time.time())
-
-
 # Remove files with start timestamp of commands executing
 def cleanCommandExecLogs():
-    os.system("rm -f " + varDir + "command_execstart_*")
+    global var_dir
+    os.system("rm -f " + var_dir + "command_execstart_*")
 
 
 # Return True if the commandFile changed from the
 # last time it was executed. If the file was never executed returns False
-def checkCommandListChanges():
-    curFile = varDir + "currentCommandFile"
-    lastFile = varDir + "lastCommandFile"
-    fp = open(curFile, "w")
-    json.dump(commands, fp)
-    fp.close()
-    if not os.path.isfile(lastFile):
-        shutil.copyfile(curFile, lastFile)
+def check_command_list_changes():
+    cur_file = var_dir + "currentCommandFile"
+    last_file = var_dir + "lastCommandFile"
+    with open(cur_file, "w") as fp:
+        json.dump(commands, fp)
+    if not os.path.isfile(last_file):
+        shutil.copyfile(cur_file, last_file)
         return True
 
-    if filecmp.cmp(curFile, lastFile, shallow=False):
+    if filecmp.cmp(cur_file, last_file, shallow=False):
         return False
     else:
-        shutil.copyfile(curFile, lastFile)
+        shutil.copyfile(cur_file, last_file)
         return True
 
 
 # Select the correct command to be executed from the commands
-def selectCommand():
-    if checkCommandListChanges():
+def select_command():
+    global timestamp
+    if check_command_list_changes():
         cleanCommandExecLogs()
 
     # Get the index of last existent file
     i = 0
-    while os.path.isfile(varDir + "command_execstart_" + str(i)):
+    while os.path.isfile(var_dir + "command_execstart_" + str(i)):
         i += 1
     i -= 1
 
     # If there is no file, create the first file with current timestamp
     # and return the first command of commands list
     if i == -1:
-        os.system("echo " + str(int(time.time())) + " > " + varDir + "command_execstart_0")
+        os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_0")
         return getCommand(0)
 
     # Check if last command executed is still in the defined time window for each command
     # and return it
-
     # Read the timestamp file
     try:
-        fp = open(varDir + "command_execstart_" + str(i), 'r')
+        fp = open(var_dir + "command_execstart_" + str(i), 'r')
         timestamp = int(float(fp.readline().strip()))
         fp.close()
     except ValueError as eDetail:
-        logMsg("Rebooting, command execstart timestamp read error: " + str(eDetail))
+        logging.exception("Rebooting, command execstart timestamp read error: " + str(eDetail))
         sockConnect()
-        os.system("rm -f " + varDir + "command_execstart_" + str(i))
+        os.system("rm -f " + var_dir + "command_execstart_" + str(i))
         os.system("shutdown -r now")
         time.sleep(20)
 
     now = int(time.time())
-    if (now - timestamp) < timeWindowCommands:
+    if (now - timestamp) < time_window_commands:
         return getCommand(i)
 
     i += 1
     # If all commands executed their time window, start all over again
     if i >= len(commands):
         cleanCommandExecLogs()
-        os.system("echo " + str(int(time.time())) + " > " + varDir + "command_execstart_0")
+        os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_0")
         return getCommand(0)
 
     # Finally, select the next command not executed so far
-    os.system("echo " + str(int(time.time())) + " > " + varDir + "command_execstart_" + str(i))
+    os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_" + str(i))
     return getCommand(i)
 
 
 def execCommand(command):
     try:
-        updateTimestamp()
-        if re.match(".*&\s*$", command):
+        # updateTimestamp()
+        if re.match(r".*&\s*$", command):
             # print "command should be ok"
             return os.system(command)
         else:
             # print "command not ok, inserting &"
             return os.system(command + " &")
     except OSError as detail:
-        logMsg("Error launching command '" + command + "'; error detail: " + str(detail))
+        logging.exception("Error launching command '" + command + "'; error detail: " + str(detail))
         return None
 
 
 def getCommand(index):
-    global timestampMaxDiff
+    global timestamp_max_diff
     try:
         if commands[index]["tmDiff"]:
-            timestampMaxDiff = commands[index]["tmDiff"]
-    except:
-        timestampMaxDiff = timestampMaxDiffDefault
+            timestamp_max_diff = commands[index]["tmDiff"]
+    except (IndexError, KeyError):
+        timestamp_max_diff = timestamp_max_diff_default
     return commands[index]["exec"]
 
 
@@ -162,8 +144,8 @@ def killall():
 
 # When SIGUSR1 or SIGUSR2 is received update timestamp
 def receive_signal(signum, stack):
-    global timestampSignal
-    timestampSignal = int(time.time())
+    global timestamp_signal
+    timestamp_signal = int(time.time())
 
 
 def readCommands(filelist):
@@ -180,100 +162,144 @@ def readCommands(filelist):
                 fjson.close()
                 commands.extend(data)
             else:
-                logMsg("ERROR: File with commands not found - " + str(f) + " - continuing with other files")
+                logging.error("ERROR: File with commands not found - " + str(f) + " - continuing with other files")
 
 
-################################################
-# KillTest Main Execution
-################################################
-confFile = '/etc/radiation-benchmarks.conf'
+def main():
+    global commands, var_dir, timestamp_max_diff, last_kill_timestamp
+    global timestamp_diff, timestamp_signal
+    ################################################
+    # KillTest Main Execution
+    ################################################
+    conf_file = '/etc/radiation-benchmarks.conf'
 
-# call the routine "receive_sginal" when SIGUSR1 is received
-signal.signal(signal.SIGUSR1, receive_signal)
-# call the routine "receive_sginal" when SIGUSR2 is received
-signal.signal(signal.SIGUSR2, receive_signal)
+    # call the routine "receive_sginal" when SIGUSR1 is received
+    signal.signal(signal.SIGUSR1, receive_signal)
+    # call the routine "receive_sginal" when SIGUSR2 is received
+    signal.signal(signal.SIGUSR2, receive_signal)
 
-if not os.path.isfile(confFile):
-    raise FileNotFoundError("System configuration file not found!(" + confFile + ")")
-    # sys.exit(1)
+    if not os.path.isfile(conf_file):
+        raise FileNotFoundError("System configuration file not found!(" + conf_file + ")")
+        # sys.exit(1)
 
-try:
-    config = configparser.RawConfigParser()
-    config.read(confFile)
+    try:
+        config = configparser.RawConfigParser()
+        config.read(conf_file)
 
-    installDir = config.get('DEFAULT', 'installdir') + "/"
-    varDir = config.get('DEFAULT', 'vardir') + "/"
-    logDir = config.get('DEFAULT', 'logdir') + "/"
-    tmpDir = config.get('DEFAULT', 'tmpdir') + "/"
+        # install_dir = config.get('DEFAULT', 'installdir') + "/"
+        var_dir = config.get('DEFAULT', 'vardir') + "/"
+        log_dir = config.get('DEFAULT', 'logdir') + "/"
+        # tmp_dir = config.get('DEFAULT', 'tmpdir') + "/"
 
-    if not os.path.isdir(logDir):
-        os.mkdir(logDir, 0o777)
-        os.chmod(logDir, 0o777)
+        if not os.path.isdir(log_dir):
+            os.mkdir(log_dir, 0o777)
+            os.chmod(log_dir, 0o777)
 
-except IOError as e:
-    raise IOError("System configuration setup error: " + str(e))
-    # sys.exit(1)
+    except IOError as e:
+        raise IOError("System configuration setup error: " + str(e))
+        # sys.exit(1)
 
-logFile = logDir + "killtest.log"
-timestampFile = varDir + "timestamp.txt"
+    log_file = log_dir + "killtest.log"
+    # timestampFile = var_dir + "timestamp.txt"
 
-if len(sys.argv) != 2:
-    print("Usage: " + sys.argv[0] + " <file with absolute paths of json files>")
-    sys.exit(1)
+    # Logging definition
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt='%m-%d %H:%M',
+        filename=log_file,
+        filemode='w'
+    )
 
-commands = list()
+    if len(sys.argv) != 2:
+        print("Usage: " + sys.argv[0] + " <file with absolute paths of json files>")
+        sys.exit(1)
 
-readCommands(sys.argv[1])
+    commands = list()
 
-if len(commands) < 1:
-    raise ValueError("ERROR: No commands read, there is nothing to execute")
-    # sys.exit(1)
+    readCommands(sys.argv[1])
 
-timestampMaxDiff = timestampMaxDiffDefault
-# Start last kill timestamp with an old enough timestamp
-lastKillTimestamp = int(time.time()) - 50 * timestampMaxDiff
-timestampSignal = int(time.time())
+    if len(commands) < 1:
+        raise ValueError("ERROR: No commands read, there is nothing to execute")
+        # sys.exit(1)
 
-try:
-    killCount = 0  # Counts how many kills were executed throughout execution
-    curCommand = selectCommand()
-    execCommand(curCommand)
-    while True:
-        sockConnect()
+    timestamp_max_diff = timestamp_max_diff_default
+    # Start last kill timestamp with an old enough timestamp
+    last_kill_timestamp = int(time.time()) - 50 * timestamp_max_diff
+    timestamp_signal = int(time.time())
 
-        # Get the current timestamp
-        now = int(time.time())
-        # timestampDiff = now - timestamp
-        timestampDiff = now - timestampSignal
-        # If timestamp was not update properly
-        if timestampDiff > timestampMaxDiff:
-            # Check if last kill was in the last 60 seconds and reboot
-            killall()
+    try:
+        kill_count = 0  # Counts how many kills were executed throughout execution
+        cur_command = select_command()
+        execCommand(cur_command)
+        while True:
+            sockConnect()
+
+            # Get the current timestamp
             now = int(time.time())
-            if (now - lastKillTimestamp) < 3 * timestampMaxDiff:
-                logMsg("Rebooting, last kill too recent, timestampDiff: " + str(
-                    timestampDiff) + ", current command:" + curCommand)
-                sockConnect()
-                os.system("shutdown -r now")
-                time.sleep(20)
-            else:
-                lastKillTimestamp = now
+            # timestamp_diff = now - timestamp
+            timestamp_diff = now - timestamp_signal
+            # If timestamp was not update properly
+            if timestamp_diff > timestamp_max_diff:
+                # Check if last kill was in the last 60 seconds and reboot
+                killall()
+                now = int(time.time())
+                if (now - last_kill_timestamp) < 3 * timestamp_max_diff:
+                    logging.info("Rebooting, last kill too recent, timestamp_diff: " + str(
+                        timestamp_diff) + ", current command:" + cur_command)
+                    sockConnect()
+                    os.system("shutdown -r now")
+                    time.sleep(20)
+                else:
+                    last_kill_timestamp = now
 
-            killCount += 1
-            logMsg("timestampMaxDiff kill(#" + str(killCount) + "), timestampDiff:" + str(
-                timestampDiff) + " command '" + curCommand + "'")
-            # Reboot if we reach the max number of kills allowed
-            if killCount >= maxKill:
-                logMsg("Rebooting, maxKill reached, current command:" + curCommand)
-                sockConnect()
-                os.system("shutdown -r now")
-                time.sleep(20)
-            else:
-                curCommand = selectCommand()  # select properly the current command to be executed
-                execCommand(curCommand)  # start the command
+                kill_count += 1
+                logging.info("timestamp_max_diff kill(#" + str(kill_count) + "), timestamp_diff:" + str(
+                    timestamp_diff) + " command '" + cur_command + "'")
+                # Reboot if we reach the max number of kills allowed
+                if kill_count >= max_kill:
+                    logging.info("Rebooting, max_kill reached, current command:" + cur_command)
+                    sockConnect()
+                    os.system("shutdown -r now")
+                    time.sleep(20)
+                else:
+                    cur_command = select_command()  # select properly the current command to be executed
+                    execCommand(cur_command)  # start the command
 
-        time.sleep(1)
-except KeyboardInterrupt:  # Ctrl+c
-    print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
-    killall()
-    sys.exit(1)
+            time.sleep(1)
+    except KeyboardInterrupt:  # Ctrl+c
+        print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        killall()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    # timestampFile = ""
+    var_dir = ""
+    timestamp = 0
+    timestamp_max_diff = 0
+    commands = []
+    last_kill_timestamp = 0
+    timestamp_signal = 0
+    timestamp_diff = 0
+    main()
+
+"""
+# Log messages adding timestamp before the message
+def logMsg(msg):
+    global logFile
+    now = datetime.now()
+    date_str = str(now.ctime()) + ": " + str(msg)
+    with open(logFile, 'a') as fp:
+        fp.write(date_str + '\n')
+    print(date_str)
+
+
+# Update the timestamp file with machine current timestamp
+def updateTimestamp():
+    global timestampFile
+    command = "echo " + str(int(time.time())) + " > " + timestampFile
+    # retcode = os.system(command)
+    global timestamp_signal
+    timestamp_signal = int(time.time())
+"""
