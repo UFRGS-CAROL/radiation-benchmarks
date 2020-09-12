@@ -8,12 +8,9 @@ from .server_parameters import REBOOTING_SLEEP, LOG_FILE
 from .common import Codes, execute_command
 
 
-class MachineStatus:
-    ON = "ON"
-    OFF = "OFF"
-
-
 class RebootMachine(threading.Thread):
+    __ON = "ON"
+    __OFF = "OFF"
 
     def __init__(self, machine_address, switch_model, switch_port, switch_ip):
         super(RebootMachine, self).__init__()
@@ -23,18 +20,13 @@ class RebootMachine(threading.Thread):
         self.__switch_ip = switch_ip
         self.__reboot_status = Codes.SUCCESS
         self.__switch_model = switch_model
-        # self.__log = Logging(log_file=logFile)
-
-        # self.__port_count = port_count
-        self.__port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
-            switch_port, switch_port - 1, switch_port - 1, switch_port - 1)
 
     def run(self):
         logging.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                      f" switch switch_port: {self.__switch_port}")
-        self.__select_command_on_switch(MachineStatus.OFF)
+        self.__select_command_on_switch(self.__OFF)
         time.sleep(REBOOTING_SLEEP)
-        self.__select_command_on_switch(MachineStatus.ON)
+        self.__select_command_on_switch(self.__ON)
 
     def __select_command_on_switch(self, status):
         if self.__switch_model == "default":
@@ -48,7 +40,7 @@ class RebootMachine(threading.Thread):
         to_change = "000000000000000000000000"
         led = f"{to_change[:(self.__switch_port - 1)]}1{to_change[self.__switch_port:]}"
 
-        if status == MachineStatus.ON:
+        if status == self.__ON:
             url = f'http://{self.__switch_ip}/ons.cgi?led={led}'
         else:
             url = f'http://{self.__switch_ip}/offs.cgi?led={led}'
@@ -79,8 +71,11 @@ class RebootMachine(threading.Thread):
             self.__reboot_status = Codes.ERROR
 
     def __common_switch_command(self, status):
+        port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
+            self.__switch_port, self.__switch_port - 1, self.__switch_port - 1, self.__switch_port - 1)
+
         cmd = 'curl --data \"'
-        cmd += self.__port_default_cmd % ("On" if status == MachineStatus.ON else "Off")
+        cmd += port_default_cmd % ("On" if status == self.__ON else "Off")
         cmd += '&Apply=Apply\" '
         cmd += f'http://%s/tgi/iocontrol.tgi {self.__switch_ip}'
         cmd += '-o /dev/null '
