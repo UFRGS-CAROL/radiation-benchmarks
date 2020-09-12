@@ -4,7 +4,7 @@ import requests
 import json
 import logging
 
-from .server_parameters import REBOOTING_SLEEP, LOG_FILE
+from .server_parameters import REBOOTING_SLEEP
 from .common import Codes, execute_command
 
 
@@ -14,7 +14,6 @@ class RebootMachine(threading.Thread):
 
     def __init__(self, machine_address, switch_model, switch_port, switch_ip):
         super(RebootMachine, self).__init__()
-
         self.__address = machine_address
         self.__switch_port = switch_port
         self.__switch_ip = switch_ip
@@ -84,8 +83,9 @@ class RebootMachine(threading.Thread):
     def get_reboot_status(self):
         return self.__reboot_status
 
+
 # Debug process
-# reboot = RebootMachine(machine_address="192.168.1.5", switch_model="lindy", switch_port=2, switch_ip="192.168.1.100")
-# reboot.start()
-# print(f"Reboot status {reboot.get_reboot_status()}")
-# reboot.join()
+reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2, switch_ip="130.246.39.137")
+reboot.start()
+print(f"Reboot status {reboot.get_reboot_status()}")
+reboot.join()

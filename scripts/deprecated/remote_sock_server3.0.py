@@ -192,17 +192,17 @@ class RebootMachine(threading.Thread):
 # Socket server
 ################################################
 # Create an INET, STREAMing socket
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def startSocket():
 	# Bind the socket to a public host, and a well-known port
-	serverSocket.bind((serverIP, socketPort))
+	server_socket.bind((serverIP, socketPort))
 	print "\tServer bind to: ",serverIP
 	# Become a server socket
-	serverSocket.listen(15)
+	server_socket.listen(15)
 	
 	while 1:
 		# Accept connections from outside
-		(clientSocket, address) = serverSocket.accept()
+		(clientSocket, address) = server_socket.accept()
 		print "connection from "+str(address[0])
 		if address[0] in IPmachines:
 			IPLastConn[address[0]]=time.time() # Set new timestamp
@@ -287,7 +287,7 @@ try:
 	startSocket()
 except KeyboardInterrupt:
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
-	serverSocket.close()
+	server_socket.close()
 	sys.exit(1)
 
 

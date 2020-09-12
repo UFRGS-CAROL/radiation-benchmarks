@@ -112,3 +112,31 @@ class Machine(threading.Thread):
         """
         self.__is_machine_active = False
         super(Machine, self).join(*args, **kwargs)
+
+
+# Debug thread
+from queue import Queue
+
+print("CREATING THE MACHINE")
+machine = Machine(
+    ip="127.0.0.1",
+    diff_reboot=1,
+    hostname="test",
+    power_switch_ip="127.0.0.1",
+    power_switch_port=1,
+    power_switch_model="lindy",
+    messages_queue=Queue()
+)
+
+print("EXECUTING THE MACHINE")
+machine.start()
+machine.set_timestamp(999999)
+
+print("SLEEPING THE MACHINE")
+time.sleep(30)
+
+print("JOINING THE MACHINE")
+machine.join()
+
+print("RAGE AGAINST THE MACHINE")
+
