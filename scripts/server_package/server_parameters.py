@@ -11,7 +11,7 @@ SLEEP_TIME = 5
 
 # IP of the remote socket server (hardware watchdog)
 # SERVER_IP = "192.168.1.5"
-SERVER_IP = "127.0.0.1"
+SERVER_IP = "25.91.229.61"
 
 # time of a hard reboot
 REBOOTING_SLEEP = 10
