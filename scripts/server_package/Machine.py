@@ -3,7 +3,7 @@ import time
 import logging
 
 from .RebootMachine import RebootMachine
-from .server_parameters import BOOT_PROBLEM_MAX_DELTA
+from .server_parameters import BOOT_PROBLEM_MAX_DELTA, SLEEP_TIME, LOGGER_NAME
 
 
 class Machine(threading.Thread):
@@ -30,6 +30,7 @@ class Machine(threading.Thread):
         self.__queue = kwargs.pop("messages_queue")
         super(Machine, self).__init__(*args, **kwargs)
         self.__timestamp = time.time()
+        self.__logger = logging.getLogger(LOGGER_NAME)
 
         # Stops the thread when false
         self.__is_machine_active = True
@@ -49,33 +50,47 @@ class Machine(threading.Thread):
             now = time.time()
             last_conn_delta = now - self.__timestamp
             if not boot_problem_disable:
+                # print(last_conn_delta)
                 # If machine is not working fine reboot it
                 if self.__diff_reboot < last_conn_delta < lower_threshold:
                     reboot_delta = now - last_reboot_timestamp
                     # If the reboot delta is bigger than the allowed reboot
                     if reboot_delta > self.__diff_reboot:
-                        reboot_msg, last_reboot_timestamp = self.__reboot_this_machine()
-                        # print(reboot_msg)
+                        reboot_status, last_reboot_timestamp = self.__reboot_this_machine()
+                        self.__log(reboot_status)
 
                 # If machine did not reboot, log this and set it to not check again
                 elif lower_threshold < last_conn_delta < upper_threshold:
                     message_string = f"Boot Problem IP  {self.__ip} ({self.__hostname})"
                     # print(message_string)
-                    logging.error(message_string)
+                    self.__logger.error(message_string)
                     boot_problem_disable = True
                 # IPActiveTest[address] = False
                 elif last_conn_delta > upper_threshold:
-                    reboot_msg, last_reboot_timestamp = self.__reboot_this_machine()
-                    # print(reboot_msg)
+                    reboot_status, last_reboot_timestamp = self.__reboot_this_machine()
+                    self.__log(reboot_status)
             else:
                 msg = f"IP {self.__ip} waiting due boot problem f{BOOT_PROBLEM_MAX_DELTA}s"
-                logging.info(msg)
+                self.__logger.info(msg)
                 # print(msg)
                 time.sleep(BOOT_PROBLEM_MAX_DELTA)
+
+            # sleep before re-check again
+            time.sleep(SLEEP_TIME)
+
+    def __log(self, reboot_status):
+        message = {
+            "msg": "Rebooted", "ip": self.__ip, "status": reboot_status
+        }
+        # TODO: finish enqueue process
+        # self.__queue.put(message)
+        reboot_msg = f"Rebooting IP {self.__ip} ({self.__hostname}) status {reboot_status}"
+        self.__logger.info(reboot_msg)
 
     def __reboot_this_machine(self):
         """
         reboot the device based on RebootMachine class
+        :return reboot_status
         :return: last_last_reboot_timestamp
         when the last reboot was performed
         """
@@ -88,14 +103,8 @@ class Machine(threading.Thread):
         reboot_thread.start()
         reboot_thread.join()
         reboot_status = reboot_thread.get_reboot_status()
-        message = {
-            "msg": "Rebooted", "ip": self.__ip, "status": reboot_status
-        }
-        logging.info(f"Rebooted IP {self.__ip} ({self.__hostname}) status {reboot_status}")
-        # TODO: replace by enqueue process
-        reboot_msg = f"Rebooting IP {self.__ip} ({self.__hostname}) status {reboot_status}"
-        # self.__queue.put(message)
-        return reboot_msg, last_reboot_timestamp
+
+        return reboot_status, last_reboot_timestamp
 
     def set_timestamp(self, timestamp):
         """
@@ -114,10 +123,18 @@ class Machine(threading.Thread):
         super(Machine, self).join(*args, **kwargs)
 
 
-# Debug thread
+"""
+# Debug 
 from queue import Queue
-
+from .server_parameters import LOG_FILE
 print("CREATING THE MACHINE")
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+    datefmt='%m-%d %H:%M',
+    filename=LOG_FILE,
+    filemode='w'
+)
 machine = Machine(
     ip="127.0.0.1",
     diff_reboot=1,
@@ -133,10 +150,11 @@ machine.start()
 machine.set_timestamp(999999)
 
 print("SLEEPING THE MACHINE")
-time.sleep(30)
+time.sleep(300)
 
 print("JOINING THE MACHINE")
 machine.join()
 
 print("RAGE AGAINST THE MACHINE")
+"""
 

@@ -6,7 +6,7 @@ no more magic numbers
 # PORT the socket will listen to
 SOCKET_PORT = 8080
 
-# Time between checks
+# Time between machine checks
 SLEEP_TIME = 5
 
 # IP of the remote socket server (hardware watchdog)
@@ -17,7 +17,9 @@ SERVER_IP = "127.0.0.1"
 REBOOTING_SLEEP = 10
 
 # log in whatever path you are executing this script
-LOG_FILE = "server.log"
+LOG_FILE = "/home/fernando/radiation-benchmarks/scripts/server.log"
+# Logger obj name
+LOGGER_NAME = 'SOCK_SERVER_4.0.0'
 
 # Maximum sequentially reboot times
 MAX_REBOOT_TIMES = 50

@@ -4,7 +4,7 @@ import requests
 import json
 import logging
 
-from .server_parameters import REBOOTING_SLEEP
+from .server_parameters import REBOOTING_SLEEP, LOGGER_NAME
 from .common import Codes, execute_command
 
 
@@ -19,9 +19,10 @@ class RebootMachine(threading.Thread):
         self.__switch_ip = switch_ip
         self.__reboot_status = Codes.SUCCESS
         self.__switch_model = switch_model
+        self.__logger = logging.getLogger(LOGGER_NAME)
 
     def run(self):
-        logging.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
+        self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                      f" switch switch_port: {self.__switch_port}")
         self.__select_command_on_switch(self.__OFF)
         time.sleep(REBOOTING_SLEEP)
@@ -65,7 +66,7 @@ class RebootMachine(threading.Thread):
             requests_status.raise_for_status()
             self.__reboot_status = Codes.SUCCESS
         except requests.RequestException:
-            logging.exception(f"Could not change Lindy IP switch status, portNumber: {self.__switch_port} "
+            self.__logger.exception(f"Could not change Lindy IP switch status, portNumber: {self.__switch_port} "
                               f" status:{status} switchIP: {self.__switch_ip}")
             self.__reboot_status = Codes.ERROR
 
@@ -85,7 +86,7 @@ class RebootMachine(threading.Thread):
 
 
 # Debug process
-reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2, switch_ip="130.246.39.137")
-reboot.start()
-print(f"Reboot status {reboot.get_reboot_status()}")
-reboot.join()
+# reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2, switch_ip="130.246.39.137")
+# reboot.start()
+# print(f"Reboot status {reboot.get_reboot_status()}")
+# reboot.join()

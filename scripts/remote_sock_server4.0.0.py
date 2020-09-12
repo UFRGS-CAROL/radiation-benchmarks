@@ -5,7 +5,7 @@ import time
 import logging
 import queue
 
-from server_package.server_parameters import SERVER_IP, SOCKET_PORT, MACHINES, LOG_FILE
+from server_package.server_parameters import SERVER_IP, SOCKET_PORT, MACHINES, LOG_FILE, LOGGER_NAME
 from server_package.common import Codes
 from server_package.Machine import Machine
 
@@ -48,14 +48,14 @@ def logging_setup():
     # )
 
     # create logger with 'spam_application'
-    logger = logging.getLogger('SOCK SERVER 4.0.0')
+    logger = logging.getLogger(LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(LOG_FILE)
     fh.setLevel(logging.DEBUG)
     # create console handler with a higher log level
     ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    ch.setLevel(logging.DEBUG)
     # create formatter and add it to the handlers
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m-%d %H:%M')
     fh.setFormatter(formatter)
@@ -63,6 +63,7 @@ def logging_setup():
     # add the handlers to the logger
     logger.addHandler(fh)
     logger.addHandler(ch)
+    return logger
 
 
 def main():
@@ -71,7 +72,7 @@ def main():
     :return: None
     """
     # log format
-    logging_setup()
+    logger = logging_setup()
 
     # Queue to print the messages in a good way
     messages_queue = queue.Queue()
@@ -87,7 +88,7 @@ def main():
             # Initialize a list that contains all Machines
             machines_hash = generate_machine_hash(messages_queue)
 
-            logging.info("\tServer bind to: ", SERVER_IP)
+            logger.info(f"\tServer bind to: {SERVER_IP}")
             # Become a server socket
             # TODO: find the correct value for backlog parameter
             server_socket.listen(15)
@@ -107,7 +108,7 @@ def main():
         for mac_obj in machines_hash.values():
             mac_obj.join()
 
-        logging.exception("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        logger.exception("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(Codes.CTRL_C)
 
 
