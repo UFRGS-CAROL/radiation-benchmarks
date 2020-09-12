@@ -19,6 +19,14 @@ REBOOTING_SLEEP = 10
 # log in whatever path you are executing this script
 LOG_FILE = "server.log"
 
+# Maximum sequentially reboot times
+MAX_REBOOT_TIMES = 50
+
+# Boot problem disable delta
+# Machine class will wait this time
+# to reboot again after a boot problem
+BOOT_PROBLEM_MAX_DELTA = 300  # e.g. 300s (5min)
+
 """
 Set the machines IP to check
 the ones which enabled parameter is false are not checked

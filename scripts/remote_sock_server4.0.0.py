@@ -3,13 +3,14 @@
 import socket
 import time
 import logging
+import queue
 
 from server_package.server_parameters import SERVER_IP, SOCKET_PORT, MACHINES, LOG_FILE
 from server_package.common import Codes
 from server_package.Machine import Machine
 
 
-def generate_machine_hash():
+def generate_machine_hash(messages_queue):
     """
     Generate the objects for the devices
     :return:
@@ -23,12 +24,45 @@ def generate_machine_hash():
                 hostname=mac["hostname"],
                 power_switch_ip=mac["power_switch_ip"],
                 power_switch_port=mac["power_switch_port"],
-                power_switch_model=mac["power_switch_model"]
+                power_switch_model=mac["power_switch_model"],
+                messages_queue=messages_queue
             )
 
             machines_hash[mac["ip"]] = mac_obj
             mac_obj.start()
     return machines_hash
+
+
+def logging_setup():
+    """
+    Logging setup
+    :return:
+    """
+    # set up logging to file - see previous section for more details
+    # logging.basicConfig(
+    #     level=logging.DEBUG,
+    #     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+    #     datefmt='%m-%d %H:%M',
+    #     filename=LOG_FILE,
+    #     filemode='w'
+    # )
+
+    # create logger with 'spam_application'
+    logger = logging.getLogger('SOCK SERVER 4.0.0')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(LOG_FILE)
+    fh.setLevel(logging.DEBUG)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m-%d %H:%M')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
 
 
 def main():
@@ -37,14 +71,10 @@ def main():
     :return: None
     """
     # log format
-    # set up logging to file - see previous section for more details
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%m-%d %H:%M',
-        filename=LOG_FILE,
-        filemode='w'
-    )
+    logging_setup()
+
+    # Queue to print the messages in a good way
+    messages_queue = queue.Queue()
 
     # attach signal handler for CTRL + C
     try:
@@ -55,9 +85,9 @@ def main():
             server_socket.bind((SERVER_IP, SOCKET_PORT))
 
             # Initialize a list that contains all Machines
-            machines_hash = generate_machine_hash()
+            machines_hash = generate_machine_hash(messages_queue)
 
-            print("\tServer bind to: ", SERVER_IP)
+            logging.info("\tServer bind to: ", SERVER_IP)
             # Become a server socket
             # TODO: find the correct value for backlog parameter
             server_socket.listen(15)
@@ -77,7 +107,7 @@ def main():
         for mac_obj in machines_hash.values():
             mac_obj.join()
 
-        print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        logging.exception("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(Codes.CTRL_C)
 
 

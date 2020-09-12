@@ -1,9 +1,9 @@
 import threading
 import time
-from datetime import datetime
 import logging
 
-from .server_parameters import SLEEP_TIME
+from .RebootMachine import RebootMachine
+from .server_parameters import BOOT_PROBLEM_MAX_DELTA
 
 
 class Machine(threading.Thread):
@@ -27,50 +27,75 @@ class Machine(threading.Thread):
         self.__switch_ip = kwargs.pop("power_switch_ip")
         self.__switch_port = kwargs.pop("power_switch_port")
         self.__switch_model = kwargs.pop("power_switch_model")
-
+        self.__queue = kwargs.pop("messages_queue")
         super(Machine, self).__init__(*args, **kwargs)
         self.__timestamp = time.time()
-        self.__machine_status = True
+
+        # Stops the thread when false
+        self.__is_machine_active = True
 
     def run(self):
-        # Check if machine is working fine
-        now = datetime.now()
-        then = datetime.fromtimestamp(self.__timestamp)
-        seconds = (now - then).total_seconds()
+        # lower and upper threshold for reboot interval
         lower_threshold = self.__time_min_reboot_threshold * self.__diff_reboot
         upper_threshold = self.__time_max_reboot_threshold * self.__diff_reboot
-        # If machine is not working fine reboot it
-        while self.__machine_status:
 
-            # If machine is not working fine reboot it
-            if self.__diff_reboot < seconds < lower_threshold:
-                # reboot = datetime.fromtimestamp(rebooting[address])
-                # if (now - reboot).total_seconds() > IPtoDiffReboot[address]:
-                #     rebooting[address] = time.time()
-                #         print("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
-                #     # Reboot machine in another thread
-                #     RebootMachine(address).start()
-                logging.info(f"Rebooting IP {self.__ip} ({self.__hostname})")
+        # Last reboot timestamp
+        last_reboot_timestamp = 0
 
-            # If machine did not reboot, log this and set it to not check again
-            elif lower_threshold < seconds < upper_threshold:
-                # print("Boot Problem IP " + address + " (" + IPtoNames[address] + ")")
-                logging.error(f"Boot Problem IP  {self.__ip} ({self.__hostname})")
+        # boot problem disable
+        boot_problem_disable = False
+        while self.__is_machine_active:
+            # Check if machine is working fine
+            now = time.time()
+            last_conn_delta = now - self.__timestamp
+            if not boot_problem_disable:
+                # If machine is not working fine reboot it
+                if self.__diff_reboot < last_conn_delta < lower_threshold:
+                    reboot_delta = now - last_reboot_timestamp
+                    # If the reboot delta is bigger than the allowed reboot
+                    if reboot_delta > self.__diff_reboot:
+                        reboot_msg, last_reboot_timestamp = self.__reboot_this_machine()
+                        # print(reboot_msg)
 
-            # IPActiveTest[address] = False
-            elif seconds > upper_threshold:
-                pass
-                # if address in IPtoNames:
-                #     print("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
-            logging.info(f"Rebooting IP {self.__ip} ({self.__hostname})")
-            time.sleep(SLEEP_TIME)
-        # RebootMachine(address).start()
+                # If machine did not reboot, log this and set it to not check again
+                elif lower_threshold < last_conn_delta < upper_threshold:
+                    message_string = f"Boot Problem IP  {self.__ip} ({self.__hostname})"
+                    # print(message_string)
+                    logging.error(message_string)
+                    boot_problem_disable = True
+                # IPActiveTest[address] = False
+                elif last_conn_delta > upper_threshold:
+                    reboot_msg, last_reboot_timestamp = self.__reboot_this_machine()
+                    # print(reboot_msg)
+            else:
+                msg = f"IP {self.__ip} waiting due boot problem f{BOOT_PROBLEM_MAX_DELTA}s"
+                logging.info(msg)
+                # print(msg)
+                time.sleep(BOOT_PROBLEM_MAX_DELTA)
 
-    def reboot(self):
+    def __reboot_this_machine(self):
         """
         reboot the device based on RebootMachine class
-        :return: None
+        :return: last_last_reboot_timestamp
+        when the last reboot was performed
         """
+        last_reboot_timestamp = time.time()
+        # Reboot machine in another thread
+        reboot_thread = RebootMachine(machine_address=self.__ip,
+                                      switch_model=self.__switch_model,
+                                      switch_port=self.__switch_port,
+                                      switch_ip=self.__switch_ip)
+        reboot_thread.start()
+        reboot_thread.join()
+        reboot_status = reboot_thread.get_reboot_status()
+        message = {
+            "msg": "Rebooted", "ip": self.__ip, "status": reboot_status
+        }
+        logging.info(f"Rebooted IP {self.__ip} ({self.__hostname}) status {reboot_status}")
+        # TODO: replace by enqueue process
+        reboot_msg = f"Rebooting IP {self.__ip} ({self.__hostname}) status {reboot_status}"
+        # self.__queue.put(message)
+        return reboot_msg, last_reboot_timestamp
 
     def set_timestamp(self, timestamp):
         """
@@ -85,5 +110,5 @@ class Machine(threading.Thread):
         Set if thread should stops or not
         :return:
         """
-        self.__machine_status = False
+        self.__is_machine_active = False
         super(Machine, self).join(*args, **kwargs)
