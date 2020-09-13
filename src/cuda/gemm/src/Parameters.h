@@ -48,8 +48,8 @@ struct Parameters {
 	bool use_tensor_cores;
 	bool triplicated;
 	std::string dmr;
-	double alpha;
-	double beta;
+	float alpha;
+	float beta;
 	bool use_cublas;
 	bool use_cutlass;
 

@@ -254,7 +254,7 @@ void setup_execute(Parameters& parameters,
 
 		parameters.start_iteration();
 
-		mult_env.gemm(parameters.alpha, parameters.beta,
+		mult_env.gemm(half_t(parameters.alpha), half_t(parameters.beta),
 				parameters.size_matrices, parameters.size_matrices, threshold);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		;

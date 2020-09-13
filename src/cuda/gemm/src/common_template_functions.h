@@ -22,7 +22,9 @@
 #endif
 
 #if (__CUDACC_VER_MAJOR__ <= 7)
-using half = float;
+#include "../../mxm/half.hpp"
+
+using half = half_float::half;
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
