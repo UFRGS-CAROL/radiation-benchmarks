@@ -232,7 +232,7 @@ void debug_mxm(std::vector<t>& a, std::vector<t>& b, std::vector<t> c,
 template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
-		Parameters& log, const uint32_t threshold, const bool dmr) {
+		Parameters& parameter, const uint32_t threshold, const bool dmr) {
 	uint32_t host_errors = 0;
 	uint32_t memory_errors = 0;
 
@@ -258,19 +258,19 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			std::stringstream error_detail("");
 			error_detail << std::setprecision(20) << std::scientific;
-			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
-					<< i % log.size_matrices << "], r: ";
+			error_detail << "p: [" << int(floor(i / parameter.size_matrices)) << ", "
+					<< i % parameter.size_matrices << "], r: ";
 			error_detail << full_precision;
 			error_detail << ", e: " << gold_value << " smaller_precision: "
 					<< half_precision;
 
-			if (log.verbose && (host_errors < 10)) {
+			if (parameter.verbose && (host_errors < 10)) {
 				std::cout << error_detail.str() << std::endl;
 
 				std::cout << is_output_diff << " " << !dmr_equals << std::endl;
 			}
 
-			log.log_error(error_detail.str());
+			parameter.log_error(error_detail.str());
 			host_errors++;
 			if (is_output_diff && dmr_equals && dmr) {
 				memory_errors++;
@@ -286,14 +286,14 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	if (dmr_err != 0) {
 		std::string error_detail;
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
-		log.log_info(error_detail);
+		parameter.log_info(error_detail);
 	}
 
 	if (memory_errors != 0) {
-		log.log_info("dmr1_equals_dmr2_detected");
+		parameter.log_info("dmr1_equals_dmr2_detected");
 	}
 
-	log.update_error_count(host_errors);
+	parameter.update_error_count(host_errors);
 	if (host_errors != 0)
 		std::cout << "#";
 

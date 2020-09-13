@@ -80,25 +80,25 @@ Parameters::Parameters(int argc, char** argv) :
 	this->log = std::make_shared<rad::Log>(app, test_info);
 }
 
-std::ostream& operator<<(std::ostream& os, const Parameters& log_obj) {
+std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {
 	os << std::boolalpha;
-	os << "Generate: " << log_obj.generate << std::endl;
-	os << "A input path: " << log_obj.a_input_path << std::endl;
-	os << "B input path: " << log_obj.b_input_path << std::endl;
-	os << "C input path: " << log_obj.c_input_path << std::endl;
-	os << "Gold in/out path: " << log_obj.gold_inout_path << std::endl;
-	os << "Iterations: " << log_obj.iterations << std::endl;
-	os << "Matrix size: " << log_obj.size_matrices << std::endl;
-	os << "Precision: " << log_obj.precision << std::endl;
-	os << "Verbose: " << log_obj.verbose << std::endl;
-	os << "DMR type: " << log_obj.dmr << std::endl;
-	os << "Tensor cores: " << log_obj.use_tensor_cores << std::endl;
-	os << "Alpha: " << log_obj.alpha << std::endl;
-	os << "Beta: " << log_obj.beta << std::endl;
-	os << "DMR Block checking " << log_obj.check_block << std::endl;
-	os << "Use cuBLAS: " << log_obj.use_cublas << std::endl;
+	os << "Generate: " << parameter.generate << std::endl;
+	os << "A input path: " << parameter.a_input_path << std::endl;
+	os << "B input path: " << parameter.b_input_path << std::endl;
+	os << "C input path: " << parameter.c_input_path << std::endl;
+	os << "Gold in/out path: " << parameter.gold_inout_path << std::endl;
+	os << "Iterations: " << parameter.iterations << std::endl;
+	os << "Matrix size: " << parameter.size_matrices << std::endl;
+	os << "Precision: " << parameter.precision << std::endl;
+	os << "Verbose: " << parameter.verbose << std::endl;
+	os << "DMR type: " << parameter.dmr << std::endl;
+	os << "Tensor cores: " << parameter.use_tensor_cores << std::endl;
+	os << "Alpha: " << parameter.alpha << std::endl;
+	os << "Beta: " << parameter.beta << std::endl;
+	os << "DMR Block checking " << parameter.check_block << std::endl;
+	os << "Use cuBLAS: " << parameter.use_cublas << std::endl;
 	os << "Will it use the already created matrices (check_input_existence): " <<
-			(log_obj.check_input_existence ? "yes" : "no") << std::endl;
+			(parameter.check_input_existence ? "yes" : "no") << std::endl;
 	os << "LOGFILENAME: " << ::get_log_file_name();
 	return os;
 }
