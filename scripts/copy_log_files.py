@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 import subprocess
 import os
 from time import sleep
-import sys
-sys.path.insert(0, os.path.abspath("."))
+from paramiko import SSHClient, AutoAddPolicy, util
+from scp import SCPClient
 
-from remote_sock_parameters import IPmachines, IPtoNames
+from .server_package.server_parameters import MACHINES
 
+IPmachines = MACHINES
+IPtoNames = MACHINES
 
 DEFAULT_RADIATION_PATH = "/var/radiation-benchmarks/log"
 LOGS_DIR = "logs"
@@ -45,6 +47,35 @@ def scp_all_files_from_device(device_ip, device_folder):
         print("Trying for the {}th time".format(i))
         print(p.stderr)
         sleep(10)
+
+
+def create_ssh_client():
+    ssh_clients = {}
+    for ip in IPmachines:
+        ssh = SSHClient()
+        ssh.load_system_host_keys()
+        ssh.connect(ip, username="carol", password="qwerty0", allow_agent=False, look_for_keys=False)
+
+        scp = SCPClient(ssh.get_transport())
+
+        ssh_clients[ip] = {"ssh": ssh, "scp": scp}
+
+    return ssh_clients
+
+
+def scp_from_devices(full_path):
+    ssh_clients = create_ssh_client()
+    general_var_dir = "/var/radiation-benchmarks/"
+
+    for dir_ip in IPtoNames:
+        # GET the logs from machine
+        scp = ssh_clients[dir_ip]["scp"]
+        ssh = ssh_clients[dir_ip]["ssh"]
+
+        scp.get(general_var_dir, full_path, recursive=True)
+        scp.close()
+        ssh.close()
+    return True
 
 
 def main():
