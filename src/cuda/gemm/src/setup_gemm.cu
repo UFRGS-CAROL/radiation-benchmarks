@@ -4,6 +4,12 @@
 #include "common_template_functions.h"
 #include "no_tensor_kernels.h"
 
+std::string get_cuda_cc_version() {
+	std::string ret = "CUDACC_VER_MAJOR_"
+			+ std::to_string(__CUDACC_VER_MAJOR__);
+	ret += "CUDACC_VER_MINOR_" + std::to_string(__CUDACC_VER_MINOR__);
+	return ret;
+}
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
@@ -299,8 +305,7 @@ void setup_execute(Parameters& parameters,
 			}
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				read_abc_files(
-						parameters.a_input_path, a_vector_host,
+				read_abc_files(parameters.a_input_path, a_vector_host,
 						parameters.b_input_path, b_vector_host,
 						parameters.c_input_path, c_vector_host);
 				read_gold(parameters.gold_inout_path, gold_host);

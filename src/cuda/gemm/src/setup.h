@@ -8,6 +8,8 @@
 #ifndef SETUP_H_
 #define SETUP_H_
 
+#include <string>
+
 struct Parameters;
 
 /**
@@ -23,6 +25,9 @@ void setup_gemm_cublas(Parameters&);
 void setup_gemm_tensor_cores_unhardened(Parameters&);
 void setup_gemm_tensor_cores_dmr(Parameters&);
 
-
+/**
+ * Get the __CUDACC_VER_MAJOR__ from NVCC
+ */
+std::string get_cuda_cc_version();
 
 #endif /* SETUP_GEMM_H_ */
