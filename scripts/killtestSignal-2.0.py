@@ -27,6 +27,8 @@ def sockConnect():
     try:
         # create an INET, STREAMing socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # python 3 requires a TIMEOUT
+        s.settimeout(2)
         # Now, connect with IP (or hostname) and PORT
         s.connect((sockServerIP, sockServerPORT))
         s.close()
@@ -133,7 +135,7 @@ def selectCommand():
 def execCommand(command):
     try:
         updateTimestamp()
-        if re.match(".*&\s*$", command):
+        if re.match(r".*&\s*$", command):
             # print "command should be ok"
             return os.system(command)
         else:
