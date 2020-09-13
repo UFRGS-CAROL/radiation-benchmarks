@@ -36,7 +36,7 @@ def generate_machine_hash(messages_queue):
 def logging_setup():
     """
     Logging setup
-    :return:
+    :return: logger
     """
     # set up logging to file - see previous section for more details
     # logging.basicConfig(
@@ -52,7 +52,7 @@ def logging_setup():
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(LOG_FILE)
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(logging.INFO)
     # create console handler with a higher log level
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -104,6 +104,7 @@ def main():
 
                 # Close the connection
                 client_socket.close()
+                logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
     except KeyboardInterrupt:
         for mac_obj in machines_hash.values():
             mac_obj.join()

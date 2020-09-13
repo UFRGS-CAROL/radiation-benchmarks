@@ -42,7 +42,7 @@ the ones which enabled parameter is false are not checked
 """
 MACHINES = [
     {
-        "ip": "192.168.1.11",
+        "ip": "25.63.132.38",
         "enabled": True,
         "diff_reboot": 100,
         "hostname": "carolk201",

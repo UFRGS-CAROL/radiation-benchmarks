@@ -61,7 +61,7 @@ class Machine(threading.Thread):
 
                 # If machine did not reboot, log this and set it to not check again
                 elif lower_threshold < last_conn_delta < upper_threshold:
-                    message_string = f"Boot Problem IP  {self.__ip} ({self.__hostname})"
+                    message_string = f"\tBoot Problem IP  {self.__ip} ({self.__hostname})"
                     # print(message_string)
                     self.__logger.error(message_string)
                     boot_problem_disable = True
@@ -70,7 +70,7 @@ class Machine(threading.Thread):
                     reboot_status, last_reboot_timestamp = self.__reboot_this_machine()
                     self.__log(reboot_status)
             else:
-                msg = f"IP {self.__ip} waiting due boot problem f{BOOT_PROBLEM_MAX_DELTA}s"
+                msg = f"\tIP {self.__ip} waiting due boot problem f{BOOT_PROBLEM_MAX_DELTA}s"
                 self.__logger.info(msg)
                 # print(msg)
                 time.sleep(BOOT_PROBLEM_MAX_DELTA)
@@ -84,7 +84,7 @@ class Machine(threading.Thread):
         }
         # TODO: finish enqueue process
         # self.__queue.put(message)
-        reboot_msg = f"Rebooting IP {self.__ip} ({self.__hostname}) status {reboot_status}"
+        reboot_msg = f"\tRebooting IP {self.__ip} ({self.__hostname}) status {reboot_status}"
         self.__logger.info(reboot_msg)
 
     def __reboot_this_machine(self):
@@ -122,6 +122,13 @@ class Machine(threading.Thread):
         self.__is_machine_active = False
         super(Machine, self).join(*args, **kwargs)
 
+    def get_hostname(self):
+        """
+        Return hostname
+        :return: hostname str
+        """
+        return self.__hostname
+
 
 """
 # Debug 
@@ -157,4 +164,3 @@ machine.join()
 
 print("RAGE AGAINST THE MACHINE")
 """
-
