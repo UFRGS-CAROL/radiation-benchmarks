@@ -97,6 +97,8 @@ std::ostream& operator<<(std::ostream& os, const Parameters& log_obj) {
 	os << "Beta: " << log_obj.beta << std::endl;
 	os << "DMR Block checking " << log_obj.check_block << std::endl;
 	os << "Use cuBLAS: " << log_obj.use_cublas << std::endl;
+	os << "Will it use the already created matrices (check_input_existence): " <<
+			(log_obj.check_input_existence ? "yes" : "no") << std::endl;
 	os << "LOGFILENAME: " << ::get_log_file_name();
 	return os;
 }
