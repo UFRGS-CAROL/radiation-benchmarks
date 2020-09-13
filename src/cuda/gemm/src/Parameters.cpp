@@ -85,7 +85,7 @@ Parameters::Parameters(int argc, char** argv) :
 #ifdef NVCCOPTFLAGS
 	opt_flags += STRING(NVCCOPTFLAGS);
 #endif
-
+	test_info += " nvcc_optimization_flags: " + opt_flags;
 	std::string app = "gemm_tensor_cores_" + this->precision;
 	this->log = std::make_shared<rad::Log>(app, test_info);
 }
