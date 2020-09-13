@@ -77,10 +77,13 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 	}
 
 	void gemm(half alpha, half beta, int wA, int wB, const uint32_t threshold) {
+#if (__CUDACC_VER_MAJOR__ >= 10)
+
 		rad::checkCublasErrors(
 				cublasHgemm(this->blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, wA, wB,
 						wA, &alpha, this->a_dev.data(), wA, this->b_dev.data(),
 						wB, &beta, this->c_dev.data(), wB));
+#endif
 	}
 
 	std::vector<real_t> memcpy_half_t_mem() {
@@ -92,9 +95,11 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 		rad::checkCublasErrors(cublasCreate(&this->blas_handle));
 
 		if (use_tensor_cores) {
+#if (__CUDACC_VER_MAJOR__ >= 10)
 			rad::checkCublasErrors(
 					cublasSetMathMode(this->blas_handle,
 							CUBLAS_TENSOR_OP_MATH));
+#endif
 
 		}
 	} //default constructor
