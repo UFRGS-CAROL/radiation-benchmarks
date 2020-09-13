@@ -14,12 +14,12 @@ class Machine(threading.Thread):
         """
         Initialize a new thread that represents a setup machine
         :param args: None
-        :param ip
-        :param diff_reboot
-        :param hostname
-        :param power_switch_ip
-        :param power_switch_port
-        :param power_switch_model
+        :param ip:
+        :param diff_reboot:
+        :param hostname:
+        :param power_switch_ip:
+        :param power_switch_port:
+        :param power_switch_model:
         """
         self.__ip = kwargs.pop("ip")
         self.__diff_reboot = kwargs.pop("diff_reboot")

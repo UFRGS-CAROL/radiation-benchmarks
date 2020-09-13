@@ -12,33 +12,44 @@ import signal
 import json
 from datetime import datetime
 
-timestampMaxDiffDefault = 30  # Time in seconds to wait for the timestamp update
+from .server_package.server_parameters import SERVER_IP, SOCKET_PORT
 
-maxKill = 5  # Max number of kills allowed
+# Time in seconds to wait for the timestamp update
+timestampMaxDiffDefault = 30
 
-timeWindowCommands = 1 * 60 * 60  # How long each command will execute, time window in seconds
+# Max number of kills allowed
+maxKill = 5
 
-sockServerIP = "192.168.1.5"
-sockServerPORT = 8080
+# How long each command will execute, time window in seconds
+timeWindowCommands = 3600
+
+# Config file
+confFile = '/etc/radiation-benchmarks.conf'
 
 
-# Connect to server and close connection, kind of ping
 def sockConnect():
+    """
+    Connect to server and close connection, kind of ping
+    :return:
+    """
     try:
         # create an INET, STREAMing socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # python 3 requires a TIMEOUT
         s.settimeout(2)
         # Now, connect with IP (or hostname) and PORT
-        s.connect((sockServerIP, sockServerPORT))
+        s.connect((SERVER_IP, SOCKET_PORT))
         s.close()
     except socket.error:
         print("could not connect to remote server, socket error")
-    # logMsg("socket connect error: "+str(eDetail))
 
 
-# Log messages adding timestamp before the message
 def logMsg(msg):
+    """
+    Log messages adding timestamp before the message
+    :param msg: message to print
+    :return:
+    """
     now = datetime.now()
     # fp = open(logFile, 'a')
     date_str = str(now.ctime()) + ": " + str(msg)
@@ -49,22 +60,31 @@ def logMsg(msg):
     print(date_str)
 
 
-# Update the timestamp file with machine current timestamp
 def updateTimestamp():
+    """
+    Update the timestamp file with machine current timestamp
+    :return:
+    """
     command = "echo " + str(int(time.time())) + " > " + timestampFile
     retcode = os.system(command)
     global timestampSignal
     timestampSignal = int(time.time())
 
 
-# Remove files with start timestamp of commands executing
 def cleanCommandExecLogs():
+    """
+    Remove files with start timestamp of commands executing
+    :return:
+    """
     os.system("rm -f " + varDir + "command_execstart_*")
 
 
-# Return True if the commandFile changed from the
-# last time it was executed. If the file was never executed returns False
 def checkCommandListChanges():
+    """
+    Return True if the commandFile changed from the
+    last time it was executed. If the file was never executed returns False
+    :return:
+    """
     curFile = varDir + "currentCommandFile"
     lastFile = varDir + "lastCommandFile"
     fp = open(curFile, "w")
@@ -81,8 +101,11 @@ def checkCommandListChanges():
         return True
 
 
-# Select the correct command to be executed from the commands
 def selectCommand():
+    """
+    Select the correct command to be executed from the commands
+    :return:
+    """
     if checkCommandListChanges():
         cleanCommandExecLogs()
 
@@ -133,6 +156,11 @@ def selectCommand():
 
 
 def execCommand(command):
+    """
+    Execute command
+    :param command: cmd to execute
+    :return:
+    """
     try:
         updateTimestamp()
         if re.match(r".*&\s*$", command):
@@ -190,8 +218,6 @@ def readCommands(filelist):
 ################################################
 # KillTest Main Execution
 ################################################
-confFile = '/etc/radiation-benchmarks.conf'
-
 # call the routine "receive_sginal" when SIGUSR1 is received
 signal.signal(signal.SIGUSR1, receive_signal)
 # call the routine "receive_sginal" when SIGUSR2 is received
@@ -199,7 +225,6 @@ signal.signal(signal.SIGUSR2, receive_signal)
 
 if not os.path.isfile(confFile):
     raise FileNotFoundError("System configuration file not found!(" + confFile + ")")
-    # sys.exit(1)
 
 try:
     config = configparser.RawConfigParser()
@@ -280,4 +305,5 @@ try:
 except KeyboardInterrupt:  # Ctrl+c
     print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
     killall()
-    sys.exit(1)
+    # 130 is the key for CTRL + c
+    exit(130)

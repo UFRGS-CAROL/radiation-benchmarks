@@ -22,9 +22,9 @@ class RebootMachine(threading.Thread):
         self.__logger = logging.getLogger(LOGGER_NAME)
 
     def run(self):
-        # Remove FAKE when rebooting lines are uncommented
+        # TODO: Remove FAKE when rebooting lines are uncommented
         self.__logger.info(f"\tFAKE FAKE Rebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
-                     f" switch switch_port: {self.__switch_port}")
+                           f" switch switch_port: {self.__switch_port}")
         # self.__select_command_on_switch(self.__OFF)
         time.sleep(REBOOTING_SLEEP)
         # self.__select_command_on_switch(self.__ON)
@@ -67,8 +67,8 @@ class RebootMachine(threading.Thread):
             requests_status.raise_for_status()
             self.__reboot_status = Codes.SUCCESS
         except requests.RequestException:
-            self.__logger.exception(f"Could not change Lindy IP switch status, portNumber: {self.__switch_port} "
-                              f" status:{status} switchIP: {self.__switch_ip}")
+            self.__logger.exception(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
+                                    f" status:{status} switchIP: {self.__switch_ip}")
             self.__reboot_status = Codes.ERROR
 
     def __common_switch_command(self, status):
