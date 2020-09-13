@@ -44,9 +44,10 @@ CXX=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-O3
-#LDFLAGS= -lm -pthread -lstdc++ 
+LDFLAGS= 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
+CFLAGS= -Wall -Wfatal-errors
+
 RAD_DIR=/home/carol/radiation-benchmarks
 
 INCLUDE=-I$(CUDAPATH)/include -I../common
