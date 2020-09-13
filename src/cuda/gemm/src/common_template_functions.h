@@ -63,11 +63,11 @@ static bool exists(std::string& path) {
 }
 
 template<typename half_t, typename real_t>
-void write_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
-		std::vector<real_t>& c_vector, std::vector<real_t>& d_vector,
-		std::string& a_file_path, std::string& b_file_path,
-		std::string& c_file_path, std::string& d_file_path) {
-
+void write_abc_files(
+		std::string& a_file_path, std::vector<half_t>& a_vector,
+		std::string& b_file_path, std::vector<half_t>& b_vector,
+		std::string& c_file_path, std::vector<real_t>& c_vector
+		) {
 	if (write_to_file(a_file_path, a_vector) == false) {
 		throw_line(a_file_path + " could not be written\n");
 	}
@@ -79,45 +79,51 @@ void write_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 	if (write_to_file(c_file_path, c_vector) == false) {
 		throw_line(c_file_path + " could not be written\n");
 	}
+}
 
+template<typename half_t, typename real_t>
+void read_abc_files(
+		std::string& a_file_path, std::vector<half_t>& a_vector,
+		std::string& b_file_path, std::vector<half_t>& b_vector,
+		std::string& c_file_path, std::vector<real_t>& c_vector
+		) {
+	if (read_from_file(a_file_path, a_vector) == false) {
+		throw_line(a_file_path + " could not be read\n");
+	}
+	if (read_from_file(b_file_path, b_vector) == false) {
+		throw_line(b_file_path + " could not be read\n");
+	}
+	if (read_from_file(c_file_path, c_vector) == false) {
+		throw_line(c_file_path + " could not be read\n");
+	}
+}
+
+
+template<typename real_t>
+void write_gold(std::string& d_file_path, std::vector<real_t>& d_vector) {
 	if (write_to_file(d_file_path, d_vector) == false) {
 		throw_line(d_file_path + " could not be written\n");
 	}
 }
 
-template<typename half_t, typename real_t>
-void read_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
-		std::vector<real_t>& c_vector, std::vector<real_t>& d_vector,
-		std::string& a_file_path, std::string& b_file_path,
-		std::string& c_file_path, std::string& d_file_path) {
-
-	if (read_from_file(a_file_path, a_vector) == false) {
-		throw_line(a_file_path + " could not be read\n");
-	}
-
-	if (read_from_file(b_file_path, b_vector) == false) {
-		throw_line(b_file_path + " could not be read\n");
-	}
-
-	if (read_from_file(c_file_path, c_vector) == false) {
-		throw_line(c_file_path + " could not be read\n");
-	}
-
+template<typename real_t>
+void read_gold(std::string& d_file_path, std::vector<real_t>& d_vector) {
 	if (read_from_file(d_file_path, d_vector) == false) {
 		throw_line(d_file_path + " could not be read\n");
 	}
 }
 
-template<typename half_t, typename real_t>
-void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
+template<typename half_t, typename real_t, const bool TENSOR_INPUT = false>
+void get_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 		std::vector<half_t>& b_vector, std::vector<real_t>& c_vector,
-		const bool tensor_input = false) {
+		std::string& a_file_path, std::string& b_file_path,
+		std::string& c_file_path, const bool read_abc = false) {
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	double min_val = GENERATOR_MINABSVALUE_GEMM;
 	double max_val = GENERATOR_MAXABSVALUE_GEMM;
-	if (tensor_input) {
+	if (TENSOR_INPUT) {
 		min_val = GENERATOR_MINABSVALUE_TENSOR;
 		max_val = GENERATOR_MAXABSVALUE_TENSOR;
 	}
@@ -127,11 +133,25 @@ void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 	b_vector.resize(matrix_size * matrix_size);
 	c_vector.resize(matrix_size * matrix_size);
 
+	if (read_abc == false) {
 #pragma omp parallel for
-	for (size_t i = 0; i < matrix_size * matrix_size; i++) {
-		a_vector[i] = half_t(dis(gen));
-		b_vector[i] = half_t(dis(gen));
-		c_vector[i] = real_t(dis(gen));
+		for (size_t i = 0; i < matrix_size * matrix_size; i++) {
+			a_vector[i] = half_t(dis(gen));
+			b_vector[i] = half_t(dis(gen));
+			c_vector[i] = real_t(dis(gen));
+		}
+
+		write_abc_files(
+				a_file_path, a_vector,
+				b_file_path, b_vector,
+				c_file_path, c_vector);
+
+	} else {
+		read_abc_files(
+				a_file_path, a_vector,
+				b_file_path, b_vector,
+				c_file_path, c_vector
+				);
 	}
 }
 
@@ -157,7 +177,6 @@ bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
 static bool equals(half& lhs, half& rhs, const uint32_t threshold = 0) {
 	return float(lhs) == float(rhs);
 }
-
 
 static std::ostream& operator<<(std::ostream& os, half &rhs) {
 	os << float(rhs);

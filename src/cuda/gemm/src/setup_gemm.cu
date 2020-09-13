@@ -76,7 +76,6 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 						wB, &beta, this->c_dev.data(), wB));
 	}
 
-
 	void gemm(half alpha, half beta, int wA, int wB, const uint32_t threshold) {
 		rad::checkCublasErrors(
 				cublasHgemm(this->blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, wA, wB,
@@ -219,13 +218,22 @@ void setup_execute(Parameters& parameters,
 
 	if (parameters.generate) {
 		std::cout << "Generating input matrices\n";
-		generate_input_matrices(parameters.size_matrices, a_vector_host,
-				b_vector_host, c_vector_host);
+		auto read_abc_files_on_generate = (parameters.check_input_existence
+				&& exists(parameters.a_input_path)
+				&& exists(parameters.b_input_path)
+				&& exists(parameters.c_input_path));
+
+		get_input_matrices(parameters.size_matrices, a_vector_host,
+				b_vector_host, c_vector_host, parameters.a_input_path,
+				parameters.b_input_path, parameters.c_input_path,
+				read_abc_files_on_generate);
 	} else {
 		std::cout << "Reading input matrices\n";
-		read_gold(a_vector_host, b_vector_host, c_vector_host, gold_host,
-				parameters.a_input_path, parameters.b_input_path,
-				parameters.c_input_path, parameters.gold_inout_path);
+		read_abc_files(parameters.a_input_path, a_vector_host,
+				parameters.b_input_path, b_vector_host, parameters.c_input_path,
+				c_vector_host);
+
+		read_gold(parameters.gold_inout_path, gold_host);
 	}
 
 	mult_env.a_dev = a_vector_host;
@@ -286,10 +294,11 @@ void setup_execute(Parameters& parameters,
 			}
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				read_gold(a_vector_host, b_vector_host, c_vector_host,
-						gold_host, parameters.a_input_path,
-						parameters.b_input_path, parameters.c_input_path,
-						parameters.gold_inout_path);
+				read_abc_files(
+						parameters.a_input_path, a_vector_host,
+						parameters.b_input_path, b_vector_host,
+						parameters.c_input_path, c_vector_host);
+				read_gold(parameters.gold_inout_path, gold_host);
 
 				mult_env.a_dev.resize(0);
 				mult_env.b_dev.resize(0);
@@ -313,10 +322,9 @@ void setup_execute(Parameters& parameters,
 	} else {
 		std::cout << "done.\n";
 	}
+
 	if (parameters.generate) {
-		write_gold(a_vector_host, b_vector_host, c_vector_host, d_vector_host,
-				parameters.a_input_path, parameters.b_input_path,
-				parameters.c_input_path, parameters.gold_inout_path);
+		write_gold(parameters.gold_inout_path, d_vector_host);
 	}
 }
 
@@ -367,8 +375,8 @@ void setup_gemm_cublas(Parameters& parameters) {
 
 void setup_gemm_cutlass(Parameters& parameters) {
 	if (parameters.precision == "half") {
-		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
-				parameters.use_tensor_cores);
+		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices,
+				parameters.size_matrices, parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
 
 	}

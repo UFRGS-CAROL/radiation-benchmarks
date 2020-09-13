@@ -1,27 +1,28 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import ConfigParser
+import configparser
 import copy
 import os
 import sys
 
-sys.path.insert(0, '../../include')
-from common_config import discover_board, execute_and_write_json_to_file
+# sys.path.insert(0, '../../include')
+from ...include.common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [8192, 1024]  # 4096
 PRECISIONS = ["float", "half"]  # , "half"]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [0]
 USE_CUBLAS = [0, 1]
+MEMTMR = False
 
 
-def config(board, arith_type, debug):
+def config(device, arith_type, debug):
     benchmark_bin = "gemm"
-    print("Generating " + benchmark_bin + " for CUDA, board:" + str(board))
+    print(f"Generating {benchmark_bin} for CUDA, board:{device}")
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(conf_file)
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
@@ -51,36 +52,30 @@ def config(board, arith_type, debug):
     for i in SIZES:
         for tc in USE_TENSOR_CORES:
             for cublas in USE_CUBLAS:
-                input_file = data_path + "/"
-
                 gen = [
                     ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                      bin_path + "/" + benchmark_bin + " "],
-                    ['--size ' + str(i)],
-                    ['--input_a ' + input_file + 'A_' + str(i) + "_use_tensor_" + str(tc) + '.matrix'],
-                    ['--input_b ' + input_file + 'B_' + str(i) + "_use_tensor_" + str(tc) + '.matrix'],
-                    ['--input_c ' + input_file + 'C_' + str(i) + "_use_tensor_" + str(tc) + '.matrix'],
-                    ['--gold ' + input_file + "GOLD_" + str(i) + "_use_tensor_" + str(tc) + ".matrix"],
-                    ['--verbose 0'],
-                    ['--tensor_cores ' + str(tc)],
-                    ['--triplicated 1'],
+                    [f'--size {i}'],
+                    [f'--input_a {data_path}/A_size_{i}.matrix'],
+                    [f'--input_b {data_path}/B_size_{i}.matrix'],
+                    [f'--input_c {data_path}/C_size_{i}.matrix'],
+                    [f'--gold {data_path}/GOLD_size_{i}_tensor_{tc}_cublas_{cublas}.matrix'],
+                    ['--verbose'],
+                    [f'--tensor_cores {tc}'],
                     ['--precision ' + str(arith_type)],
                     ['--use_cublas' if cublas == 1 else ''],
                     ['--iterations ' + str(ITERATIONS)],
-                    ['--generate 1']
-
+                    ['--triplicated'],
                 ]
 
                 # change mode and iterations for exe
                 exe = copy.deepcopy(gen)
-                exe[-1] = ['--generate 0']
+                gen.append(['--generate'])
 
                 generate.append(' '.join(str(r) for v in gen for r in v))
                 execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
-    os.rename(install_dir + "/scripts/json_files/gemm_wmma.json",
-              install_dir + "/scripts/json_files/gemm_wmma_" + arith_type + ".json")
 
 
 if __name__ == "__main__":
