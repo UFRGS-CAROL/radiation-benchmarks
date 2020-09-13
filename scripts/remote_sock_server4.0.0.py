@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import socket
+import sys
 import time
 import logging
 import queue
@@ -8,6 +9,7 @@ import queue
 from server_package.server_parameters import SERVER_IP, SOCKET_PORT, MACHINES, LOG_FILE, LOGGER_NAME
 from server_package.common import Codes
 from server_package.Machine import Machine
+from server_package.LoggerFormatter import ColoredLogger
 
 
 def generate_machine_hash(messages_queue):
@@ -53,16 +55,18 @@ def logging_setup():
     # create file handler which logs even debug messages
     fh = logging.FileHandler(LOG_FILE)
     fh.setLevel(logging.INFO)
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
     # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m-%d %H:%M')
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                  datefmt='%d-%m-%y %H:%M:%S')
     fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    # add the handlers to the logger
     logger.addHandler(fh)
-    logger.addHandler(ch)
+
+    # create console handler with a higher log level for console
+    # ch = logging.StreamHandler()
+    console = ColoredLogger(LOGGER_NAME)
+
+    # add the handlers to the logger
+    logger.addHandler(console)
     return logger
 
 
@@ -108,8 +112,7 @@ def main():
     except KeyboardInterrupt:
         for mac_obj in machines_hash.values():
             mac_obj.join()
-
-        logger.exception("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        logger.error("\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(Codes.CTRL_C)
 
 
