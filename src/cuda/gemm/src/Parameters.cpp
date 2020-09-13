@@ -39,9 +39,15 @@ Parameters::Parameters(int argc, char** argv) :
 
 	this->triplicated = rad::find_arg(argc, argv, "--triplicated");
 
+	this->check_input_existence = rad::find_arg(argc, argv, "--check_input_existence");
+
 	if (this->generate) {
 		this->iterations = 1;
+	}else{
+		// files must be there already
+		this->check_input_existence = false;
 	}
+
 
 	if (this->use_cublas && this->use_cutlass) {
 		std::cerr
@@ -71,11 +77,6 @@ Parameters::Parameters(int argc, char** argv) :
 	test_info += " use_cutlass: " + std::to_string(this->use_cutlass);
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
-//	set_iter_interval_print(10);
-
-//	start_log_file(const_cast<char*>(app.c_str()),
-//			const_cast<char*>(test_info.c_str()));
-
 	this->log = std::make_shared<rad::Log>(app, test_info);
 }
 
@@ -100,59 +101,39 @@ std::ostream& operator<<(std::ostream& os, const Parameters& log_obj) {
 	return os;
 }
 
-//Log::~Log() {
-//#ifdef LOGS
-//	end_log_file();
-//#endif
-//}
-
 void Parameters::end_iteration() {
-//#ifdef LOGS
-//	::end_iteration();
-//#endif
 	this->log->end_iteration();
 }
 
 void Parameters::start_iteration() {
-//#ifdef LOGS
-//	::start_iteration();
-//#endif
 	this->log->start_iteration();
 }
 
-//void Parameters::update_timestamp() {
-////#ifdef LOGS
-////	::update_timestamp();
-////#endif
-//	this->log->update_timestamp();
-//}
-
 void Parameters::log_error(std::string error_detail) {
-//#ifdef LOGS
-//	log_error_detail(const_cast<char*>(error_detail.c_str()));
-//#endif
 	this->log->log_error_detail(error_detail);
 }
 
 void Parameters::log_info(std::string info_detail) {
-//#ifdef LOGS
-//	log_info_detail(const_cast<char*>(info_detail.c_str()));
-//#endif
 	this->log->log_info_detail(info_detail);
 }
 
 void Parameters::update_error_count(long error_count) {
-//#ifdef LOGS
-//	if (error_count)
-//	log_error_count(error_count);
-//#endif
 	this->log->update_errors();
 }
 
 void Parameters::update_info_count(long info_count) {
-//#ifdef LOGS
-//	if (info_count)
-//	log_info_count (info_count);
-//#endif
 	this->log->update_infos();
+}
+
+void Parameters::usage(char** argv){
+		std::cout << "./" << argv[0]
+				<< " --generate --gold <gold file, DEFAULT=./gold.matrix > \n"
+						"--size <matrix size, DEFAULT=8192> \n"
+						"--iterations <how many iterations, optional> \n"
+						"--input_a <input A, DEFAUL=./input_a.matrix> \n"
+						"--input_b <input B, DEFAUL=./input_b.matrix> \n"
+						"--input_c <input C, DEFAUL=./input_c.matrix>  \n"
+						"--precision <float/double, DEFAULT=float> \n"
+						"--check_input_existence"
+				<< std::endl;
 }

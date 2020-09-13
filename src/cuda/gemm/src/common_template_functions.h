@@ -22,7 +22,7 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE_GEMM 1000
+#define GENERATOR_MAXABSVALUE_GEMM 10
 #define GENERATOR_MINABSVALUE_GEMM -GENERATOR_MAXABSVALUE_GEMM
 
 #define GENERATOR_MAXABSVALUE_TENSOR 10
@@ -57,9 +57,9 @@ bool write_to_file(std::string& path, std::vector<T>& array) {
 
 static bool exists(std::string& path) {
 	std::ifstream input(path);
-	auto exists = input.good();
+	auto file_exists = input.good();
 	input.close();
-	return exists;
+	return file_exists;
 }
 
 template<typename half_t, typename real_t>

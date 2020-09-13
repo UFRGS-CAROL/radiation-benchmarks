@@ -2,14 +2,6 @@
 #include "setup.h"
 #include "common.h"
 
-void usage(char **argv) {
-	std::cout << "./" << argv[0]
-			<< " --generate 0/1 --gold <gold file, DEFAULT=./gold.matrix > --size <matrix size, DEFAULT=8192> "
-					"--iterations <how many iterations, optional> --input_a <input A, DEFAUL=./input_a.matrix> "
-					"--input_b <input B, DEFAUL=./input_b.matrix> --input_c <input C, DEFAUL=./input_c.matrix>  --precision <float/double, DEFAULT=float>"
-			<< std::endl;
-}
-
 int main(int argc, char** argv) {
 	Parameters parameters(argc, argv);
 	if (parameters.verbose)
