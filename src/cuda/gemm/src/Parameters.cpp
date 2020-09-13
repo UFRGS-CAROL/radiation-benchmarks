@@ -4,7 +4,9 @@
 #include "common.h"
 
 extern std::string get_cuda_cc_version();
-#define STRING(s) #s
+
+#define XSTR(x) #x
+#define STRING(x) XSTR(x)
 
 Parameters::Parameters(int argc, char** argv) :
 		alpha(1), beta(0) {
