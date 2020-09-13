@@ -24,15 +24,19 @@ LOGGER_NAME = 'SOCK_SERVER_4.0.0'
 # Maximum sequentially reboot times
 MAX_REBOOT_TIMES = 50
 
-# Boot problem disable delta
-# Machine class will wait this time
-# to reboot again after a boot problem
-BOOT_PROBLEM_MAX_DELTA = 300  # e.g. 300s (5min)
+"""
+Boot problem disable delta
+Machine class will wait this time
+to reboot again after a boot problem
+e.g. 300s (5min)
+"""
+BOOT_PROBLEM_MAX_DELTA = 300
 
 """
 Set the machines IP to check
 the ones which enabled parameter is false are not checked
 :param ip the IP address of the machine
+:param enabled True if the server must use this machine, False otherwise
 :param reboot_diff delta to wait before reboot again
 :param hostname the hostname of the machine, 
        that must contains the device in the name
