@@ -21,6 +21,10 @@
 #include <omp.h>
 #endif
 
+#if (__CUDACC_VER_MAJOR__ <= 7)
+using half = float;
+#endif
+
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define GENERATOR_MAXABSVALUE_GEMM 10
 #define GENERATOR_MINABSVALUE_GEMM -GENERATOR_MAXABSVALUE_GEMM

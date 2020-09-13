@@ -3,7 +3,7 @@
 #include "include/device_vector.h"
 #include "common_template_functions.h"
 #include "no_tensor_kernels.h"
-//#include <cutlass/gemm/device/gemm.h>
+
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
