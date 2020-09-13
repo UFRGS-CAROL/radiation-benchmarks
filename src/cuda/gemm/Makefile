@@ -17,6 +17,8 @@ CHECKBLOCK=1
 
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
 
+# NVCC optmizations flags
+NVCCOPTFLAGS = -Xptxas --allow-expensive-optimizations=false
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler
@@ -99,7 +101,8 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-NVCCFLAGS+= -Xptxas -v
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS)
+CFLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
 
 all: obj $(TARGET)
 

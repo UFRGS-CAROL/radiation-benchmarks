@@ -5,9 +5,8 @@
 #include "no_tensor_kernels.h"
 
 std::string get_cuda_cc_version() {
-	std::string ret = "CUDACC_VER_MAJOR_"
-			+ std::to_string(__CUDACC_VER_MAJOR__);
-	ret += "CUDACC_VER_MINOR_" + std::to_string(__CUDACC_VER_MINOR__);
+	std::string ret = "MAJOR_" + std::to_string(__CUDACC_VER_MAJOR__);
+	ret += "_MINOR_" + std::to_string(__CUDACC_VER_MINOR__);
 	return ret;
 }
 

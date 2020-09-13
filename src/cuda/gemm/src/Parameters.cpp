@@ -3,6 +3,9 @@
 #include "Parameters.h"
 #include "common.h"
 
+extern std::string get_cuda_cc_version();
+#define STRING(s) #s
+
 Parameters::Parameters(int argc, char** argv) :
 		alpha(1), beta(0) {
 
@@ -75,6 +78,13 @@ Parameters::Parameters(int argc, char** argv) :
 	test_info += " beta: " + std::to_string(this->beta);
 	test_info += " use_cublas: " + std::to_string(this->use_cublas);
 	test_info += " use_cutlass: " + std::to_string(this->use_cutlass);
+
+	// Info for compiler test
+	test_info += " nvcc_version: " + get_cuda_cc_version();
+	std::string opt_flags = "";
+#ifdef NVCCOPTFLAGS
+	opt_flags += STRING(NVCCOPTFLAGS);
+#endif
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
 	this->log = std::make_shared<rad::Log>(app, test_info);
