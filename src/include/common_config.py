@@ -1,7 +1,7 @@
 import os
 from socket import gethostname
 
-#ADD new boards lines here
+# ADD new boards lines here
 POSSIBLE_BOARDS_BRANDS = {"NVIDIA": "nvidia-smi --query-gpu=gpu_name --format=csv,noheader",
                           "AMD": "clinfo",
                           "INTEL": "something_here",
@@ -22,8 +22,8 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
     for i in generate:
         print(i)
         if not debug and os.system(str(i)) != 0:
-                print("Something went wrong with generate of ", str(i))
-                exit(1)
+            print("Something went wrong with generate of ", str(i))
+            exit(1)
 
     list_to_print = ["[\n"]
     for ii, i in enumerate(execute):

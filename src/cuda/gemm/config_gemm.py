@@ -32,8 +32,9 @@ COMPILER_FLAGS = (
 )
 
 
-def config(device, debug):
+def config(device, compiler, debug):
     benchmark_bin = "gemm"
+    new_bench_bin = f"{benchmark_bin}_{compiler}"
     print(f"Generating {benchmark_bin} for CUDA, board:{device}")
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -66,44 +67,43 @@ def config(device, debug):
         for size in SIZES:
             for use_tensor_cores in USE_TENSOR_CORES:
                 for cublas in USE_CUBLAS:
-                    for compiler in COMPILER_VERSION:
-                        for flags in COMPILER_FLAGS:
-                            new_binary = f"{bin_path}/{benchmark_bin}_{compiler}"
+                    for flags in COMPILER_FLAGS:
+                        new_binary = f"{bin_path}/{new_bench_bin}"
 
-                            gen = [
-                                [f'sudo env LD_LIBRARY_PATH=/usr/local/cuda-{compiler}/'
-                                 'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                                 f"{new_binary}"],
-                                [f'--size {size}'],
-                                [f'--alpha {ALPHA} --beta {BETA}'],
-                                [f'--input_a {data_path}/A_size_{size}_precision_{precision}.matrix'],
-                                [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
-                                [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
-                                [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
-                                 f'_cublas_{cublas}_precision_{precision}.matrix'],
-                                [f'--tensor_cores' if use_tensor_cores else ''],
-                                [f'--precision {precision}'],
-                                ['--use_cublas' if cublas else ''],
-                                [f'--iterations {ITERATIONS}'],
-                                ['--triplicated' if MEMTMR else ''],
-                            ]
+                        gen = [
+                            [f'sudo env LD_LIBRARY_PATH=/usr/local/cuda-{compiler}/'
+                             'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                             f"{new_binary}"],
+                            [f'--size {size}'],
+                            [f'--alpha {ALPHA} --beta {BETA}'],
+                            [f'--input_a {data_path}/A_size_{size}_precision_{precision}.matrix'],
+                            [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
+                            [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
+                            [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
+                             f'_cublas_{cublas}_precision_{precision}.matrix'],
+                            [f'--tensor_cores' if use_tensor_cores else ''],
+                            [f'--precision {precision}'],
+                            ['--use_cublas' if cublas else ''],
+                            [f'--iterations {ITERATIONS}'],
+                            ['--triplicated' if MEMTMR else ''],
+                        ]
 
-                            # change mode and iterations for exe
-                            exe = copy.deepcopy(gen)
-                            gen.append(['--generate'])
-                            gen.append(['--check_input_existence'])
-                            gen.append(['--verbose'])
+                        # change mode and iterations for exe
+                        exe = copy.deepcopy(gen)
+                        gen.append(['--generate'])
+                        gen.append(['--check_input_existence'])
+                        gen.append(['--verbose'])
 
-                            variable_gen = ["make clean",
-                                            f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags}",
-                                            f"sudo mv -f ./{benchmark_bin} {new_binary}"
-                                            ]
+                        variable_gen = ["make clean",
+                                        f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags}",
+                                        f"sudo mv -f ./{benchmark_bin} {new_binary}"
+                                        ]
 
-                            generate.extend(variable_gen)
-                            generate.append(' '.join(str(r) for v in gen for r in v))
-                            execute.append(' '.join(str(r) for v in exe for r in v))
+                        generate.extend(variable_gen)
+                        generate.append(' '.join(str(r) for v in gen for r in v))
+                        execute.append(' '.join(str(r) for v in exe for r in v))
 
-    execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
+    execute_and_write_json_to_file(execute, generate, install_dir, new_bench_bin, debug=debug)
 
 
 if __name__ == "__main__":
@@ -117,4 +117,5 @@ if __name__ == "__main__":
         debug_mode = False
 
     board, _ = discover_board()
-    config(device=board, debug=debug_mode)
+    for compiler in COMPILER_VERSION:
+        config(device=board, compiler=compiler, debug=debug_mode)
