@@ -20,6 +20,10 @@ LOG_FILE = "server.log"
 # Logger obj name
 LOGGER_NAME = 'SOCK_SERVER_4.0.0'
 
+# Copy logs interval
+# time in seconds between the connections
+COPY_LOG_INTERVAL = 600
+
 """
 Boot problem disable delta
 Machine class will wait this time
