@@ -5,31 +5,34 @@ import copy
 import os
 import sys
 
-from ...include.common_config import discover_board, execute_and_write_json_to_file
+sys.path.append("../../include")
+from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [8192]  # 4096
+ALPHA = 1.0
+BETA = 0.0
+SIZES = [8192]
 PRECISIONS = ["float"]  # , "half"]
-ITERATIONS = 10000
+ITERATIONS = 10000000
 USE_TENSOR_CORES = [0]
 USE_CUBLAS = [1]
 MEMTMR = False
 
-COMPILER_VERSION = "10.1"
+COMPILER_VERSION = ["10.1", "7.0"]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
-    '--maxrregcount={parameter}',
+    '--maxrregcount=100',
 
     # Enable (disable) to allow compiler to perform expensive optimizations
     # using maximum available resources (memory and compile-time).
-    '"-Xptxas --allow-expensive-optimizations={parameter}"',
+    '"-Xptxas --allow-expensive-optimizations=false"',
 
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
     "--use_fast_math",
 )
 
 
-def config(device, arith_type, debug):
+def config(device, debug):
     benchmark_bin = "gemm"
     print(f"Generating {benchmark_bin} for CUDA, board:{device}")
 
@@ -44,49 +47,60 @@ def config(device, arith_type, debug):
 
     data_path = install_dir + "data/gemm"
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/gemm_tensorcores"
+    src_benchmark = install_dir + "src/cuda/gemm"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0o777)
         os.chmod(data_path, 0o777)
 
-    generate = ["sudo mkdir -p " + bin_path,
-                "cd " + src_benchmark,
-                "make clean",
+    generate = [f"sudo mkdir -p {bin_path}",
+                f"cd {src_benchmark}",
                 "make -C ../../include ",
-                "make PRECISION=" + arith_type + " -j 4 LOGS=1",
                 "mkdir -p " + data_path,
-                "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
+                f"sudo rm -f {data_path}/*{benchmark_bin}*",
+                ]
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
-    # max_size = max(SIZES)
-    for i in SIZES:
-        for tc in USE_TENSOR_CORES:
-            for cublas in USE_CUBLAS:
-                gen = [
-                    ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                     bin_path + "/" + benchmark_bin + " "],
-                    [f'--size {i}'],
-                    [f'--input_a {data_path}/A_size_{i}.matrix'],
-                    [f'--input_b {data_path}/B_size_{i}.matrix'],
-                    [f'--input_c {data_path}/C_size_{i}.matrix'],
-                    [f'--gold {data_path}/GOLD_size_{i}_tensor_{tc}_cublas_{cublas}.matrix'],
-                    ['--verbose'],
-                    [f'--tensor_cores {tc}'],
-                    ['--precision ' + str(arith_type)],
-                    ['--use_cublas' if cublas == 1 else ''],
-                    ['--iterations ' + str(ITERATIONS)],
-                    ['--triplicated'],
-                ]
+    for precision in PRECISIONS:
+        for size in SIZES:
+            for use_tensor_cores in USE_TENSOR_CORES:
+                for cublas in USE_CUBLAS:
+                    for compiler in COMPILER_VERSION:
+                        for flags in COMPILER_FLAGS:
+                            new_binary = f"{bin_path}/{benchmark_bin}_{compiler}"
 
-                # change mode and iterations for exe
-                exe = copy.deepcopy(gen)
-                gen.append(['--generate'])
+                            gen = [
+                                [f'sudo env LD_LIBRARY_PATH=/usr/local/cuda-{compiler}/'
+                                 'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                                 f"{new_binary}"],
+                                [f'--size {size}'],
+                                [f'--input_a {data_path}/A_size_{size}_precision_{precision}.matrix'],
+                                [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
+                                [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
+                                [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
+                                 f'_cublas_{cublas}_precision_{precision}.matrix'],
+                                ['--verbose'],
+                                [f'--tensor_cores {use_tensor_cores}'],
+                                [f'--precision {precision}'],
+                                ['--use_cublas' if cublas == 1 else ''],
+                                [f'--iterations {ITERATIONS}'],
+                                ['--triplicated' if MEMTMR else ''],
+                            ]
 
-                generate.append(' '.join(str(r) for v in gen for r in v))
-                execute.append(' '.join(str(r) for v in exe for r in v))
+                            # change mode and iterations for exe
+                            exe = copy.deepcopy(gen)
+                            gen.append(['--generate'])
+                            gen.append(['--check_input_existence'])
+
+                            variable_gen = ["make clean",
+                                            f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags}",
+                                            f"sudo mv -f ./{benchmark_bin} {new_binary}"
+                                            ]
+
+                            generate.extend(variable_gen)
+                            generate.append(' '.join(str(r) for v in gen for r in v))
+                            execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
@@ -94,12 +108,12 @@ def config(device, arith_type, debug):
 if __name__ == "__main__":
     debug_mode = False
     try:
-        parameter = str(sys.argv[1:][1]).upper()
+        parameter = str(sys.argv[-1]).upper()
+
         if parameter == 'DEBUG':
             debug_mode = True
     except IndexError:
         debug_mode = False
 
     board, _ = discover_board()
-    for p in PRECISIONS:
-        config(board=board, arith_type=p, debug=debug_mode)
+    config(device=board, debug=debug_mode)
