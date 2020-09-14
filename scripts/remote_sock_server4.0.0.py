@@ -53,7 +53,7 @@ def logging_setup():
     logger = logging.getLogger(LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
-    fh = logging.FileHandler(LOG_FILE)
+    fh = logging.FileHandler(LOG_FILE, mode='a')
     fh.setLevel(logging.INFO)
     # create formatter and add it to the handlers
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
