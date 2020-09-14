@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import os
 import socket
 import time
 import logging
@@ -9,6 +9,31 @@ from server_parameters import *
 from server_package.Machine import Machine
 from server_package.RebootMachine import RebootMachine
 from server_package.LoggerFormatter import ColoredLogger
+from server_package.CopyLogs import CopyLogs
+
+
+def start_copying():
+    server_logs_path = "logs/"
+    if os.path.exists(server_logs_path) is False:
+        os.mkdir(server_logs_path)
+
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                  datefmt='%d-%m-%y %H:%M:%S')
+    # create logger with 'spam_application'
+    fh = logging.FileHandler(f"{server_logs_path}/copy.log", mode='a')
+    fh.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+
+    copy_obj = CopyLogs(machines=MACHINES,
+                        sleep_copy_interval=COPY_LOG_INTERVAL,
+                        destination_folder=server_logs_path,
+                        logger_name=None,
+                        to_copy_folder="/var/radiation-benchmarks/log/")
+    copy_obj.start()
+
+    return copy_obj
 
 
 def generate_machine_hash(messages_queue):
@@ -57,7 +82,6 @@ def logging_setup():
     logger.addHandler(fh)
 
     # create console handler with a higher log level for console
-    # ch = logging.StreamHandler()
     console = ColoredLogger(LOGGER_NAME)
 
     # add the handlers to the logger
@@ -72,6 +96,9 @@ def main():
     """
     # log format
     logger = logging_setup()
+
+    # copy obj and logging
+    copy_obj = start_copying()
 
     # Queue to print the messages in a good way
     messages_queue = queue.Queue()
@@ -115,6 +142,8 @@ def main():
             client_socket.close()
 
         logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        copy_obj.stop_copying()
+        copy_obj.join()
         exit(130)
 
 
