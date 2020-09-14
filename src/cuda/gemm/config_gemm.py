@@ -13,8 +13,8 @@ BETA = 0.0
 SIZES = [8192]
 PRECISIONS = ["float"]  # , "half"]
 ITERATIONS = 10000000
-USE_TENSOR_CORES = [0]
-USE_CUBLAS = [0]
+USE_TENSOR_CORES = [False]
+USE_CUBLAS = [False]
 MEMTMR = False
 
 COMPILER_VERSION = ["10.1"]  # , "7.0"]
@@ -81,9 +81,9 @@ def config(device, debug):
                                 [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
                                 [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
                                  f'_cublas_{cublas}_precision_{precision}.matrix'],
-                                [f'--tensor_cores {use_tensor_cores}'],
+                                [f'--tensor_cores' if use_tensor_cores else ''],
                                 [f'--precision {precision}'],
-                                ['--use_cublas' if cublas == 1 else ''],
+                                ['--use_cublas' if cublas else ''],
                                 [f'--iterations {ITERATIONS}'],
                                 ['--triplicated' if MEMTMR else ''],
                             ]
