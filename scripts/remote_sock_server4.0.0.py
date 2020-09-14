@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import socket
-import sys
 import time
 import logging
 import queue
@@ -40,15 +39,6 @@ def logging_setup():
     Logging setup
     :return: logger
     """
-    # set up logging to file - see previous section for more details
-    # logging.basicConfig(
-    #     level=logging.DEBUG,
-    #     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    #     datefmt='%m-%d %H:%M',
-    #     filename=LOG_FILE,
-    #     filemode='w'
-    # )
-
     # create logger with 'spam_application'
     logger = logging.getLogger(LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
