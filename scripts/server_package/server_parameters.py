@@ -17,7 +17,7 @@ SERVER_IP = "192.168.1.5"
 REBOOTING_SLEEP = 10
 
 # log in whatever path you are executing this script
-LOG_FILE = "/home/fernando/radiation-benchmarks/scripts/server.log"
+LOG_FILE = "server.log"
 # Logger obj name
 LOGGER_NAME = 'SOCK_SERVER_4.0.0'
 

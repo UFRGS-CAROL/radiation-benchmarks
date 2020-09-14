@@ -86,19 +86,20 @@ class RebootMachine(threading.Thread):
         return self.__reboot_status
 
 
-# Debug process
-"""
-from .server_parameters import LOG_FILE
-print("CREATING THE RebootMachine")
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    datefmt='%m-%d %H:%M',
-    filename=LOG_FILE,
-    filemode='w'
-)
-reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2, switch_ip="130.246.39.137")
-reboot.start()
-print(f"Reboot status {reboot.get_reboot_status()}")
-reboot.join()
-"""
+if __name__ == '__main__':
+    # FOR DEBUG ONLY
+    from .server_parameters import LOG_FILE
+
+    print("CREATING THE RebootMachine")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt='%m-%d %H:%M',
+        filename=LOG_FILE,
+        filemode='w'
+    )
+    reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2,
+                           switch_ip="130.246.39.137")
+    reboot.start()
+    print(f"Reboot status {reboot.get_reboot_status()}")
+    reboot.join()

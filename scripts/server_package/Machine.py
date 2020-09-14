@@ -131,37 +131,37 @@ class Machine(threading.Thread):
         return self.__hostname
 
 
-"""
-# Debug 
-from queue import Queue
-from .server_parameters import LOG_FILE
-print("CREATING THE MACHINE")
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    datefmt='%m-%d %H:%M',
-    filename=LOG_FILE,
-    filemode='w'
-)
-machine = Machine(
-    ip="127.0.0.1",
-    diff_reboot=1,
-    hostname="test",
-    power_switch_ip="127.0.0.1",
-    power_switch_port=1,
-    power_switch_model="lindy",
-    messages_queue=Queue()
-)
+if __name__ == '__main__':
+    # FOR DEBUG ONLY
+    from queue import Queue
+    from .server_parameters import LOG_FILE
 
-print("EXECUTING THE MACHINE")
-machine.start()
-machine.set_timestamp(999999)
+    print("CREATING THE MACHINE")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt='%m-%d %H:%M',
+        filename=LOG_FILE,
+        filemode='w'
+    )
+    machine = Machine(
+        ip="127.0.0.1",
+        diff_reboot=1,
+        hostname="test",
+        power_switch_ip="127.0.0.1",
+        power_switch_port=1,
+        power_switch_model="lindy",
+        messages_queue=Queue()
+    )
 
-print("SLEEPING THE MACHINE")
-time.sleep(300)
+    print("EXECUTING THE MACHINE")
+    machine.start()
+    machine.set_timestamp(999999)
 
-print("JOINING THE MACHINE")
-machine.join()
+    print("SLEEPING THE MACHINE")
+    time.sleep(300)
 
-print("RAGE AGAINST THE MACHINE")
-"""
+    print("JOINING THE MACHINE")
+    machine.join()
+
+    print("RAGE AGAINST THE MACHINE")
