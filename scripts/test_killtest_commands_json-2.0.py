@@ -62,18 +62,19 @@ def killall():
 def readCommands(filelist):
     global commands
     if os.path.isfile(filelist):
-        fp = open(filelist, "r")
-        for f in fp:
-            f = f.strip()
-            if f.startswith("#") or f.startswith("%"):
-                continue
-            if os.path.isfile(f):
-                fjson = open(f, "r")
-                data = json.load(fjson)
-                fjson.close()
-                commands.extend(data)
-            else:
-                logMsg("ERROR: File with commands not found - " + str(f) + " - continuing with other files")
+        with open(filelist, "r") as fp:
+            lines = fp.readlines()
+            for f in lines:
+                f = f.strip()
+                if f.startswith("#") or f.startswith("%"):
+                    continue
+                if os.path.isfile(f):
+                    fjson = open(f, "r")
+                    data = json.load(fjson)
+                    fjson.close()
+                    commands.extend(data)
+                else:
+                    logMsg(f"ERROR: File with commands not found - {f} - continuing with other files")
 
 
 # When SIGUSR1 or SIGUSR2 is received update timestamp
@@ -93,7 +94,7 @@ signal.signal(signal.SIGUSR1, receive_signal)
 signal.signal(signal.SIGUSR2, receive_signal)
 
 if not os.path.isfile(confFile):
-    print("System configuration file not found!(" + str(confFile) + ")", file=sys.stderr)
+    print(f"System configuration file not found!({confFile})", file=sys.stderr)
     sys.exit(1)
 
 try:
