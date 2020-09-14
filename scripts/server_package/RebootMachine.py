@@ -24,11 +24,11 @@ class RebootMachine(threading.Thread):
 
     def run(self):
         # TODO: Remove FAKE when rebooting lines are uncommented
-        self.__logger.info(f"\tFAKE Rebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
+        self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
-        # self.__select_command_on_switch(self.__OFF)
+        self.__select_command_on_switch(self.__OFF)
         time.sleep(self.__rebooting_sleep)
-        # self.__select_command_on_switch(self.__ON)
+        self.__select_command_on_switch(self.__ON)
 
     def __select_command_on_switch(self, status):
         if self.__switch_model == "default":
