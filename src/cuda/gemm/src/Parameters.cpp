@@ -78,7 +78,7 @@ Parameters::Parameters(int argc, char** argv) :
 
 	test_info += " alpha: " + std::to_string(this->alpha);
 	test_info += " beta: " + std::to_string(this->beta);
-	test_info += " use_cublags: " + std::to_string(this->use_cublas);
+	test_info += " use_cublas: " + std::to_string(this->use_cublas);
 	test_info += " use_cutlass: " + std::to_string(this->use_cutlass);
 
 	// Info for compiler test

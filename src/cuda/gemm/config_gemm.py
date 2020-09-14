@@ -14,18 +14,18 @@ SIZES = [8192]
 PRECISIONS = ["float"]  # , "half"]
 ITERATIONS = 10000000
 USE_TENSOR_CORES = [0]
-USE_CUBLAS = [1]
+USE_CUBLAS = [0]
 MEMTMR = False
 
-COMPILER_VERSION = ["10.1", "7.0"]
+COMPILER_VERSION = ["10.1"]  # , "7.0"]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
-    '--maxrregcount=100',
+    '--maxrregcount=16',
 
     # Enable (disable) to allow compiler to perform expensive optimizations
     # using maximum available resources (memory and compile-time).
-    '"-Xptxas --allow-expensive-optimizations=false"',
+    # '"-Xptxas --allow-expensive-optimizations=false"',
 
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
     "--use_fast_math",
@@ -75,12 +75,12 @@ def config(device, debug):
                                  'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                                  f"{new_binary}"],
                                 [f'--size {size}'],
+                                [f'--alpha {ALPHA} --beta {BETA}'],
                                 [f'--input_a {data_path}/A_size_{size}_precision_{precision}.matrix'],
                                 [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
                                 [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
                                 [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
                                  f'_cublas_{cublas}_precision_{precision}.matrix'],
-                                ['--verbose'],
                                 [f'--tensor_cores {use_tensor_cores}'],
                                 [f'--precision {precision}'],
                                 ['--use_cublas' if cublas == 1 else ''],
@@ -92,6 +92,7 @@ def config(device, debug):
                             exe = copy.deepcopy(gen)
                             gen.append(['--generate'])
                             gen.append(['--check_input_existence'])
+                            gen.append(['--verbose'])
 
                             variable_gen = ["make clean",
                                             f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags}",
