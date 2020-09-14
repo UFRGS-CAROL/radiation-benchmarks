@@ -81,6 +81,9 @@ def main():
     # Queue to print the messages in a good way
     messages_queue = queue.Queue()
 
+    # safe check for socket
+    client_socket = None
+
     # attach signal handler for CTRL + C
     try:
         # Start the server socket
@@ -112,6 +115,10 @@ def main():
     except KeyboardInterrupt:
         for mac_obj in machines_hash.values():
             mac_obj.join()
+
+        if client_socket:
+            client_socket.close()
+
         logger.error("\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(Codes.CTRL_C)
 
