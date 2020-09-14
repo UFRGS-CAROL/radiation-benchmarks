@@ -1,5 +1,4 @@
 #include "setup.h"
-//#include "Log.h"
 #include "include/device_vector.h"
 #include "common_template_functions.h"
 #include "tensor_kernels.h"

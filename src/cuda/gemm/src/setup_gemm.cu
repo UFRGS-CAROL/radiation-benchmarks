@@ -204,6 +204,7 @@ struct DMRGemmCaller: public GemmCaller<0, real_t, real_t> {
 	}
 };
 
+
 template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
 		GemmCaller<COUNT, half_t, real_t>& mult_env, const uint32_t threshold =
@@ -333,6 +334,11 @@ void setup_execute(Parameters& parameters,
 	}
 
 	if (parameters.generate) {
+		auto zero_count = 0ul;
+		for (auto s : d_vector_host) {
+			zero_count += (float(s) == 0.0f);
+		}
+		std::cout << "Zero values on gold: " << zero_count << std::endl;
 		write_gold(parameters.gold_inout_path, d_vector_host);
 	}
 }
