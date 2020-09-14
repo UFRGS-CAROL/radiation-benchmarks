@@ -99,7 +99,7 @@ if __name__ == '__main__':
         filemode='w'
     )
     reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2,
-                           switch_ip="130.246.39.137")
+                           switch_ip="192.168.1.101")
     reboot.start()
     print(f"Reboot status {reboot.get_reboot_status()}")
     reboot.join()
