@@ -5,13 +5,12 @@ no more magic numbers
 
 # PORT the socket will listen to
 SOCKET_PORT = 8080
+# IP of the remote socket server (hardware watchdog)
+# SERVER_IP = "192.168.1.5"
+SERVER_IP = "25.91.229.61"
 
 # Time between machine checks
-SLEEP_TIME = 5
-
-# IP of the remote socket server (hardware watchdog)
-SERVER_IP = "192.168.1.5"
-# SERVER_IP = "25.91.229.61"
+MACHINE_CHECK_SLEEP_TIME = 5
 
 # time of a hard reboot
 REBOOTING_SLEEP = 10
@@ -20,9 +19,6 @@ REBOOTING_SLEEP = 10
 LOG_FILE = "server.log"
 # Logger obj name
 LOGGER_NAME = 'SOCK_SERVER_4.0.0'
-
-# Maximum sequentially reboot times
-MAX_REBOOT_TIMES = 50
 
 """
 Boot problem disable delta
@@ -56,7 +52,7 @@ MACHINES = [
     },
     {
         "ip": "192.168.1.14",
-        "enabled": False,
+        "enabled": True,
         "diff_reboot": 100,
         "hostname": "carolk202",
         "power_switch_ip": "192.168.1.100",

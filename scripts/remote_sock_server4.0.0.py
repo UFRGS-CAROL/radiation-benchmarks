@@ -5,9 +5,9 @@ import time
 import logging
 import queue
 
-from server_package.server_parameters import SERVER_IP, SOCKET_PORT, MACHINES, LOG_FILE, LOGGER_NAME
-from server_package.common import Codes
+from server_parameters import *
 from server_package.Machine import Machine
+from server_package.RebootMachine import RebootMachine
 from server_package.LoggerFormatter import ColoredLogger
 
 
@@ -26,7 +26,12 @@ def generate_machine_hash(messages_queue):
                 power_switch_ip=mac["power_switch_ip"],
                 power_switch_port=mac["power_switch_port"],
                 power_switch_model=mac["power_switch_model"],
-                messages_queue=messages_queue
+                messages_queue=messages_queue,
+                sleep_time=MACHINE_CHECK_SLEEP_TIME,
+                logger_name=LOGGER_NAME,
+                boot_problem_max_delta=BOOT_PROBLEM_MAX_DELTA,
+                reboot_sleep_time=REBOOTING_SLEEP,
+                RebootMachine=RebootMachine
             )
 
             machines_hash[mac["ip"]] = mac_obj
@@ -109,8 +114,8 @@ def main():
         if client_socket:
             client_socket.close()
 
-        logger.error("\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
-        exit(Codes.CTRL_C)
+        logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
+        exit(130)
 
 
 if __name__ == '__main__':

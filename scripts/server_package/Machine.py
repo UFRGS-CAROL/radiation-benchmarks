@@ -2,9 +2,6 @@ import threading
 import time
 import logging
 
-from .RebootMachine import RebootMachine
-from .server_parameters import BOOT_PROBLEM_MAX_DELTA, SLEEP_TIME, LOGGER_NAME
-
 
 class Machine(threading.Thread):
     __time_min_reboot_threshold = 3
@@ -20,6 +17,10 @@ class Machine(threading.Thread):
         :param power_switch_ip:
         :param power_switch_port:
         :param power_switch_model:
+        :param messages_queue:
+        :param sleep_time:
+        :param logger_name:
+        :param boot_problem_max_delta:
         """
         self.__ip = kwargs.pop("ip")
         self.__diff_reboot = kwargs.pop("diff_reboot")
@@ -28,9 +29,14 @@ class Machine(threading.Thread):
         self.__switch_port = kwargs.pop("power_switch_port")
         self.__switch_model = kwargs.pop("power_switch_model")
         self.__queue = kwargs.pop("messages_queue")
-        super(Machine, self).__init__(*args, **kwargs)
+        self.__sleep_time = kwargs.pop("sleep_time")
+        self.__logger_name = kwargs.pop("logger_name")
+        self.__boot_problem_max_delta = kwargs.pop("boot_problem_max_delta")
         self.__timestamp = time.time()
-        self.__logger = logging.getLogger(LOGGER_NAME)
+        self.__logger = logging.getLogger(self.__logger_name)
+        self.__reboot_sleep_time = kwargs.pop("reboot_sleep_time")
+        self.__RebootMachine = kwargs.pop("RebootMachine")
+        super(Machine, self).__init__(*args, **kwargs)
 
         # Stops the thread when false
         self.__is_machine_active = True
@@ -70,14 +76,14 @@ class Machine(threading.Thread):
                     reboot_status, last_reboot_timestamp = self.__reboot_this_machine()
                     self.__log(reboot_status)
             else:
-                msg = f"\tIP {self.__ip} waiting due boot problem f{BOOT_PROBLEM_MAX_DELTA}s"
+                msg = f"\tIP {self.__ip} waiting due boot problem f{self.__boot_problem_max_delta}s"
                 self.__logger.info(msg)
                 # print(msg)
-                time.sleep(BOOT_PROBLEM_MAX_DELTA)
+                time.sleep(self.__boot_problem_max_delta)
                 boot_problem_disable = False
 
             # sleep before re-check again
-            time.sleep(SLEEP_TIME)
+            time.sleep(self.__sleep_time)
 
     def __log(self, reboot_status):
         message = {
@@ -97,10 +103,12 @@ class Machine(threading.Thread):
         """
         last_reboot_timestamp = time.time()
         # Reboot machine in another thread
-        reboot_thread = RebootMachine(machine_address=self.__ip,
-                                      switch_model=self.__switch_model,
-                                      switch_port=self.__switch_port,
-                                      switch_ip=self.__switch_ip)
+        reboot_thread = self.__RebootMachine(machine_address=self.__ip,
+                                             switch_model=self.__switch_model,
+                                             switch_port=self.__switch_port,
+                                             switch_ip=self.__switch_ip,
+                                             rebooting_sleep=self.__reboot_sleep_time,
+                                             logger_name=self.__logger_name)
         reboot_thread.start()
         reboot_thread.join()
         reboot_status = reboot_thread.get_reboot_status()
@@ -134,14 +142,14 @@ class Machine(threading.Thread):
 if __name__ == '__main__':
     # FOR DEBUG ONLY
     from queue import Queue
-    from .server_parameters import LOG_FILE
+    from RebootMachine import RebootMachine
 
     print("CREATING THE MACHINE")
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         datefmt='%m-%d %H:%M',
-        filename=LOG_FILE,
+        filename="unit_test_log_Machine.log",
         filemode='w'
     )
     machine = Machine(
@@ -151,7 +159,13 @@ if __name__ == '__main__':
         power_switch_ip="127.0.0.1",
         power_switch_port=1,
         power_switch_model="lindy",
-        messages_queue=Queue()
+        messages_queue=Queue(),
+        sleep_time=5,
+        logger_name="MACHINE_LOG",
+        boot_problem_max_delta=300,
+        reboot_sleep_time=2,
+        RebootMachine=RebootMachine
+
     )
 
     print("EXECUTING THE MACHINE")
@@ -159,7 +173,7 @@ if __name__ == '__main__':
     machine.set_timestamp(999999)
 
     print("SLEEPING THE MACHINE")
-    time.sleep(300)
+    time.sleep(20)
 
     print("JOINING THE MACHINE")
     machine.join()

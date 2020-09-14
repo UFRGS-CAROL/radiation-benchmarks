@@ -1,33 +1,34 @@
+import os
 import threading
 import time
 import requests
 import json
 import logging
 
-from .server_parameters import REBOOTING_SLEEP, LOGGER_NAME
-from .common import Codes, execute_command
-
 
 class RebootMachine(threading.Thread):
     __ON = "ON"
     __OFF = "OFF"
+    __SUCCESS = 0
+    __ERROR = 1
 
-    def __init__(self, machine_address, switch_model, switch_port, switch_ip):
+    def __init__(self, machine_address, switch_model, switch_port, switch_ip, rebooting_sleep, logger_name):
         super(RebootMachine, self).__init__()
         self.__address = machine_address
         self.__switch_port = switch_port
         self.__switch_ip = switch_ip
-        self.__reboot_status = Codes.SUCCESS
+        self.__reboot_status = self.__SUCCESS
         self.__switch_model = switch_model
-        self.__logger = logging.getLogger(LOGGER_NAME)
+        self.__logger = logging.getLogger(logger_name)
+        self.__rebooting_sleep = rebooting_sleep
 
     def run(self):
         # TODO: Remove FAKE when rebooting lines are uncommented
-        self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
+        self.__logger.info(f"\tFAKE Rebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
-        self.__select_command_on_switch(self.__OFF)
-        time.sleep(REBOOTING_SLEEP)
-        self.__select_command_on_switch(self.__ON)
+        # self.__select_command_on_switch(self.__OFF)
+        time.sleep(self.__rebooting_sleep)
+        # self.__select_command_on_switch(self.__ON)
 
     def __select_command_on_switch(self, status):
         if self.__switch_model == "default":
@@ -65,11 +66,11 @@ class RebootMachine(threading.Thread):
         try:
             requests_status = requests.post(url, data=json.dumps(payload), headers=headers)
             requests_status.raise_for_status()
-            self.__reboot_status = Codes.SUCCESS
+            self.__reboot_status = self.__SUCCESS
         except requests.RequestException:
             self.__logger.exception(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
                                     f" status:{status} switchIP: {self.__switch_ip}")
-            self.__reboot_status = Codes.ERROR
+            self.__reboot_status = self.__ERROR
 
     def __common_switch_command(self, status):
         port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
@@ -80,26 +81,32 @@ class RebootMachine(threading.Thread):
         cmd += '&Apply=Apply\" '
         cmd += f'http://%s/tgi/iocontrol.tgi {self.__switch_ip}'
         cmd += '-o /dev/null '
-        self.__reboot_status = execute_command(cmd)
+        self.__reboot_status = self.__execute_command(cmd)
 
     def get_reboot_status(self):
         return self.__reboot_status
 
+    def __execute_command(self, cmd):
+        tmp_file = "/tmp/server_error_execute_command"
+        result = os.system(f"{cmd} 2>{tmp_file}")
+        with open(tmp_file) as err:
+            if len(err.readlines()) != 0 or result != 0:
+                return self.__ERROR
+        return self.__SUCCESS
+
 
 if __name__ == '__main__':
     # FOR DEBUG ONLY
-    from .server_parameters import LOG_FILE
-
     print("CREATING THE RebootMachine")
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         datefmt='%m-%d %H:%M',
-        filename=LOG_FILE,
+        filename="unit_test_log_RebootMachine.log",
         filemode='w'
     )
     reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2,
-                           switch_ip="192.168.1.101")
+                           switch_ip="192.168.1.101", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
     reboot.start()
     print(f"Reboot status {reboot.get_reboot_status()}")
     reboot.join()
