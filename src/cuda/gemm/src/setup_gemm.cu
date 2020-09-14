@@ -299,9 +299,9 @@ void setup_execute(Parameters& parameters,
 						<< int((wasted_time / full_time) * 100.0f) << "%)"
 						<< std::endl;
 			} else {
-				std::cout << "Iteration: " << it << " DMR errors "
-						<< errors.first << ". " << "Radiation errors: "
-						<< errors.second << ". " << std::endl;
+//				std::cout << "Iteration: " << it << " DMR errors "
+//						<< errors.first << ". " << "Radiation errors: "
+//						<< errors.second << ". " << std::endl;
 			}
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
