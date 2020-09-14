@@ -37,14 +37,17 @@ class CopyLogs(threading.Thread):
                 ip = mac["ip"]
                 hostname = mac['hostname']
                 is_active_device = mac["enabled"]
+                password = mac["password"]
+                username = mac["username"]
                 destination = f"{self.__destination_folder}/{hostname}"
 
                 if is_active_device:
-                    self.__copy_from_address(ip=ip, destination_folder=destination)
+                    self.__copy_from_address(ip=ip, destination_folder=destination, username=username,
+                                             password=password)
 
             self.__stop_event.wait(self.__sleep_copy_interval)  # instead of sleeping
 
-    def __copy_from_address(self, ip, destination_folder):
+    def __copy_from_address(self, ip, destination_folder, username, password):
         """
         Copy from an addres
         :param ip:
@@ -54,7 +57,7 @@ class CopyLogs(threading.Thread):
         try:
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
-            ssh.connect(ip, username="carol", password="informatica@4", allow_agent=False, look_for_keys=False)
+            ssh.connect(ip, username=username, password=password, allow_agent=False, look_for_keys=False)
 
             ssh_client = scp.SCPClient(ssh.get_transport())
 

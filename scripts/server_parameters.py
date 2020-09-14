@@ -43,6 +43,8 @@ the ones which enabled parameter is false are not checked
 :param power_switch_ip IP address of the power switch
 :param power_switch_port outlet of the power switch
 :param power_switch_model brand of the power switch
+:param username
+:param password for connection
 """
 MACHINES = [
     {
@@ -52,7 +54,9 @@ MACHINES = [
         "hostname": "carolk201",
         "power_switch_ip": "192.168.1.100",
         "power_switch_port": 1,
-        "power_switch_model": "lindy"
+        "power_switch_model": "lindy",
+        "username": "carol",
+        "password": "R@di@tion"
     },
     {
         "ip": "192.168.1.14",
@@ -61,7 +65,9 @@ MACHINES = [
         "hostname": "carolk202",
         "power_switch_ip": "192.168.1.100",
         "power_switch_port": 2,
-        "power_switch_model": "lindy"
+        "power_switch_model": "lindy",
+        "username": "carol",
+        "password": "R@di@tion"
     },
     {
         "ip": "192.168.1.15",
@@ -70,6 +76,8 @@ MACHINES = [
         "hostname": "caroltitanv1",
         "power_switch_ip": "192.168.1.100",
         "power_switch_port": 3,
-        "power_switch_model": "lindy"
+        "power_switch_model": "lindy",
+        "username": "carol",
+        "password": "R@di@tion"
     },
 ]
