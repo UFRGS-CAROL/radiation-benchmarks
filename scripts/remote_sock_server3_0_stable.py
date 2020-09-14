@@ -14,22 +14,29 @@ sys.path.insert(0, os.path.abspath("."))
 socketPort = 8080  # PORT the socket will listen to
 sleepTime = 5  # Time between checks
 
-serverIP = "192.168.1.5"  # IP of the remote socket server (hardware watchdog)
+# IP of the remote socket server (hardware watchdog)
+# TODO: Trocar aqui
+# serverIP = "192.168.1.5"
+serverIP = "25.91.229.61"
 
 # time of a hard reboot
 rebootingSleep = 10
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
-    "192.168.1.11",  # k201
-    "192.168.1.14",  # v1001
-    "192.168.1.15",  # k202
-    "192.168.1.51",  # apu1
+    # TODO: Trocar aqui
+    # "192.168.1.11",  # k201
+    "25.63.132.38",
+    # "192.168.1.14",  # v1001
+    # "192.168.1.15",  # k202
+    # "192.168.1.51",  # apu1
 ]
 
 # Set the machine names for each IP
 IPtoDiffReboot = {
-    "192.168.1.11": 100,  # k201
+    # TODO: Trocar aqui
+    # "192.168.1.11"
+    "25.63.132.38": 100,  # k201
     "192.168.1.14": 100,  # v1001
     "192.168.1.15": 100,  # k202
     "192.168.1.51": 100,  # apu1
@@ -37,7 +44,9 @@ IPtoDiffReboot = {
 
 # Set the machine names for each IP
 IPtoNames = {
-    "192.168.1.11": "carolk201",
+    # TODO: Trocar aqui
+    # "192.168.1.11"
+    "25.63.132.38": "carolk201",
     "192.168.1.14": "carolv1001",
     "192.168.1.15": "carolk202",
     "192.168.1.51": "carolapu1",
@@ -45,7 +54,9 @@ IPtoNames = {
 
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
-    "192.168.1.11": "192.168.1.100",  # carolk201
+    # TODO: Trocar aqui
+    # "192.168.1.11"
+    "25.63.132.38": "192.168.1.100",  # carolk201
     "192.168.1.14": "192.168.1.100",  # carolv1001
     "192.168.1.15": "192.168.1.100",  # carolk202
     "192.168.1.51": "192.168.1.100",  # carolapu1
@@ -53,7 +64,9 @@ IPtoSwitchIP = {
 
 # Set the switch Port that a machine IP is connected
 IPtoSwitchPort = {
-    "192.168.1.11": 1,  # carolk201
+    # TODO: Trocar aqui
+    # "192.168.1.11"
+    "25.63.132.38": 1,  # carolk201
     "192.168.1.14": 2,  # carolv1001
     "192.168.1.15": 3,  # carolk202
     "192.168.1.51": 4,  # carolapu1
@@ -74,12 +87,8 @@ logFile = "server.log"
 # Log messages adding timestamp before the message
 def logMsg(msg):
     now = datetime.now()
-    # fp = open(logFile, 'a')
-    # print >> fp, now.ctime() + ": " + str(msg)
-    # fp.close()
-
     with open(logFile, 'a') as fp:
-        fp.write(now.ctime() + ": " + str(msg) + "\n")
+        fp.write("{time_now}: {msg}\n".format(time_now=now.ctime(), msg=msg))
 
 
 ################################################
@@ -113,7 +122,7 @@ def lindySwitch(portNumber, status, switchIP):
 
     try:
         return requests.post(url, data=json.dumps(payload), headers=headers)
-    except:
+    except requests.RequestException:
         logMsg("Could not change Lindy IP switch status, portNumber: " + str(
             portNumber) + ", status" + status + ", switchIP:" + switchIP)
         return 1
