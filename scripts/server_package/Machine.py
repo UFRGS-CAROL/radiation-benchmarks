@@ -74,6 +74,7 @@ class Machine(threading.Thread):
                 self.__logger.info(msg)
                 # print(msg)
                 time.sleep(BOOT_PROBLEM_MAX_DELTA)
+                boot_problem_disable = False
 
             # sleep before re-check again
             time.sleep(SLEEP_TIME)
