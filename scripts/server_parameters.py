@@ -52,7 +52,7 @@ MACHINES = [
     },
     {
         "ip": "192.168.1.14",
-        "enabled": True,
+        "enabled": False,
         "diff_reboot": 100,
         "hostname": "carolk202",
         "power_switch_ip": "192.168.1.100",
