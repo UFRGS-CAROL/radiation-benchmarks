@@ -341,6 +341,8 @@ void setup_execute(Parameters& parameters,
 			nans_count += (std::isnan(float(s)));
 		}
 		std::cout << "Zero values on gold: " << zero_count << std::endl;
+		std::cout << "Nans values on gold: " << nans_count << std::endl;
+
 		write_gold(parameters.gold_inout_path, d_vector_host);
 	}
 }
