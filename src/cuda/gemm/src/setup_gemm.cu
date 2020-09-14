@@ -335,8 +335,10 @@ void setup_execute(Parameters& parameters,
 
 	if (parameters.generate) {
 		auto zero_count = 0ul;
+		auto nans_count = 0ul;
 		for (auto s : d_vector_host) {
 			zero_count += (float(s) == 0.0f);
+			nans_count += (std::isnan(float(s)));
 		}
 		std::cout << "Zero values on gold: " << zero_count << std::endl;
 		write_gold(parameters.gold_inout_path, d_vector_host);
