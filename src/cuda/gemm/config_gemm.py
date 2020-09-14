@@ -5,15 +5,28 @@ import copy
 import os
 import sys
 
-# sys.path.insert(0, '../../include')
 from ...include.common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [8192, 1024]  # 4096
-PRECISIONS = ["float", "half"]  # , "half"]
+SIZES = [8192]  # 4096
+PRECISIONS = ["float"]  # , "half"]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [0]
-USE_CUBLAS = [0, 1]
+USE_CUBLAS = [1]
 MEMTMR = False
+
+COMPILER_VERSION = "10.1"
+
+COMPILER_FLAGS = (
+    # append to parameter list the number of the registers
+    '--maxrregcount={parameter}',
+
+    # Enable (disable) to allow compiler to perform expensive optimizations
+    # using maximum available resources (memory and compile-time).
+    '"-Xptxas --allow-expensive-optimizations={parameter}"',
+
+    # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
+    "--use_fast_math",
+)
 
 
 def config(device, arith_type, debug):
