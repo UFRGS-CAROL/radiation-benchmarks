@@ -16,16 +16,20 @@ with open("src/branch_kernel.h", "w") as fp:
     )
 
     fp.write("\tconst int_t i = (blockDim.x * blockIdx.x + threadIdx.x);\n")
-    fp.write("\tint_t value = i;\n")
+    fp.write("\tint_t value = (i + 1) % op;\n")
+    fp.write("\tfor(int opi = 0; opi < op; opi++) {")
 
-    fp.write("\n\tif (threadIdx.x == 0) {\n\t\tvalue = 0;\n\t}")
+    fp.write("\n\t\tif (threadIdx.x == 0) {\n"
+             "\t\t\tvalue = 0;\n"
+             "\t\t}")
 
     # setting the registers
     for i in range(1, MAXBRANCHS):
         fp.write(" else if (threadIdx.x == {})".format(i) + " {\n")  # " dst[i] = {};".format(i, i))
-        fp.write("\t\tvalue = {};\n".format(i))
-        fp.write("\t}")
+        fp.write("\t\t\tvalue = {};\n".format(i))
+        fp.write("\t\t}")
 
+    fp.write("\n\t}")
     fp.write("\n\tdst_1[i] = value;\n")
     fp.write("\n\tdst_2[i] = value;\n")
     fp.write("\n\tdst_3[i] = value;\n")

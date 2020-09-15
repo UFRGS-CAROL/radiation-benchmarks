@@ -5,11 +5,12 @@ import sys
 import os
 import re
 
+yes = {'yes', 'y', 'ye', ''}
+no = {'no', 'n'}
+
 
 def check_path(path):
     print("The install directory is '" + path + "', is that correct [Y/n]: ")
-    yes = {'yes', 'y', 'ye', ''}
-    no = {'no', 'n'}
 
     choice = input().lower()
     if choice in yes:
@@ -28,6 +29,20 @@ def install_path():
         print("Please, enter the install path (radiation-benchmarks directory): ")
         path = input()
     return path
+
+
+def remove_sudo():
+    """
+    Remove sudo password requesting
+    :return:
+    """
+    print("[CAUTION] Remove sudo password for all users [Y/n] (default yes): ", end="")
+    choice = input().lower()
+    sudo_str = "	ALL	ALL = (ALL) NOPASSWD: ALL\n"
+    if choice in yes:
+        with open("/etc/sudoers", "a") as sudoers_file:
+            sudoers_file.write(sudo_str)
+        print(f"sudo password request removed, remove {sudo_str} last line to add it again")
 
 
 var_dir = "/var/radiation-benchmarks"
@@ -59,6 +74,8 @@ try:
 except IOError:
     print("I/O Error, please make sure to run as root (sudo)")
     sys.exit(1)
+
+remove_sudo()
 
 print("var directory created (" + var_dir + ")")
 print("log directory created (" + log_dir + ")")
