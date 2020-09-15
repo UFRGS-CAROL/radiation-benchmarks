@@ -17,7 +17,10 @@ USE_TENSOR_CORES = [False]
 USE_CUBLAS = [False]
 MEMTMR = False
 
-COMPILER_VERSION = ["10.1"]  # , "7.0"]
+COMPILER_VERSION = [
+    # ("10.1", "g++"),
+    ("7.0", "g++-4.8")
+]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
@@ -34,7 +37,9 @@ COMPILER_FLAGS = (
 
 def config(device, compiler, debug):
     benchmark_bin = "gemm"
-    new_bench_bin = f"{benchmark_bin}_{compiler}"
+    cuda_version = compiler[0]
+    cxx_version = compiler[1]
+    new_bench_bin = f"{benchmark_bin}_{cuda_version}"
     print(f"Generating {benchmark_bin} for CUDA, board:{device}")
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -69,9 +74,9 @@ def config(device, compiler, debug):
                 for cublas in USE_CUBLAS:
                     for flags in COMPILER_FLAGS:
                         new_binary = f"{bin_path}/{new_bench_bin}"
-
+                        cuda_path = f"/usr/local/cuda-{cuda_version}"
                         gen = [
-                            [f'sudo env LD_LIBRARY_PATH=/usr/local/cuda-{compiler}/'
+                            [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
                              'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                              f"{new_binary}"],
                             [f'--size {size}'],
@@ -93,9 +98,8 @@ def config(device, compiler, debug):
                         gen.append(['--generate'])
                         gen.append(['--check_input_existence'])
                         gen.append(['--verbose'])
-
                         variable_gen = ["make clean",
-                                        f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags}",
+                                        f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags} CXX={cxx_version} CUDAPATH={cuda_path}",
                                         f"sudo mv -f ./{benchmark_bin} {new_binary}"
                                         ]
 

@@ -5,8 +5,24 @@
 #include "no_tensor_kernels.h"
 
 std::string get_cuda_cc_version() {
-	std::string ret = "MAJOR_" + std::to_string(__CUDACC_VER_MAJOR__);
-	ret += "_MINOR_" + std::to_string(__CUDACC_VER_MINOR__);
+	long version_major, version_minor;
+
+#ifdef __CUDACC_VER_MAJOR__
+	version_major = __CUDACC_VER_MAJOR__;
+	version_minor = __CUDACC_VER_MINOR__;
+#elif defined(__CUDACC_VER__)
+	version_major = __CUDACC_VER__ / 10000;
+	version_minor = __CUDACC_VER__ % 10000;
+#else
+#warning "Neither __CUDACC_VER__ or __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
+	version_major = 7;
+	version_minor = 0;
+#endif
+	std::string ret = "";
+
+	ret += "MAJOR_" + std::to_string(version_major);
+	ret += "_MINOR_" + std::to_string(version_minor);
+
 	return ret;
 }
 
@@ -203,7 +219,6 @@ struct DMRGemmCaller: public GemmCaller<0, real_t, real_t> {
 		return this->c_half_t_dev.to_vector();
 	}
 };
-
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
