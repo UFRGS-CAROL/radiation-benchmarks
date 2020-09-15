@@ -18,7 +18,7 @@ USE_CUBLAS = [False]
 MEMTMR = False
 
 COMPILER_VERSION = [
-    # ("10.1", "g++"),
+    ("10.1", "g++"),
     ("7.0", "g++-4.8")
 ]
 
@@ -31,7 +31,7 @@ COMPILER_FLAGS = (
     # '"-Xptxas --allow-expensive-optimizations=false"',
 
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    "--use_fast_math",
+    # "--use_fast_math",
 )
 
 
@@ -75,6 +75,7 @@ def config(device, compiler, debug):
                     for flags in COMPILER_FLAGS:
                         new_binary = f"{bin_path}/{new_bench_bin}"
                         cuda_path = f"/usr/local/cuda-{cuda_version}"
+                        flags_parsed = flags.replace("-", "")
                         gen = [
                             [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
                              'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
@@ -85,7 +86,7 @@ def config(device, compiler, debug):
                             [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
                             [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
                             [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
-                             f'_cublas_{cublas}_precision_{precision}.matrix'],
+                             f'_cublas_{cublas}_precision_{precision}_{cuda_version}_{flags_parsed}.matrix'],
                             [f'--tensor_cores' if use_tensor_cores else ''],
                             [f'--precision {precision}'],
                             ['--use_cublas' if cublas else ''],
@@ -100,7 +101,8 @@ def config(device, compiler, debug):
                         gen.append(['--verbose'])
                         variable_gen = ["make clean",
                                         f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags} CXX={cxx_version} CUDAPATH={cuda_path}",
-                                        f"sudo mv -f ./{benchmark_bin} {new_binary}"
+                                        f"sudo rm {new_binary}"
+                                        f"sudo mv ./{benchmark_bin} {new_binary}"
                                         ]
 
                         generate.extend(variable_gen)
