@@ -76,17 +76,18 @@ def config(device, compiler, debug):
                         new_binary = f"{bin_path}/{new_bench_bin}"
                         cuda_path = f"/usr/local/cuda-{cuda_version}"
                         flags_parsed = flags.replace("-", "")
+                        default_path = f'_size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}'
+                        default_path += f'_precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
                         gen = [
                             [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
                              'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                              f"{new_binary}"],
                             [f'--size {size}'],
                             [f'--alpha {ALPHA} --beta {BETA}'],
-                            [f'--input_a {data_path}/A_size_{size}_precision_{precision}.matrix'],
-                            [f'--input_b {data_path}/B_size_{size}_precision_{precision}.matrix'],
-                            [f'--input_c {data_path}/C_size_{size}_precision_{precision}.matrix'],
-                            [f'--gold {data_path}/GOLD_size_{size}_tensor_{use_tensor_cores}'
-                             f'_cublas_{cublas}_precision_{precision}_{cuda_version}_{flags_parsed}.matrix'],
+                            [f'--input_a {data_path}/A_{default_path}'],
+                            [f'--input_b {data_path}/B_{default_path}'],
+                            [f'--input_c {data_path}/C_{default_path}'],
+                            [f'--gold {data_path}/GOLD_{default_path}'],
                             [f'--tensor_cores' if use_tensor_cores else ''],
                             [f'--precision {precision}'],
                             ['--use_cublas' if cublas else ''],
@@ -97,7 +98,7 @@ def config(device, compiler, debug):
                         # change mode and iterations for exe
                         exe = copy.deepcopy(gen)
                         gen.append(['--generate'])
-                        gen.append(['--check_input_existence'])
+                        # gen.append(['--check_input_existence'])
                         gen.append(['--verbose'])
                         variable_gen = ["make clean",
                                         f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags} CXX={cxx_version} CUDAPATH={cuda_path}",
