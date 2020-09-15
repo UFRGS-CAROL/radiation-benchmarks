@@ -63,7 +63,7 @@ def config(device, compiler, debug):
                 f"cd {src_benchmark}",
                 "make -C ../../include ",
                 "mkdir -p " + data_path,
-                f"sudo rm -f {data_path}/*{benchmark_bin}*",
+                f"sudo rm -f {data_path}/*{cuda_version}*",
                 ]
     execute = []
 
@@ -101,7 +101,7 @@ def config(device, compiler, debug):
                         gen.append(['--verbose'])
                         variable_gen = ["make clean",
                                         f"make -j 4 LOGS=1 NVCCOPTFLAGS={flags} CXX={cxx_version} CUDAPATH={cuda_path}",
-                                        f"sudo rm {new_binary}"
+                                        f"sudo rm -f {new_binary}",
                                         f"sudo mv ./{benchmark_bin} {new_binary}"
                                         ]
 
