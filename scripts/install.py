@@ -10,7 +10,7 @@ no = {'no', 'n'}
 
 
 def check_path(path):
-    print("The install directory is '" + path + "', is that correct [Y/n]: ")
+    print("The install directory is '" + path + "', is that correct [Y/n]: ", end="")
 
     choice = input().lower()
     if choice in yes:
@@ -42,7 +42,7 @@ def remove_sudo():
     if choice in yes:
         with open("/etc/sudoers", "a") as sudoers_file:
             sudoers_file.write(sudo_str)
-        print(f"sudo password request removed, remove {sudo_str} last line to add it again")
+        print("sudo password request removed, remove last line to add it again")
 
 
 var_dir = "/var/radiation-benchmarks"
