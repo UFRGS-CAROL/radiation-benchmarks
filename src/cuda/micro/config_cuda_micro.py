@@ -10,7 +10,7 @@ from common_config import discover_board, execute_and_write_json_to_file
 ITERATIONS = int(1e9)
 INT_MICRO = {
     "int32": {
-        "branch": {"ops": 10000000, "block_size": 256, "sm_factor": 1}
+        "branch": {"ops": 100000, "block_size": 256, "sm_factor": 1}
     }
 
     # "float": {
