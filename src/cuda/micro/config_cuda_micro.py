@@ -10,12 +10,13 @@ from common_config import discover_board, execute_and_write_json_to_file
 ITERATIONS = int(1e9)
 INT_MICRO = {
     "int32": {
-        "branch": {"ops": 100000, "block_size": 256, "sm_factor": 1}
+        "branch": {"ops": int(1e5), "block_size": 256, "sm_factor": 1},
+        "ldst": {"ops": 64, "block_size": 256, "sm_factor": 1}
+    },
+    "float": {
+        "fma": {"ops": int(1e8), "block_size": 256, "sm_factor": 1},
+        "add": {"ops": int(1e8), "block_size": 256, "sm_factor": 1}
     }
-
-    # "float": {
-    #     "fma": {"ops": 100000000, "block_size": 256, "sm_factor": 1}
-    # }
 }
 
 
