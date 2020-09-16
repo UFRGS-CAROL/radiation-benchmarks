@@ -540,6 +540,32 @@ int check_output_errors(parameters *setup_parameters, int streamIdx,
 	return (host_errors == 0);
 }
 
+std::string get_cuda_cc_version() {
+	long version_major, version_minor;
+
+#ifdef __CUDACC_VER_MAJOR__
+	version_major = __CUDACC_VER_MAJOR__;
+	version_minor = __CUDACC_VER_MINOR__;
+#elif defined(__CUDACC_VER__)
+	version_major = __CUDACC_VER__ / 10000;
+	version_minor = __CUDACC_VER__ % 10000;
+#else
+#warning "Neither __CUDACC_VER__ or __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
+	version_major = 7;
+	version_minor = 0;
+#endif
+	std::string ret = "";
+
+	ret += "MAJOR_" + std::to_string(version_major);
+	ret += "_MINOR_" + std::to_string(version_minor);
+
+	return ret;
+}
+
+#define XSTR(x) #x
+#define STRING(x) XSTR(x)
+
+
 void run(int argc, char** argv) {
 	//int streamIdx;
 	double timestamp, globaltime;
@@ -581,27 +607,41 @@ void run(int argc, char** argv) {
 
 	//-----------------------------------------------------------------------------------
 
-	char test_info[150];
-	char test_name[90];
-	snprintf(test_info, 150,
-			"streams:%d precision:%s size:%d pyramidHeight:%d simTime:%d",
-			setupParams->nstreams, test_precision_description,
-			setupParams->grid_rows, setupParams->pyramid_height,
-			setupParams->sim_time);
-	snprintf(test_name, 90, "cuda_hotspot_%s", test_precision_description);
+//	char test_info[150];
+//	char test_name[90];
+//	snprintf(test_info, 150,
+//			"streams:%d precision:%s size:%d pyramidHeight:%d simTime:%d",
+//			setupParams->nstreams, test_precision_description,
+//			setupParams->grid_rows, setupParams->pyramid_height,
+//			setupParams->sim_time);
+//	snprintf(test_name, 90, "cuda_hotspot_%s", test_precision_description);
+
 //#ifdef LOGS
 //	if (!(setupParams->generate)) start_log_file(test_name, test_info);
 //#endif
-	auto t_name = std::string(test_name);
-	auto t_info = std::string(test_info);
-	rad::Log log(t_name, t_info);
+//	auto t_name = std::string(test_name);
+//	auto t_info = std::string(test_info);
+	auto test_name = "cuda_hotspot_" + std::string(test_precision_description);
+	auto test_info = "streams:" + std::to_string(setupParams->nstreams);
+	test_info += " precision:" + std::string(test_precision_description);
+	test_info += " size:" + std::to_string(setupParams->grid_rows);
+	test_info += " pyramidHeight:" + std::to_string(setupParams->pyramid_height);
+	test_info += " simTime:" + std::to_string(setupParams->sim_time);
+	test_info += " nvcc_version:" + get_cuda_cc_version();
+	std::string opt_flags = "";
+#ifdef NVCCOPTFLAGS
+	opt_flags += STRING(NVCCOPTFLAGS);
+#endif
+	test_info += " nvcc_optimization_flags:" + opt_flags;
+
+	rad::Log log(test_name, test_info);
 	if (setupParams->verbose) {
 		std::cout << log << std::endl;
 
 	}
 	printf(
 			"\n=================================\n%s\n%s\n=================================\n\n",
-			test_name, test_info);
+			test_name.c_str(), test_info.c_str());
 
 	timestamp = rad::mysecond();
 	readInput(setupParams);

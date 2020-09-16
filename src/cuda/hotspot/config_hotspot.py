@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 
-import ConfigParser
+import configparser
 import copy
 import os
 import sys
@@ -16,16 +16,35 @@ STREAMS = 20
 PRECISIONS = ["single"]
 BUILDPROFILER = 1
 
+COMPILER_VERSION = [
+    ("10.1", "g++"),
+    ("7.0", "g++-4.8")
+]
 
-def config(board, arith_type, debug):
+COMPILER_FLAGS = (
+    # append to parameter list the number of the registers
+    '--maxrregcount=16',
+
+    # Enable (disable) to allow compiler to perform expensive optimizations
+    # using maximum available resources (memory and compile-time).
+    # '"-Xptxas --allow-expensive-optimizations=false"',
+
+    # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
+    # "--use_fast_math",
+)
+
+
+def config(board, arith_type, debug, compiler_version, flag):
+    cuda_version = compiler_version[0]
+    cxx_version = compiler_version[1]
     original_hotspot = "hotspot"
     benchmark_bin = "cuda_hotspot_" + arith_type
     benchmark_src = "hotspot"
-    print("Generating " + benchmark_bin + " for CUDA, board:" + str(board))
+    print(f"Generating {benchmark_bin} for CUDA, board:{board}")
 
     confFile = '/etc/radiation-benchmarks.conf'
     try:
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(confFile)
         installDir = config.get('DEFAULT', 'installdir') + "/"
 
@@ -44,39 +63,49 @@ def config(board, arith_type, debug):
     generate = ["cd " + src_hotspot,
                 "make clean",
                 "make -C ../../include ",
-                "make -C ../common/",
-                "make PRECISION={} BUILDPROFILER={}".format(arith_type, BUILDPROFILER),
+                # "make -C ../common/",
+                # "make PRECISION={} BUILDPROFILER={}".format(arith_type, BUILDPROFILER),
                 "mkdir -p " + data_path,
-                "mv ./" + benchmark_bin + " " + bin_path + "/"]
+                # "mv ./" + benchmark_bin + " " + bin_path + "/"
+                ]
     execute = []
-
+    flag_parsed = flag.replace("=", "").replace("--", "")
+    benchmark_bin_new = f"{benchmark_bin}_{cuda_version}_{flag_parsed}"
     for i in SIZES:
         for s in SIMTIME:
-            inputFile = data_path + "/"
+            new_binary = f"{bin_path}/{benchmark_bin_new}"
+            cuda_path = f"/usr/local/cuda-{cuda_version}"
 
-            gen = [None] * 9
-            gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-generate ']
-            gen[3] = ['-input_temp=' + inputFile + "temp_" + str(i)]
-            gen[4] = ['-input_power=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold_temp=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_" + str(s)]
-            gen[6] = ['-sim_time=' + str(s)]
-            gen[7] = ['-iterations=1']
-            gen[8] = ['-streams=' + str(STREAMS)]
-
+            gen = [
+                [f'sudo env LD_LIBRARY_PATH={cuda_path}/''lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} '
+                 f"{new_binary}"],
+                [f'-size={i}'],
+                [f'-input_temp={data_path}/temp_{i}'],
+                [f'-input_power={data_path}/power_{i}'],  # change for execute
+                [f'-gold_temp={data_path}/gold_{i}_{arith_type}_{s}_{cuda_version}_{flag_parsed}'],
+                [f'-sim_time={s}'],
+                [f'-streams={STREAMS}'],
+            ]
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
-            exe[2] = []
-            exe[7] = ['-iterations=' + str(ITERATIONS)]
+            exe.append(['-iterations=' + str(ITERATIONS)])
+            gen.extend([['-generate'], ['-iterations=1']])
 
+            variable_gen = ["make clean",
+                            f"make LOGS=1 PRECISION={arith_type} NVCCOPTFLAGS={flag}"
+                            f" CXX={cxx_version} CUDAPATH={cuda_path}",
+                            f"sudo rm -f {new_binary}",
+                            f"sudo mv ./{benchmark_bin} {new_binary}"
+                            ]
+
+            generate.extend(variable_gen)
             generate.append(' '.join(str(r) for v in gen for r in v))
             execute.append(' '.join(str(r) for v in exe for r in v))
 
     # execute, generate, install_dir, benchmark_bin, debug
     execute_and_write_json_to_file(execute=execute, generate=generate,
                                    install_dir=installDir,
-                                   benchmark_bin=benchmark_bin,
+                                   benchmark_bin=benchmark_bin_new,
                                    debug=debug)
 
 
@@ -91,5 +120,7 @@ if __name__ == "__main__":
 
     board, _ = discover_board()
     for p in PRECISIONS:
-        config(board=board, arith_type=p, debug=debug_mode)
+        for compiler_ver in COMPILER_VERSION:
+            for compiler_flag in COMPILER_FLAGS:
+                config(board=board, arith_type=p, debug=debug_mode, compiler_version=compiler_ver, flag=compiler_flag)
     print("Multiple jsons may have been generated.")
