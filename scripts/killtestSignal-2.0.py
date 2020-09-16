@@ -12,7 +12,7 @@ import signal
 import json
 from datetime import datetime
 
-from server_package.server_parameters import SERVER_IP, SOCKET_PORT
+from server_parameters import SERVER_IP, SOCKET_PORT
 
 # Time in seconds to wait for the timestamp update
 timestampMaxDiffDefault = 30
