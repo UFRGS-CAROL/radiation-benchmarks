@@ -45,6 +45,25 @@ def remove_sudo():
         print("sudo password request removed, remove last line to add it again")
 
 
+def place_rc_local():
+    print("[CAUTION] Do you wish to create an /etc/rc.local [Y/n] (default yes):", end="")
+    choice = input().lower()
+    etc_path = "/etc/rc.local"
+    from pathlib import Path
+    home = str(Path.home())
+    at_boot_path = f"{home}/atBoot.sh"
+
+    file_content = ["#!/bin/bash\n\n", f"sudo {home}/atBoot.sh &\n\n", "exit 0\n"]
+    at_boot_content = ["#!/bin/bash\n\n", "echo 'TODO: content here'\n\n", "exit 0\n"]
+    if choice in yes:
+        with open(etc_path, "w+") as etc_fp, open(at_boot_path, "w+") as at_boot_fp:
+            etc_fp.writelines(file_content)
+            at_boot_fp.writelines(at_boot_content)
+        print(f"{etc_path} file created, fill {at_boot_path} with the desirable script")
+        os.chmod(at_boot_path, 0o777)
+        os.chmod(etc_path, 0o777)
+
+
 var_dir = "/var/radiation-benchmarks"
 conf_file = "/etc/radiation-benchmarks.conf"
 
@@ -78,6 +97,7 @@ except IOError:
     sys.exit(1)
 
 remove_sudo()
+place_rc_local()
 
 print("var directory created (" + var_dir + ")")
 print("log directory created (" + log_dir + ")")
