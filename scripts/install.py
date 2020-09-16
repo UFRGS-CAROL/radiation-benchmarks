@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import shutil
+from pathlib import Path
 
 yes = {'yes', 'y', 'ye', ''}
 no = {'no', 'n'}
@@ -59,7 +60,6 @@ def place_rc_local(install_path__):
     print("[CAUTION] Do you wish to create an /etc/rc.local [Y/n] (default yes):", end="")
     choice = input().lower()
     etc_path = "/etc/rc.local"
-    from pathlib import Path
     home = str(Path.home())
     at_boot_path = f"{home}/atBoot.sh"
     at_boot_example_path = f"{install_path__}/scripts/atBoot.sh.example"
