@@ -27,7 +27,7 @@ INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../
 
 OBJDIR=./obj/
 OBJ=  micro_real_kernels.o micro_ldst_kernels.o 
-OBJ+= micro_int_kernels.o main.o Parameters.o utils.o 
+OBJ+= micro_int_kernels.o main.o Parameters.o utils.o branch_kernel.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
