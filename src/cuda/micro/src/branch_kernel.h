@@ -2,13 +2,13 @@
 #define BRANCH_KERNEL_H_
 
 #include <cstdint>
-
+#include "input_device.h"
 
 template<typename int_t>
 __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint32_t op) {
 	const int_t i = (blockDim.x * blockIdx.x + threadIdx.x);
 	int_t value = i;
-	int_t to_store = (i + 1) % op;
+	int_t to_store = (common_int_input[threadIdx.x] + 1) % op;
 #pragma unroll 16
 	for(int opi = 0; opi < op; opi++) {
 		if (threadIdx.x == 0) {
@@ -63,7 +63,6 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 			value = to_store;
 		} else if (threadIdx.x == 25) {
 			value = to_store;
-			continue;
 		} else if (threadIdx.x == 26) {
 			value = to_store;
 		} else if (threadIdx.x == 27) {
