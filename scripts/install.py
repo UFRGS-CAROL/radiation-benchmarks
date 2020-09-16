@@ -26,7 +26,7 @@ def install_path():
     path = os.getcwd()
     path = re.sub(r'/scripts', '', path)
     while not check_path(path):
-        print("Please, enter the install path (radiation-benchmarks directory): ")
+        print("Please, enter the install path (radiation-benchmarks directory):", end="")
         path = input()
     return path
 
@@ -36,7 +36,7 @@ def remove_sudo():
     Remove sudo password requesting
     :return:
     """
-    print("[CAUTION] Remove sudo password for all users [Y/n] (default yes): ", end="")
+    print("[CAUTION] Remove sudo password for all users [Y/n] (default yes):", end="")
     choice = input().lower()
     sudo_str = "	ALL	ALL = (ALL) NOPASSWD: ALL\n"
     if choice in yes:
