@@ -1,0 +1,29 @@
+#!/bin/bash
+
+NUMBEROFPROCESSORS=7
+
+RADDIR=${HOME}/radiation-benchmarks
+
+#sudo nvidia-smi -i 0 -pm ENABLED
+
+# set mce check interval to short
+for i in $(seq 0 ${NUMBEROFPROCESSORS})
+do
+	echo 10 > /sys/devices/system/machinecheck/machinecheck"$i"/check_interval;
+	echo 3 > /sys/devices/system/machinecheck/machinecheck"$i"/tolerant
+done
+
+# turn off crash on uncorrectable errs
+echo 0 > /sys/module/edac_core/parameters/edac_mc_panic_on_ue
+
+##ONLY FOR TEST PURPOSE
+#sudo ntpdate -dv 192.168.1.5 > ${HOME}/log_ntpdate.log 2>${HOME}/log_ntpdate.log
+#sudo ntpdate NTPServer1 >>  ${HOME}/log_ntpdate.log 2>>${HOME}/log_ntpdate.log
+
+# NTP date update for a specific server
+sudo ntpdate -u 192.168.1.5 > "${HOME}"/log_ntpdate.log 2>>"${HOME}"/log_ntpdate.log
+
+#sudo "${RADDIR}"/scripts/killtestSignal-2.0.py "${RADDIR}"/scripts/json_files/json_parameter &
+#sudo "${RADDIR}"/scripts/test_killtest_commands_json-2.0.py "${RADDIR}"/scripts/json_files/json_parameter
+
+exit 0

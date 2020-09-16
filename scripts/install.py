@@ -4,6 +4,7 @@ import configparser
 import sys
 import os
 import re
+import shutil
 
 yes = {'yes', 'y', 'ye', ''}
 no = {'no', 'n'}
@@ -39,26 +40,35 @@ def remove_sudo():
     print("[CAUTION] Remove sudo password for all users [Y/n] (default yes):", end="")
     choice = input().lower()
     sudo_str = "	ALL	ALL = (ALL) NOPASSWD: ALL\n"
+    pattern = r".*ALL.*ALL.*=.*(ALL).*NOPASSWD:.*ALL.*"
     if choice in yes:
-        with open("/etc/sudoers", "a") as sudoers_file:
-            sudoers_file.write(sudo_str)
+        sudoers_path = "/etc/sudoers"
+        contains_line = False
+        with open(sudoers_path, "r") as sudoers_file:
+            for l in sudoers_file.readlines():
+                if re.match(pattern, sudo_str):
+                    contains_line = True
+                    break
+        if contains_line is False:
+            with open(sudoers_path, "a") as sudoers_file:
+                sudoers_file.write(sudo_str)
         print("sudo password request removed, remove last line to add it again")
 
 
-def place_rc_local():
+def place_rc_local(install_path__):
     print("[CAUTION] Do you wish to create an /etc/rc.local [Y/n] (default yes):", end="")
     choice = input().lower()
     etc_path = "/etc/rc.local"
     from pathlib import Path
     home = str(Path.home())
     at_boot_path = f"{home}/atBoot.sh"
-
+    at_boot_example_path = f"{install_path__}/scripts/atBoot.sh.example"
     file_content = ["#!/bin/bash\n\n", f"sudo {home}/atBoot.sh &\n\n", "exit 0\n"]
-    at_boot_content = ["#!/bin/bash\n\n", "echo 'TODO: content here'\n\n", "exit 0\n"]
+
     if choice in yes:
-        with open(etc_path, "w+") as etc_fp, open(at_boot_path, "w+") as at_boot_fp:
+        with open(etc_path, "w+") as etc_fp:
             etc_fp.writelines(file_content)
-            at_boot_fp.writelines(at_boot_content)
+        shutil.copy(at_boot_example_path, at_boot_path)
         print(f"{etc_path} file created, fill {at_boot_path} with the desirable script")
         os.chmod(at_boot_path, 0o777)
         os.chmod(etc_path, 0o777)
@@ -77,7 +87,8 @@ signal_cmd += " killall -q -USR1 test_killtest_commands_json-2.0.py; killall -q 
 
 config = configparser.ConfigParser()
 
-config.set("DEFAULT", "installdir", install_path())
+install_path_ = install_path()
+config.set("DEFAULT", "installdir", install_path_)
 config.set("DEFAULT", "vardir", var_dir)
 config.set("DEFAULT", "logdir", log_dir)
 config.set("DEFAULT", "tmpdir", "/tmp")
@@ -92,12 +103,13 @@ try:
     os.chmod(log_dir, 0o777)
     with open(conf_file, 'w') as configfile:
         config.write(configfile)
+
+    remove_sudo()
+    place_rc_local(install_path_)
+
 except IOError:
     print("I/O Error, please make sure to run as root (sudo)")
     sys.exit(1)
-
-remove_sudo()
-place_rc_local()
 
 print("var directory created (" + var_dir + ")")
 print("log directory created (" + log_dir + ")")
