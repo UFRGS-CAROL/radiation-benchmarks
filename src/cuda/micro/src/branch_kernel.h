@@ -1825,7 +1825,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 906) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 907) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 908) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 909) {
@@ -1833,7 +1833,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 910) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 911) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 912) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 913) {
@@ -1849,7 +1849,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 918) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 919) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 920) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 921) {
@@ -1869,7 +1869,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 928) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 929) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 930) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 931) {
@@ -1885,7 +1885,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 936) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 937) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 938) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 939) {
@@ -1893,7 +1893,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 940) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 941) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 942) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 943) {
@@ -1905,7 +1905,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 946) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 947) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 948) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 949) {
@@ -1917,7 +1917,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 952) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 953) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 954) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 955) {
@@ -1945,7 +1945,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 966) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 967) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 968) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 969) {
@@ -1953,7 +1953,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 970) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 971) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 972) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 973) {
@@ -1965,7 +1965,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 976) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 977) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 978) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 979) {
@@ -1977,7 +1977,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 982) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 983) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 984) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 985) {
@@ -1993,7 +1993,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 990) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 991) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 992) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 993) {
@@ -2005,7 +2005,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 996) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 997) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 998) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 999) {
@@ -2029,7 +2029,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 1008) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1009) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1010) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1011) {
@@ -2037,7 +2037,7 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 1012) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1013) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1014) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1015) {
@@ -2049,11 +2049,11 @@ __global__ void int_branch_kernel(int_t* dst_1, int_t* dst_2, int_t* dst_3, uint
 		} else if (threadIdx.x == 1018) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1019) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1020) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1021) {
-			value = common_int_input[threadIdx.x] & opi;
+			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1022) {
 			value = common_int_input[threadIdx.x];
 		} else if (threadIdx.x == 1023) {
