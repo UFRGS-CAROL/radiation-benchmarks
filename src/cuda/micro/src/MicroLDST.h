@@ -29,6 +29,12 @@ struct MicroLDST: public Micro<int_t> {
 
 	MicroLDST(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			Micro<int_t>(parameters, log) {
+		// Check if ecc on, otherwise cannot execute Micro LSDST
+		if(this->is_ecc_on == false){
+			throw_line(
+					"Cannot execute LDST with ECC turned OFF, please turn it ON first.");
+		}
+
 		//Array size is the amount of memory that will be evaluated
 		parameters.array_size = parameters.memory_size_to_use / sizeof(int_t);
 		parameters.operation_num = MEM_OPERATION_NUM;
