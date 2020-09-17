@@ -12,7 +12,7 @@ from common_config import discover_board, execute_and_write_json_to_file
 SIZES = [1024]
 ITERATIONS = 10000
 SIMTIME = [1000]
-STREAMS = 20
+STREAMS = 10
 PRECISIONS = ["single"]
 BUILDPROFILER = 1
 
