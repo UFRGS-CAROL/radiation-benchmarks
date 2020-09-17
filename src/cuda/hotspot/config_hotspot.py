@@ -30,7 +30,7 @@ COMPILER_FLAGS = (
     # '"-Xptxas --allow-expensive-optimizations=false"',
 
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    # "--use_fast_math",
+    "--use_fast_math",
 )
 
 
@@ -42,10 +42,10 @@ def config(board, arith_type, debug, compiler_version, flag):
     benchmark_src = "hotspot"
     print(f"Generating {benchmark_bin} for CUDA, board:{board}")
 
-    confFile = '/etc/radiation-benchmarks.conf'
+    conf_file = '/etc/radiation-benchmarks.conf'
     try:
         config = configparser.RawConfigParser()
-        config.read(confFile)
+        config.read(conf_file)
         installDir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
