@@ -2,6 +2,8 @@ import threading
 import time
 import logging
 
+from .RebootMachine import RebootMachine
+
 
 class Machine(threading.Thread):
     __time_min_reboot_threshold = 3
@@ -35,11 +37,13 @@ class Machine(threading.Thread):
         self.__timestamp = time.time()
         self.__logger = logging.getLogger(self.__logger_name)
         self.__reboot_sleep_time = kwargs.pop("reboot_sleep_time")
-        self.__RebootMachine = kwargs.pop("RebootMachine")
+        # self.__RebootMachine = kwargs.pop("RebootMachine")
+        self.__stop_event = threading.Event()
+
         super(Machine, self).__init__(*args, **kwargs)
 
         # Stops the thread when false
-        self.__is_machine_active = True
+        # self.__is_machine_active = True
 
     def run(self):
         # lower and upper threshold for reboot interval
@@ -51,7 +55,7 @@ class Machine(threading.Thread):
 
         # boot problem disable
         boot_problem_disable = False
-        while self.__is_machine_active:
+        while not self.__stop_event.isSet():
             # Check if machine is working fine
             now = time.time()
             last_conn_delta = now - self.__timestamp
@@ -79,11 +83,14 @@ class Machine(threading.Thread):
                 msg = f"\tIP {self.__ip} waiting due boot problem f{self.__boot_problem_max_delta}s"
                 self.__logger.info(msg)
                 # print(msg)
-                time.sleep(self.__boot_problem_max_delta)
+                # time.sleep(self.__boot_problem_max_delta)
+                self.__stop_event.wait(self.__boot_problem_max_delta)  # instead of sleeping
+
                 boot_problem_disable = False
 
             # sleep before re-check again
-            time.sleep(self.__sleep_time)
+            # time.sleep(self.__sleep_time)
+            self.__stop_event.wait(self.__sleep_time)
 
     def __log(self, reboot_status):
         message = {
@@ -103,12 +110,12 @@ class Machine(threading.Thread):
         """
         last_reboot_timestamp = time.time()
         # Reboot machine in another thread
-        reboot_thread = self.__RebootMachine(machine_address=self.__ip,
-                                             switch_model=self.__switch_model,
-                                             switch_port=self.__switch_port,
-                                             switch_ip=self.__switch_ip,
-                                             rebooting_sleep=self.__reboot_sleep_time,
-                                             logger_name=self.__logger_name)
+        reboot_thread = RebootMachine(machine_address=self.__ip,
+                                      switch_model=self.__switch_model,
+                                      switch_port=self.__switch_port,
+                                      switch_ip=self.__switch_ip,
+                                      rebooting_sleep=self.__reboot_sleep_time,
+                                      logger_name=self.__logger_name)
         reboot_thread.start()
         reboot_thread.join()
         reboot_status = reboot_thread.get_reboot_status()
@@ -128,7 +135,8 @@ class Machine(threading.Thread):
         Set if thread should stops or not
         :return:
         """
-        self.__is_machine_active = False
+        # self.__is_machine_active = False
+        self.__stop_event.set()
         super(Machine, self).join(*args, **kwargs)
 
     def get_hostname(self):
@@ -142,7 +150,7 @@ class Machine(threading.Thread):
 if __name__ == '__main__':
     # FOR DEBUG ONLY
     from queue import Queue
-    from RebootMachine import RebootMachine
+    # from RebootMachine import RebootMachine
 
     print("CREATING THE MACHINE")
     logging.basicConfig(
@@ -164,8 +172,6 @@ if __name__ == '__main__':
         logger_name="MACHINE_LOG",
         boot_problem_max_delta=300,
         reboot_sleep_time=2,
-        RebootMachine=RebootMachine
-
     )
 
     print("EXECUTING THE MACHINE")

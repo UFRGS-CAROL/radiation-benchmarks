@@ -71,12 +71,13 @@ class CopyLogs(threading.Thread):
             self.__logger.debug(f"Could not download logs from {ip}")
             return False
 
-    def stop_copying(self):
+    def join(self, *args, **kwargs):
         """
         Stop the copy thread
         :return:
         """
         self.__stop_event.set()
+        super(CopyLogs, self).join(*args, **kwargs)
 
 
 if __name__ == '__main__':

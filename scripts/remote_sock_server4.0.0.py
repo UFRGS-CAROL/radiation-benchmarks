@@ -7,7 +7,7 @@ import queue
 
 from server_parameters import *
 from server_package.Machine import Machine
-from server_package.RebootMachine import RebootMachine
+# from server_package.RebootMachine import RebootMachine
 from server_package.LoggerFormatter import ColoredLogger
 from server_package.CopyLogs import CopyLogs
 
@@ -55,8 +55,8 @@ def generate_machine_hash(messages_queue):
                 sleep_time=MACHINE_CHECK_SLEEP_TIME,
                 logger_name=LOGGER_NAME,
                 boot_problem_max_delta=BOOT_PROBLEM_MAX_DELTA,
-                reboot_sleep_time=REBOOTING_SLEEP,
-                RebootMachine=RebootMachine
+                reboot_sleep_time=REBOOTING_SLEEP
+                # RebootMachine=RebootMachine
             )
 
             machines_hash[mac["ip"]] = mac_obj
@@ -85,6 +85,7 @@ def logging_setup():
     console = ColoredLogger(LOGGER_NAME)
 
     # add the handlers to the logger
+    # noinspection PyTypeChecker
     logger.addHandler(console)
     return logger
 
@@ -135,15 +136,18 @@ def main():
                 client_socket.close()
                 logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
     except KeyboardInterrupt:
+        # Stop mac objects
         for mac_obj in machines_hash.values():
             mac_obj.join()
 
+        # Close client socket
         if client_socket:
             client_socket.close()
 
-        logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
-        copy_obj.stop_copying()
+        # Stop copy thread
         copy_obj.join()
+
+        logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(130)
 
 
