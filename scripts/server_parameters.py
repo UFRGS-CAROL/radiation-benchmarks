@@ -52,7 +52,7 @@ MACHINES = [
         "enabled": True,
         "diff_reboot": 100,
         "hostname": "carolk201",
-        "power_switch_ip": "192.168.1.100",
+        "power_switch_ip": "192.168.1.102",
         "power_switch_port": 1,
         "power_switch_model": "lindy",
         "username": "carol",
