@@ -31,7 +31,7 @@ COMPILER_FLAGS = (
     # '"-Xptxas --allow-expensive-optimizations=false"',
 
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    # "--use_fast_math",
+    "--use_fast_math",
 )
 
 
@@ -73,9 +73,10 @@ def config(device, compiler, debug):
             for use_tensor_cores in USE_TENSOR_CORES:
                 for cublas in USE_CUBLAS:
                     for flags in COMPILER_FLAGS:
-                        new_binary = f"{bin_path}/{new_bench_bin}"
+                        flags_parsed = flags.replace("-", "").replace("=", "")
+
+                        new_binary = f"{bin_path}/{new_bench_bin}_{flags_parsed}"
                         cuda_path = f"/usr/local/cuda-{cuda_version}"
-                        flags_parsed = flags.replace("-", "")
                         default_path = f'_size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}'
                         default_path += f'_precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
                         gen = [
