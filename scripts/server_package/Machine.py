@@ -91,7 +91,7 @@ class Machine(threading.Thread):
         reboot_msg = ""
         logger_function = self.__logger.info
         if kind == self.__REBOOTING:
-            reboot_msg = f"\tRebooting IP:{self.__ip} HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
+            reboot_msg = f"\tRebooted IP:{self.__ip} HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
         elif kind == self.__WAITING:
             reboot_msg = f"\tWaiting {self.__boot_problem_max_delta}s due boot problem IP:{self.__ip} "
             reboot_msg += f"HOSTNAME:{self.__hostname} "
