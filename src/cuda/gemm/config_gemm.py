@@ -65,7 +65,7 @@ def config(device, compiler, debug, flag):
                 f"cd {src_benchmark}",
                 "make -C ../../include ",
                 "mkdir -p " + data_path,
-                f"sudo rm -f {data_path}/*{cuda_version}*",
+                f"sudo rm -f {data_path}/*{cuda_version}*{flag}*",
                 ]
     execute = []
 
@@ -76,8 +76,8 @@ def config(device, compiler, debug, flag):
                 for cublas in USE_CUBLAS:
                     new_binary = f"{bin_path}/{new_bench_bin}"
                     cuda_path = f"/usr/local/cuda-{cuda_version}"
-                    default_path = f'_size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}'
-                    default_path += f'_precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
+                    default_path = f'size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}'
+                    default_path += f'precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
                     gen = [
                         [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
                          'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
