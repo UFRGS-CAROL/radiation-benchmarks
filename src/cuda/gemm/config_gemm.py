@@ -65,7 +65,7 @@ def config(device, compiler, debug, flag):
                 f"cd {src_benchmark}",
                 "make -C ../../include ",
                 "mkdir -p " + data_path,
-                f"sudo rm -f {data_path}/*{cuda_version}*{flag}*",
+                f"sudo rm -f {data_path}/*{cuda_version}*{flags_parsed}*",
                 ]
     execute = []
 
