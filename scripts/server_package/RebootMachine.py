@@ -9,8 +9,7 @@ import logging
 class RebootMachine(threading.Thread):
     __ON = "ON"
     __OFF = "OFF"
-    __SUCCESS = 0
-    __ERROR = 1
+    __SUCCESS, __GENERAL_ERROR, __HTTP_ERROR, __CONNECTION_ERROR, __TIMEOUT_ERROR = range(5)
 
     def __init__(self, machine_address, switch_model, switch_port, switch_ip, rebooting_sleep, logger_name):
         super(RebootMachine, self).__init__()
@@ -23,7 +22,6 @@ class RebootMachine(threading.Thread):
         self.__rebooting_sleep = rebooting_sleep
 
     def run(self):
-        # TODO: Remove FAKE when rebooting lines are uncommented
         self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
         self.__select_command_on_switch(self.__OFF)
@@ -67,10 +65,27 @@ class RebootMachine(threading.Thread):
             requests_status = requests.post(url, data=json.dumps(payload), headers=headers)
             requests_status.raise_for_status()
             self.__reboot_status = self.__SUCCESS
-        except requests.RequestException:
-            self.__logger.exception(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
-                                    f" status:{status} switchIP: {self.__switch_ip}")
-            self.__reboot_status = self.__ERROR
+        except requests.exceptions.HTTPError as http_error:
+            self.__reboot_status = self.__HTTP_ERROR
+            self.__log_exception(http_error)
+        except requests.exceptions.ConnectionError as connection_error:
+            self.__reboot_status = self.__CONNECTION_ERROR
+            self.__log_exception(connection_error)
+        except requests.exceptions.Timeout as timeout_error:
+            self.__reboot_status = self.__TIMEOUT_ERROR
+            self.__log_exception(timeout_error)
+        except requests.exceptions.RequestException as general_error:
+            self.__reboot_status = self.__GENERAL_ERROR
+            self.__log_exception(general_error)
+
+    def __log_exception(self, err):
+        """
+        Execute in case of exception
+        :param err:
+        :return:
+        """
+        self.__logger.error(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
+                                f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
 
     def __common_switch_command(self, status):
         port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
@@ -91,7 +106,7 @@ class RebootMachine(threading.Thread):
         result = os.system(f"{cmd} 2>{tmp_file}")
         with open(tmp_file) as err:
             if len(err.readlines()) != 0 or result != 0:
-                return self.__ERROR
+                return self.__GENERAL_ERROR
         return self.__SUCCESS
 
 
@@ -105,8 +120,9 @@ if __name__ == '__main__':
         filename="unit_test_log_RebootMachine.log",
         filemode='w'
     )
-    reboot = RebootMachine(machine_address="192.168.0.4", switch_model="lindy", switch_port=2,
-                           switch_ip="192.168.1.101", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
+    reboot = RebootMachine(machine_address="192.168.1.11", switch_model="lindy", switch_port=1,
+                           switch_ip="192.168.1.102", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
+    print("Rebooting")
     reboot.start()
-    print(f"Reboot status {reboot.get_reboot_status()}")
     reboot.join()
+    print(f"Reboot status {reboot.get_reboot_status()}")
