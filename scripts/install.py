@@ -4,7 +4,6 @@ import configparser
 import sys
 import os
 import re
-import shutil
 from pathlib import Path
 
 yes = {'yes', 'y', 'ye', ''}
@@ -46,14 +45,20 @@ def remove_sudo():
         sudoers_path = "/etc/sudoers"
         contains_line = False
         with open(sudoers_path, "r") as sudoers_file:
-            for l in sudoers_file.readlines():
-                if re.match(pattern, sudo_str):
+            for line in sudoers_file.readlines():
+                if re.match(pattern, line):
                     contains_line = True
                     break
         if contains_line is False:
             with open(sudoers_path, "a") as sudoers_file:
                 sudoers_file.write(sudo_str)
         print("sudo password request removed, remove last line to add it again")
+
+
+def replace(old_file_path, new_file_path, pattern, subst):
+    with open(new_file_path, 'w') as new_file, open(old_file_path) as old_file:
+        for line in old_file:
+            new_file.write(line.replace(pattern, subst))
 
 
 def place_rc_local(install_path__):
@@ -68,7 +73,8 @@ def place_rc_local(install_path__):
     if choice in yes:
         with open(etc_path, "w+") as etc_fp:
             etc_fp.writelines(file_content)
-        shutil.copy(at_boot_example_path, at_boot_path)
+
+        replace(at_boot_example_path, at_boot_path, "/home/carol", home)
         print(f"{etc_path} file created, fill {at_boot_path} with the desirable script")
         os.chmod(at_boot_path, 0o777)
         os.chmod(etc_path, 0o777)
