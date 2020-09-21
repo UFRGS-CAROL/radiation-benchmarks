@@ -24,9 +24,23 @@ class RebootMachine(threading.Thread):
     def run(self):
         self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
-        self.__select_command_on_switch(self.__OFF)
+        self.off()
         time.sleep(self.__rebooting_sleep)
+        self.on()
+
+    def on(self):
+        """
+        Set status to on
+        :return: None
+        """
         self.__select_command_on_switch(self.__ON)
+
+    def off(self):
+        """
+        Set status to off
+        :return: None
+        """
+        self.__select_command_on_switch(self.__OFF)
 
     def __select_command_on_switch(self, status):
         if self.__switch_model == "default":
@@ -85,7 +99,7 @@ class RebootMachine(threading.Thread):
         :return:
         """
         self.__logger.error(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
-                                f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
+                            f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
 
     def __common_switch_command(self, status):
         port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
@@ -125,4 +139,6 @@ if __name__ == '__main__':
     print("Rebooting")
     reboot.start()
     reboot.join()
+    # reboot.off()
+
     print(f"Reboot status {reboot.get_reboot_status()}")
