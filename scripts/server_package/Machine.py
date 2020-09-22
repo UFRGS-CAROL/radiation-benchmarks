@@ -6,9 +6,21 @@ from .RebootMachine import RebootMachine
 
 
 class Machine(threading.Thread):
-    __time_min_reboot_threshold = 3
-    __time_max_reboot_threshold = 10
-    __WAITING, __REBOOTING, __BOOT_PROBLEM = range(3)
+    """
+    Machine Thread
+    do not change the machine constants unless you
+    really know what you are doing, most of the constants
+    describes the behavior of HARD reboot execution
+    """
+    __TIME_MIN_REBOOT_THRESHOLD = 3
+    __TIME_MAX_REBOOT_THRESHOLD = 10
+    __WAITING, __REBOOTING, __BOOT_PROBLEM, __MAX_SEQ_REBOOT_REACHED = range(4)
+
+    """
+    DO NOT SET this parameter to a high value
+    it is the maximum HARD REBOOT sequentially executed
+    """
+    __MAX_SEQUENTIAL_REBOOT_ALLOWED = 10
 
     def __init__(self, *args, **kwargs):
         """
@@ -35,32 +47,35 @@ class Machine(threading.Thread):
         self.__sleep_time = kwargs.pop("sleep_time")
         self.__logger_name = kwargs.pop("logger_name")
         self.__boot_problem_max_delta = kwargs.pop("boot_problem_max_delta")
+        self.__reboot_sleep_time = kwargs.pop("reboot_sleep_time")
         self.__timestamp = time.time()
         self.__logger = logging.getLogger(self.__logger_name)
-        self.__reboot_sleep_time = kwargs.pop("reboot_sleep_time")
-        # self.__RebootMachine = kwargs.pop("RebootMachine")
         self.__stop_event = threading.Event()
         self.__reboot_status = None
+
         super(Machine, self).__init__(*args, **kwargs)
 
-        # Stops the thread when false
-        # self.__is_machine_active = True
-
     def run(self):
+        """
+        Run execution of thread
+        :return:
+        """
         # lower and upper threshold for reboot interval
-        lower_threshold = self.__time_min_reboot_threshold * self.__diff_reboot
-        upper_threshold = self.__time_max_reboot_threshold * self.__diff_reboot
+        lower_threshold = self.__TIME_MIN_REBOOT_THRESHOLD * self.__diff_reboot
+        upper_threshold = self.__TIME_MAX_REBOOT_THRESHOLD * self.__diff_reboot
 
         # Last reboot timestamp
         last_reboot_timestamp = 0
 
         # boot problem disable
         boot_problem_disable = False
+        # Count sequential reboot after last_conn_delta > upper_threshold
+        sequential_reboot_counter = 0
         while not self.__stop_event.isSet():
             # Check if machine is working fine
             now = time.time()
             last_conn_delta = now - self.__timestamp
-            if not boot_problem_disable:
+            if boot_problem_disable is False:
                 # print(last_conn_delta)
                 # If machine is not working fine reboot it
                 if self.__diff_reboot < last_conn_delta < lower_threshold:
@@ -76,8 +91,15 @@ class Machine(threading.Thread):
                     boot_problem_disable = True
                 # IPActiveTest[address] = False
                 elif last_conn_delta > upper_threshold:
-                    last_reboot_timestamp = self.__reboot_this_machine()
-                    self.__log(self.__REBOOTING)
+                    # Check if it is ok to reboot, otherwise wait
+                    if self.__MAX_SEQUENTIAL_REBOOT_ALLOWED < sequential_reboot_counter:
+                        sequential_reboot_counter += 1
+                        last_reboot_timestamp = self.__reboot_this_machine()
+                        self.__log(self.__REBOOTING)
+                    else:
+                        sequential_reboot_counter = 0
+                        boot_problem_disable = True
+                        self.__log(self.__MAX_SEQ_REBOOT_REACHED)
             else:
                 self.__log(self.__WAITING)
                 self.__stop_event.wait(self.__boot_problem_max_delta)  # instead of sleeping
@@ -88,6 +110,11 @@ class Machine(threading.Thread):
             self.__stop_event.wait(self.__sleep_time)
 
     def __log(self, kind):
+        """
+        Log some behavior
+        :param kind:
+        :return:
+        """
         reboot_msg = ""
         logger_function = self.__logger.info
         if kind == self.__REBOOTING:
@@ -97,6 +124,9 @@ class Machine(threading.Thread):
             reboot_msg += f"HOSTNAME:{self.__hostname} "
         elif kind == self.__BOOT_PROBLEM:
             reboot_msg = f"\tBoot Problem  IP:{self.__ip} HOSTNAME:{self.__hostname}"
+            logger_function = self.__logger.error
+        elif kind == self.__MAX_SEQ_REBOOT_REACHED:
+            reboot_msg = f"\tMaximum number of reboots allowed reached for IP:{self.__ip} HOSTNAME:{self.__hostname}"
             logger_function = self.__logger.error
 
         logger_function(reboot_msg)
@@ -174,7 +204,7 @@ if __name__ == '__main__':
         messages_queue=Queue(),
         sleep_time=5,
         logger_name="MACHINE_LOG",
-        boot_problem_max_delta=20,
+        boot_problem_max_delta=10,
         reboot_sleep_time=2,
     )
 
@@ -184,9 +214,7 @@ if __name__ == '__main__':
     machine.start()
 
     print("SLEEPING THE MACHINE")
-    time.sleep(10)
-    machine.set_timestamp(time.time())
-    time.sleep(40)
+    time.sleep(100)
 
     print("JOINING THE MACHINE")
     machine.join()
