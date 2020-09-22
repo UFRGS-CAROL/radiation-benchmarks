@@ -91,11 +91,12 @@ class Machine(threading.Thread):
                     boot_problem_disable = True
                 # IPActiveTest[address] = False
                 elif last_conn_delta > upper_threshold:
+                    last_reboot_timestamp = self.__reboot_this_machine()
+                    self.__log(self.__REBOOTING)
+
                     # Check if it is ok to reboot, otherwise wait
                     if self.__MAX_SEQUENTIAL_REBOOT_ALLOWED < sequential_reboot_counter:
                         sequential_reboot_counter += 1
-                        last_reboot_timestamp = self.__reboot_this_machine()
-                        self.__log(self.__REBOOTING)
                     else:
                         sequential_reboot_counter = 0
                         boot_problem_disable = True
