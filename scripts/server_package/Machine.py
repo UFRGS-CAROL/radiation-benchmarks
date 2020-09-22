@@ -93,11 +93,10 @@ class Machine(threading.Thread):
                 elif last_conn_delta > upper_threshold:
                     last_reboot_timestamp = self.__reboot_this_machine()
                     self.__log(self.__REBOOTING)
+                    sequential_reboot_counter += 1
 
                     # Check if it is ok to reboot, otherwise wait
-                    if self.__MAX_SEQUENTIAL_REBOOT_ALLOWED < sequential_reboot_counter:
-                        sequential_reboot_counter += 1
-                    else:
+                    if sequential_reboot_counter > self.__MAX_SEQUENTIAL_REBOOT_ALLOWED:
                         sequential_reboot_counter = 0
                         boot_problem_disable = True
                         self.__log(self.__MAX_SEQ_REBOOT_REACHED)
