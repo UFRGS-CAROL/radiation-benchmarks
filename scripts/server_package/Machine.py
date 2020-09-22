@@ -89,7 +89,7 @@ class Machine(threading.Thread):
                 elif lower_threshold < last_conn_delta < upper_threshold:
                     self.__log(self.__BOOT_PROBLEM)
                     boot_problem_disable = True
-                # IPActiveTest[address] = False
+                # Sanity checks
                 elif last_conn_delta > upper_threshold:
                     last_reboot_timestamp = self.__reboot_this_machine()
                     self.__log(self.__REBOOTING)
