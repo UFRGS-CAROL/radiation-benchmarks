@@ -80,8 +80,8 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
 	
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
-	$(NVCC) $(ARCH)  -dlink $@ -o $@_dlink.o -lcudadevrt
+	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE)
+	$(NVCC) -ccbin $(CXX) $(ARCH)  -dlink $@ -o $@_dlink.o -lcudadevrt
 
 mkdir:
 	mkdir -p $(OBJDIR)
