@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.17)
 project(common)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 include_directories(include)
 include_directories(src/jtx2/include)
 include_directories(/usr/local/cuda/include)
 
-add_executable(common
+
+add_library(common
         include/cuda_utils.h
         include/device_vector.h
         include/generic_log.h

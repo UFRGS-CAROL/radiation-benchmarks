@@ -21,6 +21,7 @@
 //#endif
 #include "generic_log.h"
 #include "cuda_utils.h"
+#include "multi_compiler_analysis.h"
 
 // The timestamp is updated on every log_helper function call.
 
@@ -41,7 +42,7 @@ typedef float tested_type_host;
 const char test_precision_description[] = "half";
 typedef half tested_type;
 typedef half_float::half tested_type_host;
-#else 
+#else
 #error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 
@@ -540,32 +541,6 @@ int check_output_errors(parameters *setup_parameters, int streamIdx,
 	return (host_errors == 0);
 }
 
-std::string get_cuda_cc_version() {
-	long version_major, version_minor;
-
-#ifdef __CUDACC_VER_MAJOR__
-	version_major = __CUDACC_VER_MAJOR__;
-	version_minor = __CUDACC_VER_MINOR__;
-#elif defined(__CUDACC_VER__)
-	version_major = __CUDACC_VER__ / 10000;
-	version_minor = __CUDACC_VER__ % 10000;
-#else
-#warning "Neither __CUDACC_VER__ or __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
-	version_major = 7;
-	version_minor = 0;
-#endif
-	std::string ret = "";
-
-	ret += "MAJOR_" + std::to_string(version_major);
-	ret += "_MINOR_" + std::to_string(version_minor);
-
-	return ret;
-}
-
-#define XSTR(x) #x
-#define STRING(x) XSTR(x)
-
-
 void run(int argc, char** argv) {
 	//int streamIdx;
 	double timestamp, globaltime;
@@ -627,7 +602,7 @@ void run(int argc, char** argv) {
 	test_info += " size:" + std::to_string(setupParams->grid_rows);
 	test_info += " pyramidHeight:" + std::to_string(setupParams->pyramid_height);
 	test_info += " simTime:" + std::to_string(setupParams->sim_time);
-	test_info += " nvcc_version:" + get_cuda_cc_version();
+	test_info += " nvcc_version:" + rad::get_cuda_cc_version();
 	std::string opt_flags = "";
 #ifdef NVCCOPTFLAGS
 	opt_flags += STRING(NVCCOPTFLAGS);

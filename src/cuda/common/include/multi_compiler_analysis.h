@@ -1,0 +1,8 @@
+//
+// Created by fernando on 9/24/20.
+//
+
+#ifndef COMMON_MULTI_COMPILER_ANALYSIS_H
+#define COMMON_MULTI_COMPILER_ANALYSIS_H
+
+#endif //COMMON_MULTI_COMPILER_ANALYSIS_H
