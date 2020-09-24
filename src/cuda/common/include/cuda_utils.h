@@ -101,13 +101,13 @@ static void sleep(int seconds) {
 }
 
 static void sleep(double seconds) {
-	int milli = seconds * 1000.0;
+	int milli = std::ceil(seconds * 1000.0);
 	std::this_thread::sleep_for(std::chrono::milliseconds(milli));
 }
 
 static double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
+	struct timeval tp{};
+	struct timezone tzp{};
 	gettimeofday(&tp, &tzp);
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
