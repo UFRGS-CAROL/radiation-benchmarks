@@ -603,11 +603,7 @@ void run(int argc, char** argv) {
 	test_info += " pyramidHeight:" + std::to_string(setupParams->pyramid_height);
 	test_info += " simTime:" + std::to_string(setupParams->sim_time);
 	test_info += " nvcc_version:" + rad::get_cuda_cc_version();
-	std::string opt_flags = "";
-#ifdef NVCCOPTFLAGS
-	opt_flags += STRING(NVCCOPTFLAGS);
-#endif
-	test_info += " nvcc_optimization_flags:" + opt_flags;
+	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();;
 
 	rad::Log log(test_name, test_info);
 	if (setupParams->verbose) {

@@ -16,6 +16,7 @@ add_library(common
         include/NVMLWrapper.h
         include/persistent_lib.h
         include/Profiler.h
+        include/multi_compiler_analysis.h
         src/jtx2/example/sample.cpp
         src/jtx2/include/jtx1inst.h
         src/jtx2/src/jtx1pow.cpp
