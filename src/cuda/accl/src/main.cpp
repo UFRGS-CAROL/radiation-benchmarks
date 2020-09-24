@@ -50,18 +50,16 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
-#include <omp.h>
 
-#define MAX_LABELS 262144
+//#include <omp.h>
+
+//#define MAX_LABELS 262144
 #define BUF_SIZE 256
 
 #include "Parameters.h"
-#include "log_helper.h"
 #include "utils.h"
-
 #include "cuda_utils.h"
 #include "generic_log.h"
-
 #include "image.h"
 #include "misc.h"
 #include "accl.h"
@@ -153,7 +151,7 @@ std::shared_ptr<image<uchar>> loadPGM(const std::string& name) {
 	 */
 	std::ifstream file(name, std::ios::in | std::ios::binary);
 	pgmRead(file, buf);
-	if (strncmp(buf, "P5", 2))
+	if (strncmp(buf, "P5", 2) != 0)
 		throw_line("P5");
 
 	pgmRead(file, buf);
@@ -198,7 +196,7 @@ void savePGM(std::shared_ptr<image<rgb>> im, const std::string& name) {
  * - image<int>: image with integer values
  */
 std::shared_ptr<image<int>> imageUcharToInt(
-		std::shared_ptr<image<uchar>> input) {
+		const std::shared_ptr<image<uchar>>& input) {
 	int width = input->width();
 	int height = input->height();
 	std::shared_ptr<image<int>> output = std::make_shared<image<int>>(width,
@@ -272,7 +270,8 @@ int main(int argc, char** argv) {
 	//	"frames:%d, framesPerStream:%d"
 	std::string test_info = "frames:" + std::to_string(parameters.nFrames);
 	test_info += ", framesPerStream:"
-			+ std::to_string(parameters.nFramesPerStream);
+			+ std::to_string(parameters.nFramesPerStream) + get_multi_compiler_header();
+
 	std::string test_name = "cudaCCL";
 
 	rad::Log log(test_name, test_info);
@@ -302,8 +301,8 @@ int main(int argc, char** argv) {
 			height);
 //	imInt = imageUcharToInt(input);
 
-	auto nFrames = parameters.nFrames;
-	auto nFramsPerStream = parameters.nFramesPerStream;
+	int nFrames = parameters.nFrames;
+	int nFramsPerStream = parameters.nFramesPerStream;
 
 	const int rows = nFrames * 512;
 	const int cols = 512;
@@ -324,7 +323,7 @@ int main(int argc, char** argv) {
 	std::vector<int> gold_spans(spansSize);
 	std::vector<int> gold_components(componentsSize);
 
-	if (parameters.generate == false) {
+	if (!parameters.generate) {
 		readGold(gold_spans, gold_components, parameters.gold);
 		if (parameters.debug) {
 			gold_components[22] = 22;
@@ -375,7 +374,7 @@ int main(int argc, char** argv) {
 		auto comparisson_time = rad::mysecond();
 		// output validation
 		int kernel_errors = 0;
-		if (parameters.generate == false) {
+		if (!parameters.generate) {
 #pragma omp parallel for
 			for (int i = 0; i < rows; i++) {
 				for (int j = 0; j < colsSpans; j++) {

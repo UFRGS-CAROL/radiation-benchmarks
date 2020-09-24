@@ -8,10 +8,14 @@
 #include <string>
 
 namespace rad {
+    static void check_nvcc(){
+#ifndef __NVCC__
+#error "Cannot use this library without NVCC, please add the reader only on files that will be compiled by NVCC"
+#endif
+    }
     static std::string get_cuda_cc_version() {
+        check_nvcc();
         long version_major, version_minor;
-
-
 #ifdef __CUDACC_VER_MAJOR__
         version_major = __CUDACC_VER_MAJOR__;
     version_minor = __CUDACC_VER_MINOR__;
@@ -33,6 +37,8 @@ namespace rad {
 #define STRING(x) XSTR(x)
 
     std::string extract_nvcc_opt_flags_str() {
+        check_nvcc();
+
         std::string opt_flags;
 #ifdef NVCCOPTFLAGS
         opt_flags = STRING(NVCCOPTFLAGS);

@@ -14,6 +14,9 @@ VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
+# NVCC optmizations flags
+# To use for different flags
+NVCCOPTFLAGS?=
 
 NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -dc  -Wno-deprecated-gpu-targets
 
@@ -45,6 +48,9 @@ LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml
 endif
 
 
+NVCCFLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
+NVCCFLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
@@ -73,8 +79,8 @@ clean:
 	
 
 generate:
-	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate ;
+	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
 
 test:
-	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --frames $(FRAMES) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
 	

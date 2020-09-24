@@ -9,4 +9,6 @@ double acclCuda(rad::DeviceVector<int>& devOut,
 		const rad::DeviceVector<int>& devIn, uint nFrames, uint nFramsPerStream,
 		const int rows, const int cols, int logs_active, rad::Log& log,
 		std::vector<cudaStream_t>& streams);
+
+std::string get_multi_compiler_header();
 #endif
