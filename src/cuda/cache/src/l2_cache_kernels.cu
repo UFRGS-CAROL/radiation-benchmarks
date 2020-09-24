@@ -12,6 +12,7 @@
 #include "CacheLine.h"
 #include "L2Cache.h"
 #include "utils.h"
+#include "device_functions.h"
 
 // We allocate two times each thread
 #define FACTOR 2
@@ -56,8 +57,8 @@ void L2Cache::test(const uint64& mem) {
 			input_device_1.data(), output_device_1.data(),
 			hit_vector_device.data(), miss_vector_device.data(), cycles);
 
-	cuda_check(cudaPeekAtLastError());
-	cuda_check(cudaDeviceSynchronize());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	//Host arrays
 	//Copy back to the host
 	this->hit_vector_host = hit_vector_device.to_vector();
@@ -120,7 +121,7 @@ bool L2Cache::call_checker(uint64& gold, rad::Log& log, int64& hits, int64& miss
 //void L2Cache::clear_cache(uint32 n) {
 //	float *random_array_dev;
 //	/* Allocate n floats on device */
-//	cuda_check(cudaMalloc((void ** )&random_array_dev, n * sizeof(float)));
+//	checkFrameworkErrors(cudaMalloc((void ** )&random_array_dev, n * sizeof(float)));
 //
 //	/* Create pseudo-random number generator */
 //	curandGenerator_t gen;
@@ -141,11 +142,11 @@ bool L2Cache::call_checker(uint64& gold, rad::Log& log, int64& hits, int64& miss
 //		block_number = 1024;
 //
 //	clear_cache_kenel<<<block_number, thread_number>>>(random_array_dev);
-//	cuda_check(cudaDeviceSynchronize());
+//	checkFrameworkErrors(cudaDeviceSynchronize());
 //
 //	(curandDestroyGenerator(gen));
 //
-//	cuda_check(cudaFree(random_array_dev));
+//	checkFrameworkErrors(cudaFree(random_array_dev));
 //
 //}
 

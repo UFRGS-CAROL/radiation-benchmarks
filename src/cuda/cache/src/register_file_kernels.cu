@@ -52,8 +52,8 @@ void RegisterFile::test(const uint64& mem_) {
 		break;
 	};
 
-	cuda_check(cudaPeekAtLastError());
-	cuda_check(cudaDeviceSynchronize());
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	this->output_host_1 = output_device_1.to_vector();
 	this->output_host_2 = output_device_2.to_vector();
 	this->output_host_3 = output_device_3.to_vector();

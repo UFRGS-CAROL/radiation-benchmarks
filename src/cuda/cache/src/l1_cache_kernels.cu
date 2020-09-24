@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "Memory.h"
 #include "L1Cache.h"
+#include "device_functions.h"
 
 #if __CUDA_ARCH__ <= 350
 #define SHARED_PER_SM MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1
@@ -105,8 +106,8 @@ void L1Cache::test(const uint64& mem) {
 			input_device_1.data(), output_device_1.data(),
 			hit_vector_device.data(), miss_vector_device.data(), cycles);
 
-	cuda_check(cudaPeekAtLastError());
-	cuda_check(cudaDeviceSynchronize());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 //Host arrays
 //Copy back to the host
 	this->hit_vector_host = hit_vector_device.to_vector();

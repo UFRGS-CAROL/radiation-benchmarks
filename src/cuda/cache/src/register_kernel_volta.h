@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "Parameters.h"
 
+#include "device_functions.h"
+
 __constant__ __device__ static uint32 reg_array[RF_SIZE][2] = {
 		{ 0xffffffff, 0x00000000 },
 		{ 0xffffffff, 0x00000000 },

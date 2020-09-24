@@ -90,9 +90,9 @@ struct Memory {
 
 	void set_cache_config(std::string& mem_type) {
 		if (mem_type == "L1" || mem_type == "REGISTERS") {
-			cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
+            rad::checkFrameworkErrors(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 		} else {
-			cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
+            rad::checkFrameworkErrors(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 		}
 	}
 

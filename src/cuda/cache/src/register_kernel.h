@@ -2,7 +2,7 @@
 #define REGISTER_KERNEL_H_
 
 #include "utils.h"
-
+#include "device_functions.h"
 #include "Parameters.h"
 
 __global__ void test_register_file_kernel(uint32 *rf, const __restrict__ uint32 *mem1, const uint64 sleep_cycles) {

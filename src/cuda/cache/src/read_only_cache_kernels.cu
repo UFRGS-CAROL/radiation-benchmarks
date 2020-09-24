@@ -8,6 +8,8 @@
 #include "ReadOnly.h"
 #include "utils.h"
 #include "Parameters.h"
+#include "device_functions.h"
+
 
 __global__ void test_read_only_kernel(
 		const __restrict__ uint64* constant_mem_array, uint64 *output_array, uint64 *output_array_aux,
@@ -64,8 +66,8 @@ void ReadOny::test(const uint64& mem) {
 		break;
 	}
 	}
-	cuda_check(cudaPeekAtLastError());
-	cuda_check(cudaDeviceSynchronize());
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 	//Host arrays
 	//Copy back to the host

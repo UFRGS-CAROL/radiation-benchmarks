@@ -9,6 +9,7 @@
 #include "CacheLine.h"
 #include "utils.h"
 #include "SharedMemory.h"
+#include "device_functions.h"
 
 __device__ __constant__
 static uint64 volta_input[2][CACHE_LINE_SIZE_BY_INT64] =
@@ -91,8 +92,8 @@ void SharedMemory::test(const uint64& mem) {
 	}
 	}
 
-	cuda_check(cudaPeekAtLastError());
-	cuda_check(cudaDeviceSynchronize());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 	//Host arrays
 	//Copy back to the host
