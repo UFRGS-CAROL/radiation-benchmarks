@@ -1,29 +1,14 @@
 #include "setup.h"
 #include "Parameters.h"
 #include "include/device_vector.h"
+#include "include/multi_compiler_analysis.h"
 #include "common_template_functions.h"
 #include "no_tensor_kernels.h"
 
-std::string get_cuda_cc_version() {
-	long version_major, version_minor;
-
-#ifdef __CUDACC_VER_MAJOR__
-	version_major = __CUDACC_VER_MAJOR__;
-	version_minor = __CUDACC_VER_MINOR__;
-#elif defined(__CUDACC_VER__)
-	version_major = __CUDACC_VER__ / 10000;
-	version_minor = __CUDACC_VER__ % 10000;
-#else
-#warning "Neither __CUDACC_VER__ or __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
-	version_major = 7;
-	version_minor = 0;
-#endif
-	std::string ret = "";
-
-	ret += "MAJOR_" + std::to_string(version_major);
-	ret += "_MINOR_" + std::to_string(version_minor);
-
-	return ret;
+std::string get_multi_compiler_header() {
+    std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
+    test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
+    return test_info;
 }
 
 template<const uint32_t COUNT, typename half_t, typename real_t>

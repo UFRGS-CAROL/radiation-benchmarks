@@ -23,7 +23,7 @@ namespace rad {
         version_major = __CUDACC_VER__ / 10000;
     version_minor = __CUDACC_VER__ % 10000;
 #else
-#warning "Neither __CUDACC_VER__ or __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
+#warning "Neither __CUDACC_VER__ nor __CUDACC_VER_MAJOR/MINOR__ are defined, using 7 and 0 as major and minor"
         version_major = 7;
         version_minor = 0;
 #endif

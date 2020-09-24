@@ -14,6 +14,7 @@
 #include <cublas_v2.h>
 
 #ifdef __cplusplus
+#include <cmath>
 #include <chrono>
 #include <thread>
 #endif //C++ compiler defined
