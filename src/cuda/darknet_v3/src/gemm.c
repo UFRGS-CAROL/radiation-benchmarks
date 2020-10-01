@@ -199,6 +199,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 extern void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 		int lda, float *B, int ldb, float BETA, float *C, int ldc);
+extern void inject_fault(int TA, int TB, int M, int N, int K, float *C);
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
@@ -207,7 +208,9 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 	cublasSetStream(handle, st);
 	//Matteo project
 	// save the matrixes file
+#if FLEX_GRIP_ANALYSIS != 0
 	parse_entry_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+#endif
 
 #ifndef OPENGEMM
 
@@ -249,6 +252,10 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 //	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 //			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 //			A_gpu, lda, &BETA, C_gpu, ldc);
+
+#if FLEX_GRIP_ANALYSIS != 0
+    inject_fault(TA, TB, M, N, K, C_gpu);
+#endif
 
 }
 

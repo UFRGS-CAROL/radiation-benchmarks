@@ -8,6 +8,7 @@ LOGS?=1
 OPENGEMM?=0
 EXTRACT_GEMM_DATA=1
 BUILDPROFILER=0
+FLEX_GRIP_ANALYSIS=1
 
 OPENBLAS=0
 
@@ -38,7 +39,8 @@ OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
 LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 COMMON= -Iinclude/ -Isrc/
-CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC 
+CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC
+CFLAGS+= -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 
 NVCCFLAGS= -std=c++11
 #-disable-warnings 
@@ -151,7 +153,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
+	$(NVCC) -ccbin $(CC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 obj:
 	mkdir -p obj
