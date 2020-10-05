@@ -9,8 +9,8 @@
 
 #include <iterator>
 #include "helpful.h"
-#include <sstream>
-#include <ctime>
+//#include <sstream>
+//#include <ctime>
 #include <iostream>
 #include <cmath>
 
@@ -20,7 +20,7 @@
  * Detection Gold class
  */
 
-void DetectionGold::write_gold_header() {
+void DetectionGold::write_gold_header() const {
 	//  0       1           2              3              4            5            6        7         8
 	//  thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;tensor_core;
 	std::string gold_header = std::to_string(this->thresh) + ";";
@@ -78,7 +78,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		//      Log(std::string gold, int save_layer, int abft, int iterations,
 		//              std::string app, unsigned char use_tensor_core_mode)
-		this->app_log->start_log(this->gold_inout, 0, 0, this->iterations,
+		Log::start_log(this->gold_inout, 0, 0, this->iterations,
 				this->network_name, this->tensor_core_mode, this->stream_mr);
 
 		//  detection gold;
@@ -165,7 +165,7 @@ bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 		int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
 		const std::string& img, int nb, int classes, const real_t* g_probs,
-		const real_t* f_probs, int img_w, int img_h, int inet) {
+		const real_t* f_probs, int img_w, int img_h, int inet) const {
 
 	real_t objs_diff = std::fabs(g_objectness - f_objectness);
 	int sortc_diff = std::fabs(g_sort_class - f_sort_class);
@@ -186,7 +186,7 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 				<< " objectness_r: " << f_objectness << " sort_class_e: "
 				<< g_sort_class << " sort_class_r: " << f_sort_class
 				<< " img_w: " << img_w << " img_h: " << img_h;
-		this->app_log->log_error_info(error_info.str());
+		Log::log_error_info(error_info.str());
 		std::cout << error_info.str() << "\n";
 	}
 
@@ -202,7 +202,7 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 			error_info << "inet: " << inet << " img: " << img << " detection: "
 					<< nb << " class: " << cl << " prob_e: " << g_prob
 					<< " prob_r: " << f_prob;
-			this->app_log->log_error_info(error_info.str());
+			Log::log_error_info(error_info.str());
 			std::cout << error_info.str() << "\n";
 
 			error_count++;
@@ -242,7 +242,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 //        this->app_log->update_error_count(this->total_errors);
 //        exit(-1);
 //    }
-	this->app_log->update_error_count(error_count);
+	Log::update_error_count(error_count);
 
 	return error_count;
 }
@@ -285,7 +285,7 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index,
 		detection det = dets[bb];
 		box b = det.bbox;
 
-		std::string box_str = this->generate_gold_line(bb, det, b, dets);
+		std::string box_str = DetectionGold::generate_gold_line(bb, det, b, dets);
 		gold_file << box_str << std::endl;
 	}
 
@@ -399,7 +399,7 @@ DetectionGold::~DetectionGold() {
 		profiler_thread->end_profile();
 #endif
 #endif
-		this->app_log->end_log();
+		Log::end_log();
 	//	delete this->app_log;
 	}
 

@@ -14,6 +14,7 @@
 #include "log_processing.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <tuple>
 #include <unordered_map>
@@ -71,14 +72,16 @@ struct Detection {
 
 	Detection(int classes, int nboxes, int sort_class, real_t objectness,
 			std::vector<real_t> prob, box bb) :
-			prob(prob), bbox(bb), nboxes(nboxes), objectness(objectness), sort_class(
+			prob(std::move(prob)), bbox(bb), nboxes(nboxes), objectness(objectness), sort_class(
 					sort_class), classes(classes) {
 	}
 
-	Detection(const Detection& a) :
-			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
-					a.objectness), sort_class(a.sort_class), classes(a.classes) {
-	}
+	Detection(const Detection& a) = default;
+
+//	:
+//			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
+//					a.objectness), sort_class(a.sort_class), classes(a.classes) {
+//	}
 
 	Detection& operator=(const Detection& other) // copy assignment
 			{
@@ -98,11 +101,11 @@ struct Detection {
 struct GoldHash {
 	std::unordered_map<std::string, std::vector<Detection> > data;
 
-	std::vector<Detection> operator[](std::string img) {
+	std::vector<Detection> operator[](const std::string& img) {
 		return this->data[img];
 	}
 
-	void put(std::string img, std::vector<Detection> a) {
+	void put(const std::string& img, const std::vector<Detection>& a) {
 		std::pair<std::string, std::vector<Detection> > tmp(img, a);
 		this->data.insert(tmp);
 	}
@@ -121,10 +124,10 @@ struct DetectionGold {
 	int total_errors;
 	bool normalized_coordinates;
 
-	//gold atribute
+	//gold attribute
 	GoldHash gold_hash_var;
 
-	Log* app_log;
+//	Log* app_log;
 #ifdef LOGS
 #ifdef BUILDPROFILER
 	std::shared_ptr<rad::Profiler> profiler_thread;
@@ -140,27 +143,29 @@ struct DetectionGold {
 	int run(detection** dets, int* nboxes, int img_index, int classes, int img_w,
 			int img_h);
 
-	void start_iteration();
-	void end_iteration();
+//	void start_iteration();
+//	void end_iteration();
 
 	void load_gold_hash(std::ifstream& gold_file);
 
-	void write_gold_header();
+	void write_gold_header() const;
 
 	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
 	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
 			int img_h, int inet);
 
-	std::string generate_gold_line(int bb, detection det, const box& b,
-			detection* dets);
-
-	Detection load_gold_line(std::ifstream& gold_file, int nboxes);
-
 	int compare_line(real_t g_objectness, real_t f_objectness,
 			int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
 			const std::string& img, int nb, int classes, const real_t* g_probs,
-			const real_t* f_probs, int img_w, int img_h, int inet);
+			const real_t* f_probs, int img_w, int img_h, int inet) const;
+
+private:
+    static std::string generate_gold_line(int bb, detection det, const box& b,
+                                   detection* dets);
+
+    static Detection load_gold_line(std::ifstream& gold_file, int nboxes);
+
 };
 
 #endif /* DETECTIONGOLD_H_ */
