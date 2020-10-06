@@ -98,19 +98,6 @@ struct Detection {
 
 };
 
-//struct GoldHash {
-//	std::unordered_map<std::string, std::vector<Detection> > data;
-//
-//	std::vector<Detection> operator[](const std::string& img) {
-//		return this->data[img];
-//	}
-//
-//	void put(const std::string& img, const std::vector<Detection>& a) {
-//		std::pair<std::string, std::vector<Detection> > tmp(img, a);
-//		this->data.insert(tmp);
-//	}
-//};
-
 struct DetectionGold {
 	std::string network_name;
 	std::string gold_inout;
@@ -125,7 +112,6 @@ struct DetectionGold {
 	bool normalized_coordinates;
     bool compare_layers;
 	//gold attribute
-//	GoldHash gold_hash_var;
     std::unordered_map<std::string, std::vector<Detection> > gold_hash_var;
 
 //	Log* app_log;

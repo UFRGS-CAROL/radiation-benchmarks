@@ -8,20 +8,15 @@
 #ifndef PARSE_GEMM_LAYER_H_
 #define PARSE_GEMM_LAYER_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef enum {
+    GENERATE_GOLDEN_LAYERS,
+    COMPARING_CURRENT_TO_GOLDEN,
+    INJECT_FAULT_IN_OUTPUT,
+} LayerOperationType;
 
-void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
-		int lda, float *B, int ldb, float BETA, float *C, int ldc);
-
-void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
-		int lda, float *B, int ldb, float BETA, float *C, int ldc);
-
-void inject_fault(int TA, int TB, int M, int N, int K, float *C);
-
-#ifdef __cplusplus
-}
-#endif
+void set_layer_processing_parameters(
+        const std::string& base_path,
+        LayerOperationType current_operation
+        );
 
 #endif /* PARSE_GEMM_LAYER_H_ */

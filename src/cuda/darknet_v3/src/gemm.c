@@ -197,9 +197,9 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 #ifdef GPU
 
-extern void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
-		int lda, float *B, int ldb, float BETA, float *C, int ldc);
-extern void inject_fault(int TA, int TB, int M, int N, int K, float *C);
+extern void parse_input_conv_layer_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+                                       int lda, float *B, int ldb, float BETA, float *C, int ldc);
+extern void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K, float *C);
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
@@ -208,9 +208,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 	cublasSetStream(handle, st);
 	//Matteo project
 	// save the matrices file
-#if FLEX_GRIP_ANALYSIS == 1
-	parse_entry_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
-#endif
+    parse_input_conv_layer_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 
 #ifndef OPENGEMM
 
@@ -253,10 +251,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 //			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 //			A_gpu, lda, &BETA, C_gpu, ldc);
 
-#if FLEX_GRIP_ANALYSIS == 2
-    inject_fault(TA, TB, M, N, K, C_gpu);
-#endif
-
+    parse_output_conv_layer_gpu(TA, TB, M, N, K, C_gpu);
 }
 
 void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {

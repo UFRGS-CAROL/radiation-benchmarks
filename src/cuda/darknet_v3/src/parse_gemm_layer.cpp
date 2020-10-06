@@ -17,6 +17,19 @@
 #include "parse_gemm_layer.h"
 
 static int layer_count = 0;
+std::string layers_files_base_path;
+LayerOperationType operation_type = GENERATE_GOLDEN_LAYERS;
+
+void set_layer_processing_parameters(
+        const std::string &base_path,
+        LayerOperationType current_operation) {
+    layers_files_base_path = base_path;
+    operation_type = current_operation;
+    std::cout << base_path << " " << current_operation << std::endl;
+    std::cout << layers_files_base_path << " " << operation_type << std::endl;
+}
+
+
 extern "C" void cuda_pull_array(float *x_gpu, float *x, size_t n);
 
 template<typename type_t>
@@ -39,25 +52,6 @@ bool write_file(type_t *src, std::string &path, std::string &header, int m,
         return true;
     }
     return false;
-}
-
-void parse_entry_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
-                     int lda, float *B, int ldb, float BETA, float *C, int ldc) {
-
-    auto size_a = K * M;
-    auto size_b = K * N;
-    auto size_c = M * N;
-
-    std::vector<float> a_cpu(size_a);
-    std::vector<float> b_cpu(size_b);
-    std::vector<float> c_cpu(size_c);
-
-    cuda_pull_array(A, a_cpu.data(), size_a);
-    cuda_pull_array(B, b_cpu.data(), size_b);
-    cuda_pull_array(C, c_cpu.data(), size_c);
-
-    parse_entry_cpu(TA, TB, M, N, K, ALPHA, a_cpu.data(), lda, b_cpu.data(),
-                    ldb, BETA, c_cpu.data(), ldc);
 }
 
 void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
@@ -98,6 +92,29 @@ void parse_entry_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
     }
 
 }
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void parse_input_conv_layer_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
+                                int lda, float *B, int ldb, float BETA, float *C, int ldc) {
+
+    auto size_a = K * M;
+    auto size_b = K * N;
+    auto size_c = M * N;
+
+    std::vector<float> a_cpu(size_a);
+    std::vector<float> b_cpu(size_b);
+    std::vector<float> c_cpu(size_c);
+
+    cuda_pull_array(A, a_cpu.data(), size_a);
+    cuda_pull_array(B, b_cpu.data(), size_b);
+    cuda_pull_array(C, c_cpu.data(), size_c);
+
+    parse_entry_cpu(TA, TB, M, N, K, ALPHA, a_cpu.data(), lda, b_cpu.data(),
+                    ldb, BETA, c_cpu.data(), ldc);
+}
+
 
 std::vector<std::string> split(const std::string &str, char del) {
     std::stringstream ss(str);
@@ -177,4 +194,11 @@ void inject_fault(int TA, int TB, int M, int N, int K, float *C) {
             }
         }
     }
+}
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K, float *C) {
+
 }

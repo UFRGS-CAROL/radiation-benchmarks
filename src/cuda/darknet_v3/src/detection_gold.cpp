@@ -8,13 +8,16 @@
 #include "detection_gold.h"
 
 #include <iterator>
-#include "helpful.h"
+//#include "helpful.h"
 //#include <sstream>
 //#include <ctime>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include "parse_gemm_layer.h"
 
-
+extern std::vector<std::string> split(const std::string&, char);
 
 /**
  * Detection Gold class
@@ -76,7 +79,11 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	std::cout << "Radiation test mode: " << this->generate << std::endl;
 	std::cout << "Gold path: " << this->gold_inout << std::endl;
 
-	if (!this->generate) {
+	const std::string base_dir = "/var/radiation-benchmarks/layer_";
+    std::string base_path = base_dir;
+    LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
+    if (!this->generate) {
+	    base_path += "_gold_";
 
 		//      Log(std::string gold, int save_layer, int abft, int iterations,
 		//              std::string app, unsigned char use_tensor_core_mode)
@@ -121,7 +128,9 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 #endif
 #endif
 	} else {
-		this->img_list_path = std::string(img_list_path);
+        base_path += "_inj_";
+        this->img_list_path = std::string(img_list_path);
+        current_op = COMPARING_CURRENT_TO_GOLDEN;
 
 		//reading the img list path content
 		std::ifstream tmp_img_file(this->img_list_path);
@@ -138,6 +147,8 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->write_gold_header();
 		this->iterations = 1;
 	}
+
+    set_layer_processing_parameters(base_path, current_op);
 }
 
 bool operator!=(const box& a, const box& b) {
