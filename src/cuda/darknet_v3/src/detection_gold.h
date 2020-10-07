@@ -11,7 +11,7 @@
 #include "network.h" //save layer
 #include "layer.h" //save layer
 #include "box.h" //boxes
-#include "log_processing.h"
+//#include "log_processing.h"
 
 #include <string>
 #include <utility>

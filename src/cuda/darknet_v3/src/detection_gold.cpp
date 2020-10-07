@@ -17,6 +17,8 @@
 #include <sstream>
 #include "parse_gemm_layer.h"
 
+#include "log_processing.h"
+
 extern std::vector<std::string> split(const std::string&, char);
 
 /**
@@ -79,12 +81,8 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	std::cout << "Radiation test mode: " << this->generate << std::endl;
 	std::cout << "Gold path: " << this->gold_inout << std::endl;
 
-	const std::string base_dir = "/var/radiation-benchmarks/layer_";
-    std::string base_path = base_dir;
     LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
     if (!this->generate) {
-	    base_path += "_gold_";
-
 		//      Log(std::string gold, int save_layer, int abft, int iterations,
 		//              std::string app, unsigned char use_tensor_core_mode)
 		Log::start_log(this->gold_inout, 0, 0, this->iterations,
@@ -128,7 +126,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 #endif
 #endif
 	} else {
-        base_path += "_inj_";
         this->img_list_path = std::string(img_list_path);
         current_op = COMPARING_CURRENT_TO_GOLDEN;
 
@@ -147,7 +144,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->write_gold_header();
 		this->iterations = 1;
 	}
-
+    std::string base_path = "/var/radiation-benchmarks";
     set_layer_processing_parameters(base_path, current_op);
 }
 

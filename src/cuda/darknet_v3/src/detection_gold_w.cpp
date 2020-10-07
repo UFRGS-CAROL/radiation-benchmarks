@@ -8,6 +8,8 @@
 #include "detection_gold_w.h"
 #include "detection_gold.h"
 #include "darknet.h"
+#include "log_processing.h"
+
 
 struct detection_gold {
     void *obj;
