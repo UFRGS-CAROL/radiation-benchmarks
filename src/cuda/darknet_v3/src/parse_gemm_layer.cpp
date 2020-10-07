@@ -63,7 +63,8 @@ void write_file(const std::vector<type_t> &src, const std::string &path) {
         of.write(reinterpret_cast<const char *>(src.data()), sizeof(type_t) * src.size());
         of.close();
     } else {
-        throw std::runtime_error("Could not open file: " + path);
+        throw std::runtime_error(
+                "Could not open file: " + path + " At line " + std::to_string(__LINE__) + " file " + __FILE__);
     }
 }
 
@@ -75,7 +76,8 @@ void read_file(std::vector<type_t> &src, const std::string &path, size_t n) {
         ifs.read(reinterpret_cast<char *>(src.data()), sizeof(type_t) * src.size());
         ifs.close();
     } else {
-        throw std::runtime_error("Could not open file: " + path);
+        throw std::runtime_error(
+                "Could not open file: " + path + " At line " + std::to_string(__LINE__) + " file " + __FILE__);
     }
 }
 

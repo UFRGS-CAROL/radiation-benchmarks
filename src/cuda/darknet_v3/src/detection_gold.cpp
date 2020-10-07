@@ -83,7 +83,9 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
     LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
     if (!this->generate) {
-		//      Log(std::string gold, int save_layer, int abft, int iterations,
+        current_op = COMPARING_CURRENT_TO_GOLDEN;
+
+        //      Log(std::string gold, int save_layer, int abft, int iterations,
 		//              std::string app, unsigned char use_tensor_core_mode)
 		Log::start_log(this->gold_inout, 0, 0, this->iterations,
 				this->network_name, this->tensor_core_mode, this->stream_mr);
@@ -127,7 +129,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 #endif
 	} else {
         this->img_list_path = std::string(img_list_path);
-        current_op = COMPARING_CURRENT_TO_GOLDEN;
 
 		//reading the img list path content
 		std::ifstream tmp_img_file(this->img_list_path);
