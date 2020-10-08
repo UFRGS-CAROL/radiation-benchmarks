@@ -18,5 +18,6 @@ void set_layer_processing_parameters(
         const std::string& base_path,
         LayerOperationType current_operation
         );
+void reset_counters();
 
 #endif /* PARSE_GEMM_LAYER_H_ */

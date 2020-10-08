@@ -281,6 +281,8 @@ int DetectionGold::run(detection **dets, int* nboxes, int img_index,
 			ret += this->cmp(dets[inet], nboxes[inet], img_index, classes,
 					img_w, img_h, inet);
 		}
+
+		reset_counters();
 	}
 	return ret;
 }

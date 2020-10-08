@@ -20,11 +20,16 @@
 
 std::string layers_files_base_path;
 LayerOperationType operation_type = GENERATE_GOLDEN_LAYERS;
+auto reset_counters_var = false;
+
 #define MAX_FLOAT_THRESHOLD 1.0e-5f
 
 extern "C" void cuda_pull_array(float *x_gpu, float *x, size_t n);
 extern "C" void cuda_push_array(float *x_gpu, float *x, size_t n);
 
+void reset_counters(){
+    reset_counters_var = true;
+}
 
 void set_layer_processing_parameters(
         const std::string &base_path,
@@ -154,6 +159,10 @@ extern "C" {
 void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K, float *C) {
     static int layer_count_output = 0;
     static std::unordered_map<int, std::vector<float>> layers_gold_hash;
+    if (reset_counters_var){
+        layer_count_output = 0;
+        reset_counters_var = false;
+    }
     layer_count_output++;
     auto size_c = M * N;
 
