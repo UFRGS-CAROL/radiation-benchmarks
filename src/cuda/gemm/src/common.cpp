@@ -1,5 +1,6 @@
 
 #include "common.h"
+#include <stdexcept>
 
 
 void exception(std::string msg, std::string file, int line) {

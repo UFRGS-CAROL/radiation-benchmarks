@@ -8,7 +8,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#include <stdexcept>
+#include <string>
 
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
@@ -46,12 +46,30 @@ void exception(std::string msg, std::string file, int line);
 
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
+// GPU configuration.
+
+#ifndef CPU_DEBUG
+// Set this to 1 to verify the correctness of the GPU-computed matrix.
+#define CPU_DEBUG 0
+#endif
+
+#ifndef SHARED_MEMORY_LIMIT_64K
+// Set this to 0 to use more than 64 Kb of shared memory to cache data, to
+// improve the performance of the computations on GPU.
+// Note that you need a GPU that can have more than 64 Kb of shared memory
+// per multiprocessor.
+#define SHARED_MEMORY_LIMIT_64K 1
+#endif
+
+/******************************************************
+ * EXTRACTED FROM NVIDIA SAMPLES 10.1
+ ******************************************************/
+// GPU configuration.
+
 #define WARP_SIZE 32
 
-#define WARPS_PER_BLOCK 8
-#define THREADS_PER_BLOCK (WARP_SIZE * WARPS_PER_BLOCK)
-
 // MMA matrix tile dimensions.
+
 #define M 16
 #define N 16
 #define K 16
@@ -70,14 +88,12 @@ void exception(std::string msg, std::string file, int line);
 #define N_GLOBAL (N * N_TILES)
 #define K_GLOBAL (K * K_TILES)
 
-#define BLOCK_ROW_WARPS 2
-#define BLOCK_COL_WARPS 4
+#define C_LAYOUT nvcuda::wmma::mem_row_major
 
-#define WARP_ROW_TILES 4
-#define WARP_COL_TILES 2
+// Implementation constants.
 
-#define BLOCK_ROW_TILES (WARP_ROW_TILES * BLOCK_ROW_WARPS)
-#define BLOCK_COL_TILES (WARP_COL_TILES * BLOCK_COL_WARPS)
+#define WARPS_PER_BLOCK 8
+#define THREADS_PER_BLOCK (WARP_SIZE * WARPS_PER_BLOCK)
 
 #if SHARED_MEMORY_LIMIT_64K
 // With only 64 Kb shared memory available, we can fit two 8-tile chunks of
@@ -93,6 +109,25 @@ void exception(std::string msg, std::string file, int line);
 #define CHUNK_K 8
 #endif
 
+#define CHUNK_LINE_BYTES (CHUNK_K * K * sizeof(half))
+#define WARP_COPY_BYTES (WARP_SIZE * sizeof(int4))
+#define CHUNK_COPY_LINES_PER_WARP (WARP_COPY_BYTES / CHUNK_LINE_BYTES)
+#define CHUNK_COPY_LINE_LANES (WARP_SIZE / CHUNK_COPY_LINES_PER_WARP)
+
+#define BLOCK_ROW_WARPS 2
+#define BLOCK_COL_WARPS 4
+
+#define WARP_ROW_TILES 4
+#define WARP_COL_TILES 2
+
+#define BLOCK_ROW_TILES (WARP_ROW_TILES * BLOCK_ROW_WARPS)
+#define BLOCK_COL_TILES (WARP_COL_TILES * BLOCK_COL_WARPS)
+
+#define GLOBAL_MEM_STRIDE N_GLOBAL
+
+#define SHMEM_STRIDE (N * BLOCK_ROW_TILES)
+#define SHMEM_OFFSET (N * WARP_ROW_TILES)
+
 // The macro below is used to shift rows of the A matrix and columns of the B matrix
 // in shared memory to minimize possible bank conflicts.
 // Before performing the nvcuda::wmma::mma_sync operation, the warp must load the matrix
@@ -106,6 +141,7 @@ void exception(std::string msg, std::string file, int line);
 // The number of 8 two-byte "half" elements is chosen as the minimum possible shift because
 // we must keep each row and column 128-bit aligned, as required by nvcuda::wmma::load_matrix_sync.
 #define SKEW_HALF 8
-// GPU configuration.
+
+
 
 #endif /* COMMON_H_ */
