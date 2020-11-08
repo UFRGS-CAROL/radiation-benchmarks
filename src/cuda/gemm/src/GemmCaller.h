@@ -65,6 +65,7 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 		std::cout << this->dim_block << std::endl;
 		std::cout << this->dim_grid << std::endl;
 	} //default constructor
+
 };
 
 template<typename real_t>

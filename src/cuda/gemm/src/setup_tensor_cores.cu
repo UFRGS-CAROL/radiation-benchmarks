@@ -6,9 +6,16 @@
 #include "common_template_functions.h"
 #include "GemmCallerMMA.h"
 
+
+extern void show_iteration_status(int it, bool verbose, double copy_time,
+		double comparing_time, double computation_time,
+		std::pair<int, int> errors);
+
 template<typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
-		TensorCoresCaller<half_t, real_t>& mult_env, const uint32_t threshold =
+		TensorCoresCaller<half_t, real_t>& mult_env,
+
+		const uint32_t threshold =
 				0) {
 	double elapsed_time = 0;
 
@@ -64,9 +71,9 @@ void setup_execute(Parameters& parameters,
 		parameters.start_iteration();
 
 		mult_env.gemm(a_vector_device, b_vector_device, c_vector_device,
-				d_vector_device, d_vector_half_t_device, parameters.alpha,
-				parameters.beta, parameters.size_matrices,
-				parameters.size_matrices);
+				d_vector_device, d_vector_half_t_device,
+				real_t(parameters.alpha), real_t(parameters.beta),
+				parameters.size_matrices, parameters.size_matrices, threshold);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
@@ -91,12 +98,8 @@ void setup_execute(Parameters& parameters,
 
 			comparing_time = rad::mysecond() - comparing_time;
 
-			std::cout << "Iteration: " << it << " DMR errors " << errors.first
-					<< ". " << "Radiation errors: " << errors.second << ". "
-					<< "Time spent on computation: " << computation_time
-					<< "s. " << "Time spent on comparing: " << comparing_time
-					<< "s. " << "Time spent on copying: " << copy_time << "s. "
-					<< std::endl;
+			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
+					computation_time, errors);
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
@@ -123,8 +126,14 @@ void setup_execute(Parameters& parameters,
 
 	}
 
-	std::cout << "Elapsed time: " << (elapsed_time / parameters.iterations)
-			<< " s\n";
+	if (parameters.verbose) {
+
+		std::cout << "Elapsed time: " << (elapsed_time / parameters.iterations)
+				<< " s\n";
+	} else {
+		std::cout << "done.\n";
+	}
+
 	if (parameters.generate) {
 		auto zero_count = 0ul;
 		auto nans_count = 0ul;
@@ -141,15 +150,13 @@ void setup_execute(Parameters& parameters,
 }
 
 void setup_gemm_tensor_cores_unhardened(Parameters& parameters) {
-#if __CUDA_ARCH__ >= 600
 	if (parameters.precision == "half") {
-		UnhardenedTensorCoresCaller<half, half> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices);
+		UnhardenedTensorCoresCaller<half> gemm_obj(
+				parameters.size_matrices, parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
 
 	}
 
-#endif
 	if (parameters.precision == "float" || parameters.precision == "single"
 			|| parameters.precision == "double") {
 		throw_line(
@@ -158,14 +165,12 @@ void setup_gemm_tensor_cores_unhardened(Parameters& parameters) {
 
 }
 void setup_gemm_tensor_cores_dmr(Parameters& parameters) {
-#if __CUDA_ARCH__ >= 600
 	if (parameters.precision == "half") {
 		DMRTensorCoresCaller<half> gemm_obj(parameters.size_matrices,
 				parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
 
 	}
-#endif
 
 	if (parameters.precision == "float" || parameters.precision == "single"
 			|| parameters.precision == "double") {

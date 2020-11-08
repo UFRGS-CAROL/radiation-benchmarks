@@ -154,13 +154,9 @@ void setup_execute(Parameters& parameters,
 
 void setup_gemm_unhardened(Parameters& parameters) {
 	if (parameters.precision == "half") {
-#if __CUDA_ARCH__ >= 550
 		UnhardenedGemmCaller<half> gemm_obj(parameters.size_matrices,
 				parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
-#else
-		throw_line("Half MxM is not available for CUDA_ARCH<6.0");
-#endif
 	}
 //
 	if (parameters.precision == "float" || parameters.precision == "single") {

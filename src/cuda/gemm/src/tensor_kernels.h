@@ -14,93 +14,25 @@
 
 #include "common.h"
 
-//template<typename half_t, typename real_t>
-//__global__ void matrix_mult_kernel_wmma_unhardened(half_t *a, half_t *b,
-//		real_t *c, real_t *d, real_t alpha, real_t beta, int m, int n, int k) {
-//	// Leading dimensions. Packed with no transposition.
-//	int lda = m;
-//	int ldb = n;
-//	int ldc = m;
-//
-//	// Tile using a 2D grid
-//	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
-//	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
-//
-//	// Declare the fragments
-//	nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K,
-//			half_t, nvcuda::wmma::col_major> a_frag;
-//	nvcuda::wmma::fragment<nvcuda::wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K,
-//			half_t, nvcuda::wmma::col_major> b_frag;
-//	nvcuda::wmma::fragment<nvcuda::wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,
-//			real_t> acc_frag;
-//	nvcuda::wmma::fragment<nvcuda::wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,
-//			real_t> c_frag;
-//
-//	nvcuda::wmma::fill_fragment(acc_frag, 0.0f);
-//
-//	// Loop over k
-//	for (int i = 0; i < k; i += WMMA_K) {
-//		int aRow = warpM * WMMA_M;
-//		int aCol = i;
-//
-//		int bRow = i;
-//		int bCol = warpN * WMMA_N;
-//
-//		// Bounds checking
-//		if (aRow < M && aCol < K && bRow < K && bCol < N) {
-//			// Load the inputs
-//			nvcuda::wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
-//			nvcuda::wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
-//
-//			// Perform the matrix multiplication
-//			nvcuda::wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-//
-//		}
-//	}
-//
-//	// Load in the current value of c, scale it by beta, and add this our result scaled by alpha
-//	int cRow = warpM * WMMA_M;
-//	int cCol = warpN * WMMA_N;
-//
-//	if (cRow < M && cCol < N) {
-//		nvcuda::wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc,
-//				nvcuda::wmma::mem_col_major);
-//
-//		for (int i = 0; i < c_frag.num_elements; i++) {
-//			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-//		}
-//
-//		// Store the output
-//		nvcuda::wmma::store_matrix_sync(d + cRow + cCol * ldc, c_frag, ldc,
-//				nvcuda::wmma::mem_col_major);
-//	}
-//}
-
-template<typename half_t, typename real_t>
-__global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t *B, const real_t *C,
-		real_t *D, real_t alpha, real_t beta) {
+template<typename half_t, typename real_t> __device__
+void call_mxm_wmma_unhardened(const half_t* A, const half_t* B, const real_t* C,
+		real_t* D, real_t alpha, real_t beta) {
 	extern __shared__ half_t shmem[][CHUNK_K * K + SKEW_HALF];
-
 	// Warp and lane identification.
 	const unsigned int warpId = threadIdx.x / WARP_SIZE;
 	const unsigned int laneId = threadIdx.x % WARP_SIZE;
-
 	// Offset in shared memory from which the B matrix is stored.
 	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
-
 	// This pointer is used to access the C and D matrix tiles this warp computes.
 	real_t *shmem_warp_tile_ptr = (real_t*) &shmem[0][0]
 			+ (warpId / 2) * SHMEM_STRIDE * K * 2+ (warpId%2) * SHMEM_OFFSET;
-
 	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
 	real_t *shmem_warp_stream_ptr = (real_t*) &shmem[0][0]
 			+ warpId * SHMEM_STRIDE * K;
-
 	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
 	// each tile computation. Technically this is not generally correct (may result
 	// in a loss of precision). Zero still needs to be specially handled though.
 	beta /= alpha;
-
 	// Each CTA slides along the 128 x 128 tiles from the top left corner of the matrix to the
 	// right and down, and selects the next tile to compute. Once there's no such tile,
 	// all warps in this CTA exit.
@@ -144,7 +76,8 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 				const real_t *tile_ptr = shmem_warp_tile_ptr
 						+ i * SHMEM_STRIDE * K + j * N;
 
-				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
+				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
+				C_LAYOUT);
 			}
 		}
 
@@ -210,8 +143,10 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 			// Compute a grid of C matrix tiles in each warp.
 #pragma unroll
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
-				nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, M, N, K, half_t, nvcuda::wmma::row_major> a[WARP_COL_TILES];
-				nvcuda::wmma::fragment<nvcuda::wmma::matrix_b, M, N, K, half_t, nvcuda::wmma::col_major> b[WARP_ROW_TILES];
+				nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, M, N, K, half_t,
+						nvcuda::wmma::row_major> a[WARP_COL_TILES];
+				nvcuda::wmma::fragment<nvcuda::wmma::matrix_b, M, N, K, half_t,
+						nvcuda::wmma::col_major> b[WARP_ROW_TILES];
 
 #pragma unroll
 				for (int i = 0; i < WARP_COL_TILES; i++) {
@@ -219,7 +154,7 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 					const half_t *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
 					nvcuda::wmma::load_matrix_sync(a[i], tile_ptr,
-							K * CHUNK_K + SKEW_HALF);
+					K * CHUNK_K + SKEW_HALF);
 
 #pragma unroll
 					for (int j = 0; j < WARP_ROW_TILES; j++) {
@@ -233,7 +168,7 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 									* K];
 
 							nvcuda::wmma::load_matrix_sync(b[j], tile_ptr,
-									K * CHUNK_K + SKEW_HALF);
+							K * CHUNK_K + SKEW_HALF);
 						}
 
 						nvcuda::wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
@@ -258,7 +193,8 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K
 						+ j * N;
 
-				nvcuda::wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
+				nvcuda::wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE,
+				C_LAYOUT);
 			}
 		}
 
@@ -277,5 +213,76 @@ __global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A, const half_t
 		__syncthreads();
 	}
 }
+
+template<typename half_t, typename real_t>
+__global__ void matrix_mult_kernel_wmma_unhardened(const half_t *A,
+		const half_t *B, const real_t *C, real_t *D, real_t alpha,
+		real_t beta) {
+#if __CUDA_ARCH__ >= 700
+	call_mxm_wmma_unhardened(A, B, C, D, alpha, beta);
+#endif /* END CUDA ARCH CHECK */
+}
+
+//template<typename half_t, typename real_t>
+//__global__ void matrix_mult_kernel_wmma_unhardened(half_t *a, half_t *b,
+//		real_t *c, real_t *d, real_t alpha, real_t beta, int m, int n, int k) {
+//	// Leading dimensions. Packed with no transposition.
+//	int lda = m;
+//	int ldb = n;
+//	int ldc = m;
+//
+//	// Tile using a 2D grid
+//	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
+//	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
+//
+//	// Declare the fragments
+//	nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K,
+//			half_t, nvcuda::wmma::col_major> a_frag;
+//	nvcuda::wmma::fragment<nvcuda::wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K,
+//			half_t, nvcuda::wmma::col_major> b_frag;
+//	nvcuda::wmma::fragment<nvcuda::wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,
+//			real_t> acc_frag;
+//	nvcuda::wmma::fragment<nvcuda::wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,
+//			real_t> c_frag;
+//
+//	nvcuda::wmma::fill_fragment(acc_frag, 0.0f);
+//
+//	// Loop over k
+//	for (int i = 0; i < k; i += WMMA_K) {
+//		int aRow = warpM * WMMA_M;
+//		int aCol = i;
+//
+//		int bRow = i;
+//		int bCol = warpN * WMMA_N;
+//
+//		// Bounds checking
+//		if (aRow < M && aCol < K && bRow < K && bCol < N) {
+//			// Load the inputs
+//			nvcuda::wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
+//			nvcuda::wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
+//
+//			// Perform the matrix multiplication
+//			nvcuda::wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+//
+//		}
+//	}
+//
+//	// Load in the current value of c, scale it by beta, and add this our result scaled by alpha
+//	int cRow = warpM * WMMA_M;
+//	int cCol = warpN * WMMA_N;
+//
+//	if (cRow < M && cCol < N) {
+//		nvcuda::wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc,
+//				nvcuda::wmma::mem_col_major);
+//
+//		for (int i = 0; i < c_frag.num_elements; i++) {
+//			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+//		}
+//
+//		// Store the output
+//		nvcuda::wmma::store_matrix_sync(d + cRow + cCol * ldc, c_frag, ldc,
+//				nvcuda::wmma::mem_col_major);
+//	}
+//}
 
 #endif /* TENSOR_KERNELS_H_ */

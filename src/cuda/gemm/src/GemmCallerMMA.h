@@ -18,7 +18,7 @@
 #define MAX(a, b) (a > b ? a : b)
 #endif
 
-template<typename half_t, typename real_t>
+template<typename half_t, typename real_t = half_t>
 struct TensorCoresCaller {
 	bool duplicated;
 	dim3 dim_grid, dim_block;
@@ -35,26 +35,20 @@ struct TensorCoresCaller {
 //	};
 
 	virtual ~TensorCoresCaller() = default;
-	virtual void gemm(DevVec<half_t>& a_dev, 			//A matrix
+	virtual void gemm(
+			DevVec<half_t>& a_dev, 			//A matrix
 			DevVec<half_t>& b_dev, 			//B matrix
 			DevVec<real_t>& c_dev, 			//C matrix
 			DevVec<real_t>& d_dev, 			//D matrix
 			DevVec<real_t>& d_dev_half_t,  	//D_Half matrix
-			real_t alpha, real_t beta, int wA, int wB);
+			real_t alpha, real_t beta, int wA, int wB,
+			const uint32_t threshold) = 0;
 
 	virtual void memcpy_half_t_mem(std::vector<half_t>& host,
 			DevVec<real_t>& device) = 0;
 
 	TensorCoresCaller(uint32_t m, uint32_t n) :
 			duplicated(false) {
-
-//		this->dim_block.x = 128;
-//		this->dim_block.y = 4;
-//
-//		this->dim_grid.x = (m + (WMMA_M * this->dim_block.x / BLOCK_SIZE - 1))
-//				/ (WMMA_M * this->dim_block.x / BLOCK_SIZE);
-//		this->dim_grid.y = (n + WMMA_N * this->dim_block.y - 1)
-//				/ (WMMA_N * this->dim_block.y);
 
 		auto device_prop = rad::get_device();
 		// If enough shared memory available on the GPU use high performance kernel
@@ -77,54 +71,56 @@ struct TensorCoresCaller {
 	}
 };
 
-template<typename half_t, typename real_t>
+template<typename half_t, typename real_t = half_t>
 struct UnhardenedTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
-
-	void gemm(DevVec<half_t>& a_dev, 			//A matrix
+	void gemm(
+			DevVec<half_t>& a_dev, 			//A matrix
 			DevVec<half_t>& b_dev, 			//B matrix
 			DevVec<real_t>& c_dev, 			//C matrix
 			DevVec<real_t>& d_dev, 			//D matrix
 			DevVec<real_t>& d_dev_half_t,  	//D_Half matrix
-			real_t alpha, real_t beta, int wA, int wB) {
+			real_t alpha, real_t beta, int wA, int wB,
+			const uint32_t threshold) {
 
-#if __CUDA_ARCH__ >= 600
 		matrix_mult_kernel_wmma_unhardened<<<this->dim_grid, this->dim_block, this->SHMEM_SZ>>>(
 				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(), alpha,
 				beta);
-#endif
 	}
 
 	void memcpy_half_t_mem(std::vector<real_t>& host, DevVec<real_t>& device) {}
 
 	UnhardenedTensorCoresCaller(uint32_t m, uint32_t n) :
 	TensorCoresCaller<half_t, real_t>(m, n) {
-		std::cout << TensorCoresCaller<half_t, real_t>::dim_block << std::endl;
-		std::cout << TensorCoresCaller<half_t, real_t>::dim_grid << std::endl;
+		std::cout << this->dim_block << std::endl;
+		std::cout << this->dim_grid << std::endl;
 	} //default constructor
 };
 
 template<typename half_t>
-struct DMRTensorCoresCaller: public UnhardenedTensorCoresCaller<half_t, half_t>,
-		public UnhardenedGemmCaller<half_t>  // DMR with common mxm
+struct DMRTensorCoresCaller: public UnhardenedGemmCaller<half_t>,
+		public UnhardenedTensorCoresCaller<half_t> {
 
-{
+	using UnhardenedTensorCoresCaller<half_t, half_t>::duplicated;
 	using UnhardenedTensorCoresCaller<half_t, half_t>::gemm;
 
-	void gemm(DevVec<half_t>& a_dev, 			//A matrix
+	void gemm(
+			DevVec<half_t>& a_dev, 			//A matrix
 			DevVec<half_t>& b_dev, 			//B matrix
 			DevVec<half_t>& c_dev, 			//C matrix
 			DevVec<half_t>& d_dev, 			//D matrix
 			DevVec<half_t>& d_dev_half_t,  	//D_Half matrix
-			half_t alpha, half_t beta, int wA, int wB) {
+			half_t alpha, half_t beta, int wA, int wB,
+			const uint32_t threshold) {
 
-		if (beta != half_t(0.0f)) {
+		if (float(beta) != 0.0f) {
 			throw_line("This implementation does not support beta != 0.0");
 		}
 
 		UnhardenedGemmCaller<half_t>::gemm(a_dev, b_dev, d_dev, d_dev, alpha,
-				beta, wA, wB, 0);
-		UnhardenedTensorCoresCaller<half_t, half_t>::gemm(a_dev, b_dev, c_dev,
-				d_dev_half_t, d_dev_half_t, alpha, beta, wA, wB);
+				beta, wA, wB, threshold);
+
+		UnhardenedTensorCoresCaller<half_t>::gemm(a_dev, b_dev, c_dev,
+				d_dev_half_t, d_dev_half_t, alpha, beta, wA, wB, threshold);
 	}
 
 	void memcpy_half_t_mem(std::vector<half_t>& host, DevVec<half_t>& device) {
@@ -132,9 +128,10 @@ struct DMRTensorCoresCaller: public UnhardenedTensorCoresCaller<half_t, half_t>,
 	}
 
 	DMRTensorCoresCaller(uint32_t m, uint32_t n) :
-			UnhardenedTensorCoresCaller<half_t, half_t>(m, n),
-			UnhardenedGemmCaller<half_t>(m, n) {
-		UnhardenedTensorCoresCaller<half_t, half_t>::duplicated = true;
+			UnhardenedGemmCaller<half_t>(m, n), UnhardenedTensorCoresCaller<
+					half_t>(m, n) {
+		this->duplicated = true;
+
 	} //default constructor
 };
 

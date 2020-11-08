@@ -202,39 +202,28 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	C_h[index] = half_val;
 }
 
-template<typename real_t>
-__global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
-		real_t *A,  //A
-		real_t *B,  //B
-		real_t *C,  //C
-		real_t alpha, real_t beta, int wA, int wB) {
+template<typename real_t> __device__
+void call_mxm_unhardened(real_t* A, real_t* B, real_t* C, real_t alpha,
+		real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
-
 	// Thread index
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
-
 	// Index of the first sub-matrix of A processed by the block
 	int aBegin = wA * BLOCK_SIZE * by;
-
 	// Index of the last sub-matrix of A processed by the block
 	int aEnd = aBegin + wA - 1;
-
 	// Step size used to iterate through the sub-matrices of A
 	int aStep = BLOCK_SIZE;
-
 	// Index of the first sub-matrix of B processed by the block
 	int bBegin = BLOCK_SIZE * bx;
-
 	// Step size used to iterate through the sub-matrices of B
 	int bStep = BLOCK_SIZE * wB;
-
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
 	real_t Csub = 0;
-
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
@@ -268,11 +257,29 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 		// sub-matrices of A and B in the next iteration
 		__syncthreads();
 	}
-
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 	C[index] = alpha * Csub + beta * C[index];
+}
+
+template<typename real_t>
+__global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
+		real_t *A,  //A
+		real_t *B,  //B
+		real_t *C,  //C
+		real_t alpha, real_t beta, int wA, int wB) {
+	call_mxm_unhardened(A, B, C, alpha, beta, wA, wB);
+}
+
+__global__ static void matrix_mult_kernel_unhardened(	//Kernel without hardening
+		half *A,  //A
+		half *B,  //B
+		half *C,  //C
+		half alpha, half beta, int wA, int wB) {
+#if __CUDA_ARCH__ >= 550
+	call_mxm_unhardened(A, B, C, alpha, beta, wA, wB);
+#endif
 }
 
 template<typename half_t, typename real_t>
