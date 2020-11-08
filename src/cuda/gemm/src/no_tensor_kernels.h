@@ -8,6 +8,8 @@
 #ifndef NO_TENSOR_KERNELS_H_
 #define NO_TENSOR_KERNELS_H_
 
+#include "common.h"
+
 __device__ double t = 1.000000000000000;
 
 /**

@@ -1,10 +1,13 @@
-#include "setup.h"
 #include "Parameters.h"
 #include "include/device_vector.h"
 #include "include/multi_compiler_analysis.h"
 #include "common_template_functions.h"
-#include "no_tensor_kernels.h"
+
 #include "GemmCaller.h"
+
+extern void show_iteration_status(int it, bool verbose, double copy_time,
+		double comparing_time, double computation_time,
+		std::pair<int, int> errors);
 
 std::string get_multi_compiler_header() {
 	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
@@ -13,26 +16,6 @@ std::string get_multi_compiler_header() {
 	return test_info;
 }
 
-void show_iteration_status(int it, bool verbose, double copy_time,
-		double comparing_time, double computation_time,
-		std::pair<int, int> errors) {
-	if (verbose) {
-		auto wasted_time = copy_time + comparing_time;
-		auto full_time = wasted_time + computation_time;
-		std::cout << "Iteration: " << it << " DMR errors " << errors.first
-				<< ". " << "Radiation errors: " << errors.second << ". "
-				<< "Time spent on computation: " << computation_time << "s. "
-				<< "Time spent on comparing: " << comparing_time << "s. "
-				<< "Time spent on copying: " << copy_time << "s. " << std::endl;
-		std::cout << "Wasted time " << wasted_time << " ("
-				<< int((wasted_time / full_time) * 100.0f) << "%)" << std::endl;
-	} else {
-//				std::cout << "Iteration: " << it << " DMR errors "
-//						<< errors.first << ". " << "Radiation errors: "
-//						<< errors.second << ". " << std::endl;
-	}
-
-}
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
@@ -124,6 +107,7 @@ void setup_execute(Parameters& parameters,
 
 			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
 					computation_time, errors);
+
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
 				read_abc_files(parameters.a_input_path, a_vector_host,

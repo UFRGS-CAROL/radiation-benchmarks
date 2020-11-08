@@ -10,6 +10,8 @@
 
 #include "include/device_vector.h"
 
+#include "no_tensor_kernels.h"
+
 template<typename T>
 using DevVec = rad::DeviceVector<T>;
 

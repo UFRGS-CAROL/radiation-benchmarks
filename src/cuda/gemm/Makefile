@@ -8,9 +8,9 @@ ALPHA=1.0
 BETA=0.0
 SIZE?=4096
 ITERATIONS=10
-PRECISION=float
-CUBLAS=1
-TENSOR_CORES=0
+PRECISION=half
+CUBLAS=0
+TENSOR_CORES=1
 DMR=none
 BUILDRELATIVEERROR=0
 CHECKBLOCK=1
@@ -88,8 +88,7 @@ CFLAGS+= -DOMP -fopenmp
 endif
 
 
-OBJ= main.o setup_gemm.o Parameters.o common.o 
-#setup_tensor_cores.o
+OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/

@@ -8,6 +8,8 @@
 #ifndef TENSOR_KERNELS_H_
 #define TENSOR_KERNELS_H_
 
+#include <cuda.h>
+
 #include <mma.h>
 
 #include "common.h"
