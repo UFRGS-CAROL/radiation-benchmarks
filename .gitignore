@@ -12,3 +12,7 @@
 
 
 # End of https://www.gitignore.io/api/visualstudiocode
+*.cproject
+*CMakeLists.txt
+*.gitignore
+
