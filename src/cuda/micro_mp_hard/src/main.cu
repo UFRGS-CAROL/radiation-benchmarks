@@ -181,18 +181,18 @@ int main(int argc, char* argv[]) {
 #endif
 
 	switch (parameters.operation_num) {
-//	case 1:
-//		setup<1>(parameters, log);
-//		break;
-//	case 10:
-//		setup<10>(parameters, log);
-//		break;
-//	case 100:
-//		setup<100>(parameters, log);
-//		break;
-//	case 1000:
-//		setup<1000>(parameters, log);
-//		break;
+	case 1:
+		setup<1>(parameters, log);
+		break;
+	case 10:
+		setup<10>(parameters, log);
+		break;
+	case 100:
+		setup<100>(parameters, log);
+		break;
+	case 1000:
+		setup<1000>(parameters, log);
+		break;
 	case OPS:
 		setup<OPS>(parameters, log);
 		break;

@@ -42,8 +42,9 @@ class CopyLogs(threading.Thread):
                 destination = f"{self.__destination_folder}/{hostname}"
 
                 if is_active_device:
-                    self.__copy_from_address(ip=ip, destination_folder=destination, username=username,
-                                             password=password)
+                    # TODO: Check if copy was successful
+                    success_on_copy = self.__copy_from_address(ip=ip, destination_folder=destination, username=username,
+                                                               password=password)
 
             self.__stop_event.wait(self.__sleep_copy_interval)  # instead of sleeping
 

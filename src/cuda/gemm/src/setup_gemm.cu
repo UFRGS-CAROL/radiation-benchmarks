@@ -16,7 +16,6 @@ std::string get_multi_compiler_header() {
 	return test_info;
 }
 
-
 template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
 		GemmCaller<COUNT, half_t, real_t>& mult_env, const uint32_t threshold =
@@ -37,7 +36,6 @@ void setup_execute(Parameters& parameters,
 	//Output host vectors are set after computation
 	std::vector<half_t> c_vector_host_half_t(
 			parameters.size_matrices * parameters.size_matrices);
-	;
 
 	if (parameters.generate) {
 		std::cout << "Generating input matrices\n";
@@ -64,7 +62,6 @@ void setup_execute(Parameters& parameters,
 	rad::DeviceVector<real_t> b_vector_device = b_vector_host;
 	rad::DeviceVector<real_t> c_vector_device = c_vector_host;
 	rad::DeviceVector<half_t> c_vector_device_half_t = c_vector_host_half_t;
-	;
 
 	std::cout << "Starting the setup process...\n";
 	std::cout << std::setprecision(5) << std::fixed;
@@ -105,8 +102,8 @@ void setup_execute(Parameters& parameters,
 
 			comparing_time = rad::mysecond() - comparing_time;
 
-			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
-					computation_time, errors);
+			show_iteration_status(it, parameters.verbose, copy_time,
+					comparing_time, computation_time, errors);
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
@@ -194,24 +191,7 @@ void setup_gemm_cublas(Parameters& parameters) {
 }
 
 void setup_gemm_cutlass(Parameters& parameters) {
-	if (parameters.precision == "half") {
-		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
-		setup_execute(parameters, gemm_obj);
-
-	}
-
-	if (parameters.precision == "float" || parameters.precision == "single") {
-		CUBLASGemmCaller<float> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
-		setup_execute(parameters, gemm_obj);
-	}
-
-	if (parameters.precision == "double") {
-		CUBLASGemmCaller<double> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
-		setup_execute(parameters, gemm_obj);
-	}
+	throw_line("CUTLASS GEMM not ready yet");
 }
 
 void setup_gemm_dmr(Parameters& parameters) {
