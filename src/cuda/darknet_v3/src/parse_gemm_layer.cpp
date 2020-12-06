@@ -161,6 +161,26 @@ std::string replace(std::string &s, const std::string &to_replace,
 	return s.replace(pos, to_replace.length(), replace_with);
 }
 
+template<typename T> inline
+std::vector<T> pull_array(T* ptr, int size){
+#ifdef GPU
+	std::vector<T> ret_vec(size);
+	cuda_pull_array(ptr, ret_vec.data(), size);
+#else
+	std::vector<T> ret_vec(ptr, ptr + size);
+#endif
+	return ret_vec;
+}
+
+template<typename T> inline
+void push_array(T* lhs, std::vector<T>& rhs){
+#ifdef GPU
+	cuda_push_array(lhs, rhs.data(), rhs.size());
+#else
+	std::copy(lhs, lhs + rhs.size(), rhs.data());
+#endif
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -175,8 +195,7 @@ void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K,
 	layer_count_output++;
 	auto size_c = M * N;
 
-	std::vector<float> c_cpu(size_c);
-	cuda_pull_array(C, c_cpu.data(), size_c);
+	std::vector<float> c_cpu = pull_array(C, size_c);
 
 	// Base path for C matrix is the same for all
 	// base path for gold and injection
@@ -219,7 +238,7 @@ void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K,
 	}
 	case INJECT_FAULT_IN_OUTPUT:
 		inject_fault(TA, M, K, c_cpu, layer_count_output);
-		cuda_push_array(C, c_cpu.data(), c_cpu.size());
+		push_array(C, c_cpu);
 		break;
 
 	}
