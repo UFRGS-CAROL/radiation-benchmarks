@@ -8,9 +8,6 @@
 #include "detection_gold.h"
 
 #include <iterator>
-//#include "helpful.h"
-//#include <sstream>
-//#include <ctime>
 #include <iostream>
 #include <cmath>
 #include <fstream>
