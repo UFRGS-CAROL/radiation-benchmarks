@@ -15,10 +15,17 @@
 #include <limits>
 #include <sstream>
 #include <unordered_map>
+#include <random>
+
 #include "parse_gemm_layer.h"
 #include "log_processing.h"
 
-std::string layers_files_base_path;
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 32
+#endif
+
+#define DEBUG 1
+
 LayerOperationType operation_type = GENERATE_GOLDEN_LAYERS;
 auto reset_counters_var = false;
 
@@ -36,12 +43,10 @@ void reset_counters() {
 	reset_counters_var = true;
 }
 
-void set_layer_processing_parameters(const std::string &base_path,
-		LayerOperationType current_operation) {
-	layers_files_base_path = base_path;
+void set_layer_processing_parameters(LayerOperationType current_operation) {
 	operation_type = current_operation;
-	std::cout << base_path << " " << current_operation << std::endl;
-	std::cout << layers_files_base_path << " " << operation_type << std::endl;
+//	std::cout << base_path << " " << current_operation << std::endl;
+//	std::cout << layers_files_base_path << " " << operation_type << std::endl;
 }
 
 template<typename type_t>
@@ -116,41 +121,38 @@ VectorOfFaults read_injection_file(std::string &path) {
 	return fault_vector;
 }
 
-void inject_fault(int TA, int M, int K, std::vector<float>& C,
-		int layer_count_output) {
-	auto layer_char = std::getenv("FAULT_LAYER");
-	auto fault_id = std::getenv("FAULT_ID");
-	auto fault_dir = std::getenv("FAULT_DIR");
+template<typename str_t>
+std::string get_enviroment_var(str_t& src) {
+	auto ptr = std::getenv(src);
+	std::string ret = "";
+	if (ptr) {
+		ret = std::string(ptr);
+	}
+	return ret;
+}
 
-	if (layer_char && fault_id && fault_dir) {
-		std::string layer_str = layer_char;
-		std::string fault_id_str = fault_id;
-		std::string fault_dir_str = fault_dir;
-		if (!layer_str.empty() && !fault_dir_str.empty()
-				&& !fault_id_str.empty()) {
-			auto layer_i = std::stoi(layer_str);
-			if (layer_i == layer_count_output) {
-				/**
-				 * If A is an m × n matrix and B is an n × p matrix,
-				 * C is the m × p matrix
-				 */
-				auto m = TA ? K : M;
-//		auto p = TB ? K : N;
-				//std::cout << layer_count_output << std::endl;
+void inject_fault(int M, int N, int layer_count_output, std::vector<float>& C) {
+	std::string layer_str = get_enviroment_var("FAULT_LAYER");
+	std::string fault_id_str = get_enviroment_var("FAULT_ID");
+	std::string fault_dir_str = get_enviroment_var("FAULT_DIR");
+	if (!layer_str.empty() && !fault_dir_str.empty() && !fault_id_str.empty()) {
+		auto layer_i = std::stoi(layer_str);
+		if (layer_i == layer_count_output) {
+			//std::cout << layer_count_output << std::endl;
 
-				auto file_path = fault_dir_str + "/fault_id_" + fault_id_str
-						+ "_layer_" + layer_str + ".txt";
-				auto faults = read_injection_file(file_path);
-				for (auto fault : faults) {
-					int i, j;
-					double val;
-					std::tie(i, j, val) = fault;
+			auto file_path = fault_dir_str + "/fault_id_" + fault_id_str
+					+ "_layer_" + layer_str + ".txt";
+			auto faults = read_injection_file(file_path);
+			for (auto fault : faults) {
+				int i, j;
+				double val;
+				std::tie(i, j, val) = fault;
 //			std::cout << i << " " << j << " " << val << std::endl;
-					C[i * m + j] = float(val);
-				}
+				C[i * N + j] = float(val);
 			}
 		}
 	}
+
 }
 
 std::string replace(std::string &s, const std::string &to_replace,
@@ -161,44 +163,168 @@ std::string replace(std::string &s, const std::string &to_replace,
 	return s.replace(pos, to_replace.length(), replace_with);
 }
 
-template<typename T> inline
-std::vector<T> pull_array(T* ptr, int size){
-#ifdef GPU
-	std::vector<T> ret_vec(size);
-	cuda_pull_array(ptr, ret_vec.data(), size);
-#else
-	std::vector<T> ret_vec(ptr, ptr + size);
-#endif
-	return ret_vec;
+void simulate_scheduler_fault(int M, int N, int layer_count_output,
+		std::vector<float>& C) {
+	std::string fault_parameter_file_path = get_enviroment_var(
+			"FAULT_PARAMETER_FILE");
+	if (!fault_parameter_file_path.empty()) {
+		//Open the fault injection archive
+		std::ifstream parameter_file(fault_parameter_file_path);
+		/**
+		 * For random selection
+		 */
+		//Will be used to obtain a seed for the random number engine
+		std::random_device rd;
+		//Standard mersenne_twister_engine seeded with rd()
+		std::mt19937 gen(rd());
+
+		if (parameter_file.good()) {
+
+			float min_relative, max_relative;
+			std::string geometry_format;
+			int layer_i;
+
+			//Read the parameters from file
+			parameter_file >> min_relative;
+			parameter_file >> max_relative;
+			parameter_file >> geometry_format;
+			parameter_file >> layer_i;
+			parameter_file.close();
+
+			std::uniform_real_distribution<float> float_generator(min_relative,
+					max_relative);
+			std::uniform_int_distribution<int> bool_generator(0, 1);
+
+			if (layer_i == layer_count_output) {
+				if (DEBUG == 1) {
+					std::cout << "DEBUG MIN RELATIVE " << min_relative
+							<< std::endl;
+					std::cout << "DEBUG MAX RELATIVE " << max_relative
+							<< std::endl;
+					std::cout << "DEBUG GEOMETRY FMT " << geometry_format
+							<< std::endl;
+					std::cout << "DEBUG LAYER I " << layer_i << std::endl;
+					std::cout << "DEBUG CURRENT LAYER " << layer_count_output
+							<< std::endl;
+				}
+
+				if (geometry_format == "RANDOM"
+						|| geometry_format == "SQUARE") {
+					//size selection
+					std::uniform_int_distribution<int> int_m_generator(0,
+							M - BLOCK_SIZE);
+					std::uniform_int_distribution<int> int_p_generator(0,
+							N - BLOCK_SIZE);
+					auto start_i = int_m_generator(gen);
+					auto start_j = int_p_generator(gen);
+					auto end_i = start_i + BLOCK_SIZE;
+					auto end_j = start_j + BLOCK_SIZE;
+
+					if (geometry_format == "RANDOM") {
+
+						for (auto i = start_i; i < end_i; i++) {
+							for (auto j = start_j; j < end_j; j++) {
+								auto is_necessary_to_inject = bool(
+										bool_generator(gen));
+								if (is_necessary_to_inject) {
+									C[i * N + j] *= float_generator(gen);
+								}
+							}
+						}
+					} else {
+						for (auto i = start_i; i < end_i; i++) {
+							for (auto j = start_j; j < end_j; j++) {
+								C[i * N + j] *= float_generator(gen);
+							}
+						}
+					}
+
+				} else if (geometry_format == "LINE") {
+					auto col_or_line = bool(bool_generator(gen));
+
+					if (col_or_line) {
+						//select a line
+						std::uniform_int_distribution<int> int_m_generator(0,
+								M - 1);
+						auto i = int_m_generator(gen);
+
+						for (auto j = 0; j < N; j++) {
+							C[i * N + j] *= float_generator(gen);
+						}
+					} else {
+						//select a line
+						std::uniform_int_distribution<int> int_n_generator(0,
+								N - 1);
+						auto j = int_n_generator(gen);
+						for (auto i = 0; i < M; i++) {
+							C[i * N + j] *= float_generator(gen);
+						}
+					}
+
+				}
+			}
+
+		} else {
+			throw std::runtime_error(
+					"COULD NOT OPEN FILE: " + fault_parameter_file_path);
+		}
+	}
 }
 
-template<typename T> inline
-void push_array(T* lhs, std::vector<T>& rhs){
-#ifdef GPU
-	cuda_push_array(lhs, rhs.data(), rhs.size());
-#else
-	std::copy(lhs, lhs + rhs.size(), rhs.data());
-#endif
+void compare_gemm_layers(int layer_count_output, int size_c,
+		std::string& base_gold_file, std::vector<float>& c_cpu) {
+	static std::unordered_map<int, std::vector<float>> layers_gold_hash;
+	// Key is not present
+	if (layers_gold_hash.find(layer_count_output) == layers_gold_hash.end()) {
+		std::vector<float> c_gold_i_vector;
+		read_file(c_gold_i_vector, base_gold_file, size_c);
+		layers_gold_hash[layer_count_output] = std::move(c_gold_i_vector);
+	}
+
+	//compare and save the corrupted ones
+	auto &gold = layers_gold_hash[layer_count_output];
+	auto comparator = [](float &lhs, float &rhs) -> bool {
+		return std::fabs(lhs - rhs) > MAX_FLOAT_THRESHOLD;
+	};
+	auto cmp_result = std::equal(gold.begin(), gold.end(), c_cpu.begin(),
+			comparator);
+	if (!cmp_result) {
+		auto log_file_name = Log::get_log_path();
+		auto layer_out_path = replace(log_file_name, ".log",
+				"layer_" + std::to_string(layer_count_output) + ".yololayer");
+		write_file(c_cpu, layer_out_path);
+
+	}
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K,
-		float *C) {
+		float *C_gpu) {
+	if (FLEX_GRIP_ANALYSIS != 1) {
+		return;
+	}
+
 	static int layer_count_output = 0;
-	static std::unordered_map<int, std::vector<float>> layers_gold_hash;
 	if (reset_counters_var) {
 		layer_count_output = 0;
 		reset_counters_var = false;
 	}
 	layer_count_output++;
+	/**
+	 * If A is an m × n matrix and B is an n × p matrix,
+	 * C is the m × p matrix
+	 */
 	auto size_c = M * N;
 
-	std::vector<float> c_cpu = pull_array(C, size_c);
+	std::vector<float> C_cpu(size_c);
+	cuda_pull_array(C_gpu, C_cpu.data(), size_c);
 
 	// Base path for C matrix is the same for all
 	// base path for gold and injection
+	std::string layers_files_base_path = "/var/radiation-benchmarks";
+
 	auto base_gold_file = layers_files_base_path;
 	base_gold_file += "/layer_gold_" + std::to_string(layer_count_output)
 			+ ".yololayer";
@@ -208,45 +334,31 @@ void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K,
 
 	switch (operation_type) {
 	case GENERATE_GOLDEN_LAYERS:
-		write_file(c_cpu, base_gold_file);
+		write_file(C_cpu, base_gold_file);
 		break;
 	case COMPARING_CURRENT_TO_GOLDEN: {
-		// Key is not present
-		if (layers_gold_hash.find(layer_count_output)
-				== layers_gold_hash.end()) {
-			std::vector<float> c_gold_i_vector;
-			read_file(c_gold_i_vector, base_gold_file, size_c);
-			layers_gold_hash[layer_count_output] = std::move(c_gold_i_vector);
-		}
-
-		//compare and save the corrupted ones
-		auto &gold = layers_gold_hash[layer_count_output];
-		auto comparator = [](float &lhs, float &rhs) -> bool {
-			return std::fabs(lhs - rhs) > MAX_FLOAT_THRESHOLD;
-		};
-		auto cmp_result = std::equal(gold.begin(), gold.end(), c_cpu.begin(),
-				comparator);
-		if (!cmp_result) {
-			auto log_file_name = Log::get_log_path();
-			auto layer_out_path = replace(log_file_name, ".log",
-					"layer_" + std::to_string(layer_count_output)
-							+ ".yololayer");
-			write_file(c_cpu, layer_out_path);
-
-		}
+		compare_gemm_layers(layer_count_output, size_c, base_gold_file, C_cpu);
 		break;
 	}
-	case INJECT_FAULT_IN_OUTPUT:
-		inject_fault(TA, M, K, c_cpu, layer_count_output);
-		push_array(C, c_cpu);
+	case INJECT_FAULT_IN_OUTPUT: {
+		inject_fault(M, N, layer_count_output, C_cpu);
 		break;
-
 	}
+	case SIMULATE_SCHEDULER_FAULT: {
+		simulate_scheduler_fault(M, N, layer_count_output, C_cpu);
+		break;
+	}
+	}
+
+	cuda_push_array(C_gpu, C_cpu.data(), size_c);
 }
 
 void parse_input_conv_layer_gpu(int TA, int TB, int M, int N, int K,
 		float ALPHA, float *A, int lda, float *B, int ldb, float BETA, float *C,
 		int ldc) {
+	if (FLEX_GRIP_ANALYSIS != 1) {
+		return;
+	}
 }
 
 #ifdef __cplusplus

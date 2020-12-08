@@ -11,13 +11,13 @@
 #include "network.h" //save layer
 #include "layer.h" //save layer
 #include "box.h" //boxes
-//#include "log_processing.h"
 
 #include <string>
 #include <utility>
 #include <vector>
 #include <tuple>
 #include <unordered_map>
+#include <iostream>
 
 #include <memory>
 
@@ -59,43 +59,24 @@
 struct Detection {
 	std::vector<real_t> prob;
 	box bbox;
-
 	int nboxes;
 	real_t objectness;
 	int sort_class;
 	int classes;
 
-	Detection() :
-			prob(std::vector<real_t>()), bbox(box()), nboxes(0), objectness(0), sort_class(
-					0), classes(0) {
+	friend std::ostream &operator<<(std::ostream& os, const Detection& det) {
+		os << "BB -- x: " << det.bbox.x;
+		os << " y:" << det.bbox.y;
+		os << " h:" << det.bbox.h;
+		os << " w:" << det.bbox.w;
+		os << std::endl;
+		os << " nboxes:" << det.nboxes;
+		os << " objectness:" << det.objectness;
+		os << " classes:" << det.classes << std::endl;
+		os << " sort class:" << det.sort_class;
+		os << " number of probs:" << det.prob.size();
+		return os;
 	}
-
-	Detection(int classes, int nboxes, int sort_class, real_t objectness,
-			std::vector<real_t> prob, box bb) :
-			prob(std::move(prob)), bbox(bb), nboxes(nboxes), objectness(objectness), sort_class(
-					sort_class), classes(classes) {
-	}
-
-	Detection(const Detection& a) = default;
-
-//	:
-//			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
-//					a.objectness), sort_class(a.sort_class), classes(a.classes) {
-//	}
-
-	Detection& operator=(const Detection& other) // copy assignment
-			{
-		if (this != &other) { // self-assignment check expected
-			this->prob = std::vector < real_t > (other.prob);
-			this->bbox = other.bbox;
-			this->nboxes = other.nboxes;
-			this->objectness = other.objectness;
-			this->sort_class = other.sort_class;
-			this->classes = other.classes;
-		}
-		return *this;
-	}
-
 };
 
 struct DetectionGold {
@@ -110,9 +91,9 @@ struct DetectionGold {
 	unsigned char tensor_core_mode;
 	int total_errors;
 	bool normalized_coordinates;
-    bool compare_layers;
+	bool compare_layers;
 	//gold attribute
-    std::unordered_map<std::string, std::vector<Detection> > gold_hash_var;
+	std::unordered_map<std::string, std::vector<Detection> > gold_hash_var;
 
 //	Log* app_log;
 #ifdef LOGS
@@ -127,11 +108,8 @@ struct DetectionGold {
 
 	virtual ~DetectionGold();
 
-	int run(detection** dets, int* nboxes, int img_index, int classes, int img_w,
-			int img_h);
-
-//	void start_iteration();
-//	void end_iteration();
+	int run(detection** dets, int* nboxes, int img_index, int classes,
+			int img_w, int img_h);
 
 	void load_gold_hash(std::ifstream& gold_file);
 
@@ -142,16 +120,15 @@ struct DetectionGold {
 	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
 			int img_h, int inet);
 
-	int compare_line(real_t g_objectness, real_t f_objectness,
-			int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
-			const std::string& img, int nb, int classes, const real_t* g_probs,
-			const real_t* f_probs, int img_w, int img_h, int inet) const;
+	int compare_detection(const Detection& g_det, const detection& f_det, const std::string& img,
+			int nb, int classes, int img_w, int img_h, int inet) const;
 
 private:
-    static std::string generate_gold_line(int bb, detection det, const box& b,
-                                   detection* dets);
+	static std::string generate_gold_line(int bb, detection det, const box& b,
+			detection* dets);
 
-    static Detection load_gold_line(std::ifstream& gold_file, int nboxes);
+	static void load_gold_line(std::ifstream& gold_file, Detection& det,
+			int nboxes);
 
 };
 

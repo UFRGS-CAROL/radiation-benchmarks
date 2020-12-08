@@ -142,39 +142,39 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 #ifdef OPENBLAS
 	/*
-	void cblas_sgemm 	( 	const CBLAS_LAYOUT  	layout,
-		const CBLAS_TRANSPOSE  	TransA,
-		const CBLAS_TRANSPOSE  	TransB,
-		const int  	M,
-		const int  	N,
-		const int  	K,
-		const float  	alpha,
-		const float *  	A,
-		const int  	lda,
-		const float *  	B,
-		const int  	ldb,
-		const float  	beta,
-		float *  	C,
-		const int  	ldc
-	)
+	 void cblas_sgemm 	( 	const CBLAS_LAYOUT  	layout,
+	 const CBLAS_TRANSPOSE  	TransA,
+	 const CBLAS_TRANSPOSE  	TransB,
+	 const int  	M,
+	 const int  	N,
+	 const int  	K,
+	 const float  	alpha,
+	 const float *  	A,
+	 const int  	lda,
+	 const float *  	B,
+	 const int  	ldb,
+	 const float  	beta,
+	 float *  	C,
+	 const int  	ldc
+	 )
 	 */
 	CBLAS_TRANSPOSE transa, transb;
 
-	if (!TA && !TB){
+	if (!TA && !TB) {
 		transa = CblasNoTrans;
 		transb = CblasNoTrans;
-	}else if (TA && !TB){
+	} else if (TA && !TB) {
 		transa = CblasTrans;
 		transb = CblasNoTrans;
-	}else if (!TA && TB){
+	} else if (!TA && TB) {
 		transa = CblasNoTrans;
 		transb = CblasTrans;
-	}else{
+	} else {
 		transa = CblasTrans;
 		transb = CblasTrans;
 	}
 	//	              0          1       2     3  4  5    6    7   8   9   10  11     12  13
-	cblas_sgemm(CblasRowMajor, transa, transb, M, N, K, ALPHA, A, lda, B, ldb, BETA,  C, ldc);
+	cblas_sgemm(CblasRowMajor, transa, transb, M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc);
 #else
 
 	int i, j;
@@ -196,9 +196,9 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 }
 
 #ifdef GPU
-
+#include <assert.h>
 extern void parse_input_conv_layer_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
-                                       int lda, float *B, int ldb, float BETA, float *C, int ldc);
+		int lda, float *B, int ldb, float BETA, float *C, int ldc);
 extern void parse_output_conv_layer_gpu(int TA, int TB, int M, int N, int K, float *C);
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
@@ -208,7 +208,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 	cublasSetStream(handle, st);
 	//Matteo project
 	// save the matrices file
-    parse_input_conv_layer_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+	parse_input_conv_layer_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 
 #ifndef OPENGEMM
 
@@ -251,21 +251,21 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 //			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 //			A_gpu, lda, &BETA, C_gpu, ldc);
 
-    parse_output_conv_layer_gpu(TA, TB, M, N, K, C_gpu);
+	parse_output_conv_layer_gpu(TA, TB, M, N, K, C_gpu);
 }
 
 void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {
 	real_t *a;
 	if (!TA)
-		a = random_matrix(m, k);
+	a = random_matrix(m, k);
 	else
-		a = random_matrix(k, m);
+	a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-		b = random_matrix(k, n);
+	b = random_matrix(k, n);
 	else
-		b = random_matrix(n, k);
+	b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
@@ -321,15 +321,15 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	srand(0);
 	real_t *a;
 	if (!TA)
-		a = random_matrix(m, k);
+	a = random_matrix(m, k);
 	else
-		a = random_matrix(k, m);
+	a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-		b = random_matrix(k, n);
+	b = random_matrix(k, n);
 	else
-		b = random_matrix(n, k);
+	b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
