@@ -41,7 +41,7 @@ FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS) -DBUILDRELATIVEERROR=$(BUILDRE
 
 all: $(EXEC) generate_input
 
-$(EXEC): clean $(SOURCES)
+$(EXEC): $(SOURCES)
 	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(SOURCES) -o $(EXEC)
 
 generate_input: clean
