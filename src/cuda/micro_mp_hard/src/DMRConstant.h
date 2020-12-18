@@ -43,32 +43,32 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		switch (this->parameters_.micro) {
 		case ADD: {
 			switch (this->parameters_.operation_num) {
-//			case 1: {
-//				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = ADD_UINT32_THRESHOLD_1;
-//				break;
-//			}
-//			case 10: {
-//				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_10,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = ADD_UINT32_THRESHOLD_10;
-//				break;
-//			}
-//			case 100: {
-//				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100,
-//						CHECK_BLOCK>;
-//
-//				this->threshold_diff = ADD_UINT32_THRESHOLD_100;
-//				break;
-//			}
-//			case 1000: {
-//				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,
-//						CHECK_BLOCK>;
-//
-//				this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
-//				break;
-//			}
+			case 1: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+
+				this->threshold_diff = ADD_UINT32_THRESHOLD_100;
+				break;
+			}
+			case 1000: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
+				break;
+			}
 
 			case OPS: {
 				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100000,
@@ -83,32 +83,32 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 		case MUL: {
 			switch (this->parameters_.operation_num) {
-//			case 1: {
-//				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1,
-//						CHECK_BLOCK>;
-//
-//				this->threshold_diff = MUL_UINT32_THRESHOLD_1;
-//				break;
-//			}
-//			case 10: {
-//				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_10,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = MUL_UINT32_THRESHOLD_10;
-//				break;
-//			}
-//			case 100: {
-//				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = MUL_UINT32_THRESHOLD_100;
-//				break;
-//			}
-//
-//			case 1000: {
-//				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
-//				break;
-//			}
+			case 1: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_100;
+				break;
+			}
+
+			case 1000: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
+				break;
+			}
 
 			case OPS: {
 				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100000,
@@ -122,30 +122,30 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 		case FMA: {
 			switch (this->parameters_.operation_num) {
-//			case 1: {
-//				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = FMA_UINT32_THRESHOLD_1;
-//				break;
-//			}
-//			case 10: {
-//				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_10,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = FMA_UINT32_THRESHOLD_10;
-//				break;
-//			}
-//			case 100: {
-//				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = FMA_UINT32_THRESHOLD_100;
-//
-//				break;
-//			}
-//			case 1000: {
-//				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1000,
-//						CHECK_BLOCK>;
-//				this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
-//			}
+			case 1: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_100;
+
+				break;
+			}
+			case 1000: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
+			}
 
 			case OPS: {
 				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100000,

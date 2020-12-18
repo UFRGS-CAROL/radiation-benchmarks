@@ -33,7 +33,7 @@ endif
 SOURCES=./src/main.cu
 EXEC=./cuda_micro_mp_hardening
 
-FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB)
+FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB) -ccbin $(CC)
 FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS) -DBUILDRELATIVEERROR=$(BUILDRELATIVEERROR)
 
 
