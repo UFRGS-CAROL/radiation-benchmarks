@@ -20,8 +20,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		real_t *A,   //A
 		real_t *B,   //B
 		real_t *C,   //C
-		real_t *D_r, //D
-		real_t *D_h, //D hardening
+		real_t *C_h, //D hardening
 		real_t alpha, real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
@@ -100,8 +99,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	real_t real_val = alpha * Csub_dmr0 + beta * C[index];
 	real_t half_val = alpha * Csub_dmr1 + beta * C[index];
 
-	D_r[index] = real_val;
-	D_h[index] = half_val;
+	C[index] = real_val;
+	C_h[index] = half_val;
 	check_relative_error(half_val, real_val);
 }
 
@@ -143,7 +142,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
 	real_t Csub_real = 0;
-	half_t Csub_half = 0;
+	volatile half_t Csub_half = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
@@ -170,8 +169,8 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll 32
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			half_t ah = half_t(As[ty][k]);
-			half_t bh = half_t(Bs[k][tx]);
+			volatile half_t ah = half_t(As[ty][k]);
+			volatile half_t bh = half_t(Bs[k][tx]);
 
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
