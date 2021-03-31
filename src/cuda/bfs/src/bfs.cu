@@ -23,7 +23,6 @@
 #include "cuda_utils.h"
 #include "device_vector.h"
 
-#define TEST_FULL_KERNEL 1
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +58,6 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		//if no thread changes this value then the loop stops
 		stop[0] = FALSE;
 		d_over = stop;
-#ifndef TEST_FULL_KERNEL
 		Kernel<<<grid, threads, 0, stream>>>(d_graph_nodes.data(),
 				d_graph_edges.data(), d_graph_mask.data(),
 				d_updating_graph_mask.data(), d_graph_visited.data(),
@@ -68,12 +66,6 @@ int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		Kernel2<<<grid, threads, 0, stream>>>(d_graph_mask.data(),
 				d_updating_graph_mask.data(), d_graph_visited.data(),
 				d_over.data(), no_of_nodes);
-#else
-		FullKernel<<<grid, threads, 0, stream>>>(d_graph_nodes.data(),
-				d_graph_edges.data(), d_graph_mask.data(),
-				d_updating_graph_mask.data(), d_graph_visited.data(),
-				d_cost.data(), no_of_nodes, d_over.data());
-#endif
 
 		d_over.to_vector(stop);
 		k++;
