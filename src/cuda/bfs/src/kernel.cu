@@ -18,10 +18,9 @@
 
 #include "kernel.h"
 
-
 __global__ void Kernel(Node* g_graph_nodes, int* g_graph_edges,
-		bool_t* g_graph_mask, bool_t* g_updating_graph_mask, bool_t *g_graph_visited,
-		int* g_cost, int no_of_nodes) {
+		bool_t* g_graph_mask, bool_t* g_updating_graph_mask,
+		bool_t *g_graph_visited, int* g_cost, int no_of_nodes) {
 	int tid = blockIdx.x * MAX_THREADS_PER_BLOCK + threadIdx.x;
 	if (tid < no_of_nodes && g_graph_mask[tid]) {
 		g_graph_mask[tid] = FALSE;
@@ -50,3 +49,37 @@ __global__ void Kernel2(bool_t* g_graph_mask, bool_t *g_updating_graph_mask,
 	}
 }
 
+/**
+ * Trying with only one kernel
+ */
+__global__ void FullKernel(Node* g_graph_nodes, int* g_graph_edges,
+		bool_t* g_graph_mask, bool_t* g_updating_graph_mask,
+		bool_t *g_graph_visited, int* g_cost, int no_of_nodes, bool_t *g_over) {
+	int tid = blockIdx.x * MAX_THREADS_PER_BLOCK + threadIdx.x;
+
+	if (tid < no_of_nodes) {
+		if (g_graph_mask[tid]) {
+			g_graph_mask[tid] = FALSE;
+			for (int i = g_graph_nodes[tid].starting;
+					i
+							< (g_graph_nodes[tid].no_of_edges
+									+ g_graph_nodes[tid].starting); i++) {
+				int id = g_graph_edges[i];
+				if (!g_graph_visited[id]) {
+					g_cost[id] = g_cost[tid] + 1;
+					g_updating_graph_mask[id] = TRUE;
+				}
+			}
+		}
+
+		//sync to simulate another kernel call
+		__syncthreads();
+
+		if (g_updating_graph_mask[tid]) {
+			g_graph_mask[tid] = TRUE;
+			g_graph_visited[tid] = TRUE;
+			*g_over = TRUE;
+			g_updating_graph_mask[tid] = FALSE;
+		}
+	}
+}
