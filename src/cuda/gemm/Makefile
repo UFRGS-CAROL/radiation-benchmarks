@@ -100,8 +100,10 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS)
-CFLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+CFLAGS+= $(PASSHOSTCC)
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --compiler-options="$(PASSHOSTCC)" 
 
 all: obj $(TARGET)
 
