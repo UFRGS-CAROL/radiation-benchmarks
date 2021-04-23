@@ -88,6 +88,7 @@ endif
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 NVCC_FLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"  
+NVCC_FLAGS+= $(OPT)
 
 all: $(TARGET)
 
