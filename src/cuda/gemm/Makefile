@@ -8,9 +8,9 @@ ALPHA=1.0
 BETA=0.0
 SIZE?=4096
 ITERATIONS=10
-PRECISION=half
+PRECISION=float
 CUBLAS=0
-TENSOR_CORES=1
+TENSOR_CORES=0
 DMR=none
 BUILDRELATIVEERROR=0
 CHECKBLOCK=1
@@ -102,8 +102,7 @@ DEPS = $(wildcard src/*.h) Makefile
 
 # It is necessary to multi compiler analysis
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
-CFLAGS+= $(PASSHOSTCC)
-NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --compiler-options="$(PASSHOSTCC)" 
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 
 
 all: obj $(TARGET)
 
