@@ -87,8 +87,10 @@ endif
 
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
+# TODO: verify this code
 NVCC_FLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"  
-NVCC_FLAGS+= $(OPT)
+# Host must be always at maximum opt
+NVCC_FLAGS+= --optimize 3
 
 all: $(TARGET)
 
