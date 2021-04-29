@@ -102,7 +102,7 @@ DEPS = $(wildcard src/*.h) Makefile
 
 # It is necessary to multi compiler analysis
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
-NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: obj $(TARGET)
 
