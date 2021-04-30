@@ -14,12 +14,7 @@ VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-# NVCC optmizations flags
-# To use for different flags
-NVCCOPTFLAGS?=
-
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -dc  -Wno-deprecated-gpu-targets
-
+NVCCFLAGS= -std=c++11 -Xptxas -v -dc  -Wno-deprecated-gpu-targets
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 
@@ -61,7 +56,10 @@ endif
 
 
 NVCCFLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
-NVCCFLAGS+= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
+
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
