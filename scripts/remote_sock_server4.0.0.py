@@ -71,7 +71,7 @@ def logging_setup():
     """
     # create logger with 'spam_application'
     logger = logging.getLogger(LOGGER_NAME)
-    # logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(LOG_FILE, mode='a')
     fh.setLevel(logging.INFO)
@@ -85,7 +85,6 @@ def logging_setup():
 
     # create console handler with a higher log level for console
     console = ColoredLogger(LOGGER_NAME)
-    console.setLevel(logging.DEBUG)
     # noinspection PyTypeChecker
     logger.addHandler(console)
     return logger
