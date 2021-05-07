@@ -7,7 +7,6 @@ import queue
 
 from server_parameters import *
 from server_package.Machine import Machine
-# from server_package.RebootMachine import RebootMachine
 from server_package.LoggerFormatter import ColoredLogger
 from server_package.CopyLogs import CopyLogs
 
@@ -22,7 +21,7 @@ def start_copying():
     # create logger with 'spam_application'
     fh = logging.FileHandler(f"{server_logs_path}/copy.log", mode='a')
     fh.setFormatter(formatter)
-    logger = logging.getLogger(COPY_LOGGER_NAME)
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh)
 
