@@ -7,7 +7,7 @@ no more magic numbers
 SOCKET_PORT = 8080
 # IP of the remote socket server (hardware watchdog)
 SERVER_IP = "192.168.1.5"
-#SERVER_IP = "192.168.195.112"
+# SERVER_IP = "192.168.195.112"
 
 # Time between machine checks
 MACHINE_CHECK_SLEEP_TIME = 5
@@ -19,6 +19,9 @@ REBOOTING_SLEEP = 10
 LOG_FILE = "server.log"
 # Logger obj name
 LOGGER_NAME = 'SOCK_SERVER_4.0.0'
+
+# Logger obj name for copying radiation logs
+COPY_LOGGER_NAME = 'COPY_LOGGER_THREAD'
 
 # Copy logs interval
 # time in seconds between the connections
@@ -48,7 +51,7 @@ the ones which enabled parameter is false are not checked
 """
 MACHINES = [
     {
-#        "ip": "192.168.195.222",
+        #        "ip": "192.168.195.222",
         "ip": "192.168.1.20",
         "enabled": True,
         "diff_reboot": 100,

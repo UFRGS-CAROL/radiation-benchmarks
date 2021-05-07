@@ -22,7 +22,7 @@ def start_copying():
     # create logger with 'spam_application'
     fh = logging.FileHandler(f"{server_logs_path}/copy.log", mode='a')
     fh.setFormatter(formatter)
-    logger = logging.getLogger()
+    logger = logging.getLogger(COPY_LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh)
 
@@ -71,20 +71,21 @@ def logging_setup():
     """
     # create logger with 'spam_application'
     logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(LOG_FILE, mode='a')
     fh.setLevel(logging.INFO)
     # create formatter and add it to the handlers
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                   datefmt='%d-%m-%y %H:%M:%S')
+
+    # add the handlers to the logger
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
     # create console handler with a higher log level for console
     console = ColoredLogger(LOGGER_NAME)
-
-    # add the handlers to the logger
+    console.setLevel(logging.DEBUG)
     # noinspection PyTypeChecker
     logger.addHandler(console)
     return logger
