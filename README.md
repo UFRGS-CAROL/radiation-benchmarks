@@ -2,10 +2,11 @@
 # Dependencies
 - CUDA for cuda benchmarks
 - make g++ g++-4.8 gcc-4.8 gcc git python2.7 python3-pip python-pip curl ntpdate
-- Python requeriments (for python 2.7 and 3.6)
+- screen
+- Python requeriments to install using pip (for python 2.7 and 3.6)
     - requests
     - paramiko
-    - 
+    - scp 
 
 
 # Directory structure
