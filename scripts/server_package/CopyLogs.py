@@ -102,5 +102,4 @@ if __name__ == '__main__':
                          to_copy_folder="/var/radiation-benchmarks/log/")
     copy_logs.start()
     time.sleep(10)
-    copy_logs.stop_copying()
     copy_logs.join()
