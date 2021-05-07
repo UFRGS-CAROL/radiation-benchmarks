@@ -6,8 +6,8 @@ no more magic numbers
 # PORT the socket will listen to
 SOCKET_PORT = 8080
 # IP of the remote socket server (hardware watchdog)
-SERVER_IP = "192.168.1.5"
-# SERVER_IP = "25.91.229.61"
+# SERVER_IP = "192.168.2.5"
+# SERVER_IP = "192.168.195.112"
 
 # Time between machine checks
 MACHINE_CHECK_SLEEP_TIME = 5
@@ -48,15 +48,15 @@ the ones which enabled parameter is false are not checked
 """
 MACHINES = [
     {
-        "ip": "192.168.1.11",
+        "ip": "192.168.195.222",
         "enabled": True,
         "diff_reboot": 100,
-        "hostname": "carolk201",
+        "hostname": "carol-raspberry1",
         "power_switch_ip": "192.168.1.102",
         "power_switch_port": 1,
         "power_switch_model": "lindy",
         "username": "carol",
-        "password": "R@di@tion"
+        "password": "R@diation"
     },
     {
         "ip": "192.168.1.14",
