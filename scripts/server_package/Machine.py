@@ -71,6 +71,11 @@ class Machine(threading.Thread):
         boot_problem_disable = False
         # Count sequential reboot after last_conn_delta > upper_threshold
         sequential_reboot_counter = 0
+
+        # mandatory: It must start the machine on
+        last_reboot_timestamp = self.__reboot_this_machine()
+        self.__log(self.__REBOOTING)
+
         while not self.__stop_event.isSet():
             # Check if machine is working fine
             now = time.time()
@@ -213,8 +218,9 @@ if __name__ == '__main__':
 
     machine.start()
 
-    print("SLEEPING THE MACHINE")
-    time.sleep(100)
+    sleep_time = 100
+    print(f"SLEEPING THE MACHINE FOR {sleep_time}s")
+    time.sleep(sleep_time)
 
     print("JOINING THE MACHINE")
     machine.join()
