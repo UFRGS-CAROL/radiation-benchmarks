@@ -14,7 +14,7 @@ class Machine(threading.Thread):
     """
     __TIME_MIN_REBOOT_THRESHOLD = 3
     __TIME_MAX_REBOOT_THRESHOLD = 10
-    __WAITING, __REBOOTING, __BOOT_PROBLEM, __MAX_SEQ_REBOOT_REACHED = range(4)
+    __WAITING, __REBOOTING, __BOOT_PROBLEM, __MAX_SEQ_REBOOT_REACHED, __TURN_ON = range(5)
 
     """
     DO NOT SET this parameter to a high value
@@ -73,8 +73,7 @@ class Machine(threading.Thread):
         sequential_reboot_counter = 0
 
         # mandatory: It must start the machine on
-        last_reboot_timestamp = self.__reboot_this_machine()
-        self.__log(self.__REBOOTING)
+        self.__turn_machine_on()
 
         while not self.__stop_event.isSet():
             # Check if machine is working fine
@@ -133,6 +132,8 @@ class Machine(threading.Thread):
         elif kind == self.__MAX_SEQ_REBOOT_REACHED:
             reboot_msg = f"\tMaximum number of reboots allowed reached for IP:{self.__ip} HOSTNAME:{self.__hostname}"
             logger_function = self.__logger.error
+        elif kind == self.__TURN_ON:
+            reboot_msg = f"\tTurning IP:{self.__ip} HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
 
         logger_function(reboot_msg)
         # TODO: finish enqueue process
@@ -159,6 +160,21 @@ class Machine(threading.Thread):
         self.__reboot_status = reboot_thread.get_reboot_status()
 
         return last_reboot_timestamp
+
+    def __turn_machine_on(self):
+        """
+        Turn on the machine
+        :return:
+        """
+        reboot_thread = RebootMachine(machine_address=self.__ip,
+                                      switch_model=self.__switch_model,
+                                      switch_port=self.__switch_port,
+                                      switch_ip=self.__switch_ip,
+                                      rebooting_sleep=self.__reboot_sleep_time,
+                                      logger_name=self.__logger_name)
+        reboot_thread.on()
+        self.__reboot_status = reboot_thread.get_reboot_status()
+        self.__log(self.__TURN_ON)
 
     def set_timestamp(self, timestamp):
         """
