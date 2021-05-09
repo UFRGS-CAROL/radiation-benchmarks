@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import os
 import socket
 import time
 import logging
