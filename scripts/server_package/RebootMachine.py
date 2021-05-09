@@ -5,18 +5,20 @@ import requests
 import json
 import logging
 
+from server_package.ErrorCodes import ErrorCodes
+
 
 class RebootMachine(threading.Thread):
+    # Switches status, only used in this class
     __ON = "ON"
     __OFF = "OFF"
-    __SUCCESS, __GENERAL_ERROR, __HTTP_ERROR, __CONNECTION_ERROR, __TIMEOUT_ERROR = range(5)
 
     def __init__(self, machine_address, switch_model, switch_port, switch_ip, rebooting_sleep, logger_name):
         super(RebootMachine, self).__init__()
         self.__address = machine_address
         self.__switch_port = switch_port
         self.__switch_ip = switch_ip
-        self.__reboot_status = self.__SUCCESS
+        self.__reboot_status = ErrorCodes.SUCCESS
         self.__switch_model = switch_model
         self.__logger = logging.getLogger(logger_name)
         self.__rebooting_sleep = rebooting_sleep
@@ -78,18 +80,18 @@ class RebootMachine(threading.Thread):
         try:
             requests_status = requests.post(url, data=json.dumps(payload), headers=headers)
             requests_status.raise_for_status()
-            self.__reboot_status = self.__SUCCESS
+            self.__reboot_status = ErrorCodes.SUCCESS
         except requests.exceptions.HTTPError as http_error:
-            self.__reboot_status = self.__HTTP_ERROR
+            self.__reboot_status = ErrorCodes.HTTP_ERROR
             self.__log_exception(http_error)
         except requests.exceptions.ConnectionError as connection_error:
-            self.__reboot_status = self.__CONNECTION_ERROR
+            self.__reboot_status = ErrorCodes.CONNECTION_ERROR
             self.__log_exception(connection_error)
         except requests.exceptions.Timeout as timeout_error:
-            self.__reboot_status = self.__TIMEOUT_ERROR
+            self.__reboot_status = ErrorCodes.TIMEOUT_ERROR
             self.__log_exception(timeout_error)
         except requests.exceptions.RequestException as general_error:
-            self.__reboot_status = self.__GENERAL_ERROR
+            self.__reboot_status = ErrorCodes.GENERAL_ERROR
             self.__log_exception(general_error)
 
     def __log_exception(self, err):
@@ -115,13 +117,14 @@ class RebootMachine(threading.Thread):
     def get_reboot_status(self):
         return self.__reboot_status
 
-    def __execute_command(self, cmd):
+    @staticmethod
+    def __execute_command(cmd):
         tmp_file = "/tmp/server_error_execute_command"
         result = os.system(f"{cmd} 2>{tmp_file}")
         with open(tmp_file) as err:
             if len(err.readlines()) != 0 or result != 0:
-                return self.__GENERAL_ERROR
-        return self.__SUCCESS
+                return ErrorCodes.GENERAL_ERROR
+        return ErrorCodes.SUCCESS
 
 
 if __name__ == '__main__':
