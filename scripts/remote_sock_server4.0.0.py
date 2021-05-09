@@ -30,7 +30,6 @@ def generate_machine_hash(messages_queue):
                 logger_name=LOGGER_NAME,
                 boot_problem_max_delta=BOOT_PROBLEM_MAX_DELTA,
                 reboot_sleep_time=REBOOTING_SLEEP
-                # RebootMachine=RebootMachine
             )
 
             machines_hash[mac["ip"]] = mac_obj
