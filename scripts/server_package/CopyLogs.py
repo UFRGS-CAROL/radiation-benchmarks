@@ -9,14 +9,36 @@ import scp
 
 class CopyLogs(threading.Thread):
 
-    def __init__(self, machines, sleep_copy_interval, destination_folder, logger_name, to_copy_folder):
+    def __init__(self, machines, sleep_copy_interval, destination_folder, to_copy_folder, log_messages_file="copy.log"):
+        """
+        Create a CopyLogs obj that keeps copying from the machines list
+        :param machines: list of machines
+        :param sleep_copy_interval: interval of each copy
+        :param destination_folder: local folder to store the logs
+        :param to_copy_folder: where the logs will be located at the client device
+        :param log_messages_file: output file for the info messages
+        """
+
         super(CopyLogs, self).__init__()
         self.__machines_list = machines
         self.__destination_folder = destination_folder
         self.__sleep_copy_interval = sleep_copy_interval
-        self.__logger = logging.getLogger(logger_name)
         self.__to_copy_folder = to_copy_folder
         self.__stop_event = threading.Event()
+
+        # Start the logger
+
+        if os.path.exists(self.__destination_folder) is False:
+            os.mkdir(self.__destination_folder)
+
+        formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                      datefmt='%d-%m-%y %H:%M:%S')
+        # create logger with 'spam_application'
+        fh = logging.FileHandler(f"{self.__destination_folder}/{log_messages_file}", mode='a')
+        fh.setFormatter(formatter)
+        self.__logger = logging.getLogger(__name__)
+        self.__logger.setLevel(logging.DEBUG)
+        self.__logger.addHandler(fh)
 
     def run(self):
         # Create the path if it doesnt exist
@@ -30,6 +52,7 @@ class CopyLogs(threading.Thread):
                     os.mkdir(destination)
             except FileExistsError:
                 self.__logger.exception(f"Failed on creating {destination} path")
+        self.__logger.debug("Running copy thread")
 
         # Start thread
         while not self.__stop_event.isSet():
@@ -42,15 +65,15 @@ class CopyLogs(threading.Thread):
                 destination = f"{self.__destination_folder}/{hostname}"
 
                 if is_active_device:
-                    # TODO: Check if copy was successful
-                    success_on_copy = self.__copy_from_address(ip=ip, destination_folder=destination, username=username,
-                                                               password=password)
+                    self.__logger.info(f"Attempt to copy from IP {ip} hostname {hostname}")
+                    self.__copy_from_address(ip=ip, destination_folder=destination, username=username,
+                                             password=password)
 
             self.__stop_event.wait(self.__sleep_copy_interval)  # instead of sleeping
 
     def __copy_from_address(self, ip, destination_folder, username, password):
         """
-        Copy from an addres
+        Copy from an address
         :param ip:
         :param destination_folder:
         :return: if it was successful or not
@@ -66,11 +89,12 @@ class CopyLogs(threading.Thread):
             ssh_client.get(self.__to_copy_folder, destination_folder, recursive=True)
             ssh_client.close()
             ssh.close()
-            return True
+            self.__logger.info(f"Copy was successful from IP {ip} username {username}")
+
         except (paramiko.BadHostKeyException, paramiko.AuthenticationException,
-                paramiko.SSHException, socket.error):
-            self.__logger.debug(f"Could not download logs from {ip}")
-            return False
+                paramiko.SSHException, socket.error, paramiko.ChannelException,
+                scp.SCPException) as ex:
+            self.__logger.error(f"Could not download logs from {ip}. Exception {ex}")
 
     def join(self, *args, **kwargs):
         """
@@ -88,18 +112,10 @@ if __name__ == '__main__':
     sys.path.append("..")
     from server_parameters import MACHINES
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%m-%d %H:%M',
-        filename="unit_test_CopyLogs.log",
-        filemode='w'
-    )
     copy_logs = CopyLogs(machines=MACHINES,
                          sleep_copy_interval=10,
                          destination_folder="/tmp",
-                         logger_name="COPY_LOGS_LOG",
-                         to_copy_folder="/var/radiation-benchmarks/log/")
+                         to_copy_folder="/var/radiation-benchmarks/log/", log_messages_file="unit_test_CopyLogs.log")
     copy_logs.start()
     time.sleep(10)
     copy_logs.join()
