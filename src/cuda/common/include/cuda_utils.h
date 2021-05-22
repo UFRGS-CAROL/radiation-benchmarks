@@ -27,8 +27,7 @@
 namespace rad {
 #endif //C++ compiler defined
 
-static void _checkFrameworkErrors(cudaError_t error, int line,
-		const char* file) {
+static void _checkFrameworkErrors(cudaError_t error, int line, const char *file) {
 	if (error == cudaSuccess) {
 		return;
 	}
@@ -45,8 +44,36 @@ static void _checkFrameworkErrors(cudaError_t error, int line,
 
 #define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__)
 
-static void _checkCublasErrors(cublasStatus_t error, int line,
-		const char* file) {
+/**
+ * Check function to not finish the log file and reset the GPU
+ */
+static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
+	//write before reset
+	cudaError_t lastError = cudaPeekAtLastError();
+
+	if (error != cudaSuccess || lastError) {
+		char errorDescription[256];
+		snprintf(errorDescription, 256, "CUDA possible DUE: %s. Error code %d LastError code %d",
+				cudaGetErrorString(error), (int) error, (int) lastError);
+		printf("%s - Line: %d at %s\n", errorDescription, line, file);
+
+#ifdef LOGS
+		log_info_detail((char *)errorDescription);
+		log_info_count(1);
+#endif
+
+		//if the reset is not successful we need terminate the app
+		checkFrameworkErrors(cudaDeviceReset());
+	}
+	return true;
+}
+
+/**
+ * Don't worry, it is a macro that returns the status
+ */
+#define checkFrameworkErrorsAndReset(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
+
+static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {
 		return;
 	}
@@ -65,15 +92,13 @@ static void _checkCublasErrors(cublasStatus_t error, int line,
 // This will output the proper error string when calling cudaGetLastError
 #define checkLastCudaError(msg) _checkLastCudaError (msg, __FILE__, __LINE__)
 
-static void _checkLastCudaError(const char *errorMessage, const char *file,
-		const int line) {
+static void _checkLastCudaError(const char *errorMessage, const char *file, const int line) {
 	cudaError_t err = cudaGetLastError();
 
 	if (cudaSuccess != err) {
 		char errorDescription[800];
-		sprintf(errorDescription,
-				"%s(%i) : getLastCudaError() CUDA error : %s : (%d) %s.\n",
-				file, line, errorMessage, (int) err, cudaGetErrorString(err));
+		sprintf(errorDescription, "%s(%i) : getLastCudaError() CUDA error : %s : (%d) %s.\n", file,
+				line, errorMessage, (int) err, cudaGetErrorString(err));
 #ifdef LOGS
 		log_error_detail((char *)errorDescription);
 		end_log_file();
@@ -84,7 +109,7 @@ static void _checkLastCudaError(const char *errorMessage, const char *file,
 }
 
 static cudaDeviceProp get_device() {
-	//================== Retrieve and set the default CUDA device
+//================== Retrieve and set the default CUDA device
 	cudaDeviceProp prop = cudaDevicePropDontCare;
 	checkFrameworkErrors(cudaSetDevice(0));
 	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
@@ -107,8 +132,8 @@ static void sleep(double seconds) {
 }
 
 static double mysecond() {
-	struct timeval tp{};
-	struct timezone tzp{};
+	struct timeval tp { };
+	struct timezone tzp { };
 	gettimeofday(&tp, &tzp);
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
@@ -120,7 +145,7 @@ static void del_arg(int argc, char **argv, int index) {
 	argv[i] = nullptr;
 }
 
-static int find_int_arg(int argc, char **argv, const std::string& arg, int def) {
+static int find_int_arg(int argc, char **argv, const std::string &arg, int def) {
 	int i;
 	for (i = 0; i < argc - 1; ++i) {
 		if (!argv[i])
@@ -135,7 +160,7 @@ static int find_int_arg(int argc, char **argv, const std::string& arg, int def) 
 	return def;
 }
 
-static float find_float_arg(int argc, char **argv, const std::string& arg, float def) {
+static float find_float_arg(int argc, char **argv, const std::string &arg, float def) {
 	for (int i = 0; i < argc - 1; ++i) {
 		if (!argv[i])
 			continue;
@@ -151,8 +176,7 @@ static float find_float_arg(int argc, char **argv, const std::string& arg, float
 	return def;
 }
 
-static std::string find_char_arg(int argc, char **argv, const std::string& arg,
-		std::string def) {
+static std::string find_char_arg(int argc, char **argv, const std::string &arg, std::string def) {
 	int i;
 	for (i = 0; i < argc - 1; ++i) {
 		if (!argv[i])
@@ -167,7 +191,7 @@ static std::string find_char_arg(int argc, char **argv, const std::string& arg,
 	return def;
 }
 
-static bool find_arg(int argc, char* argv[], const std::string& arg) {
+static bool find_arg(int argc, char *argv[], const std::string &arg) {
 	int i;
 	for (i = 0; i < argc; ++i) {
 		if (!argv[i])
