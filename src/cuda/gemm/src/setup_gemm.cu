@@ -5,54 +5,42 @@
 
 #include "GemmCaller.h"
 
-extern void show_iteration_status(int it, bool verbose, double copy_time,
-		double comparing_time, double computation_time,
-		std::pair<int, int> errors);
+extern void show_iteration_status(int it, bool verbose, double copy_time, double comparing_time,
+		double computation_time, std::pair<int, int> errors);
 
 std::string get_multi_compiler_header() {
 	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
-	test_info += " nvcc_optimization_flags:"
-			+ rad::extract_nvcc_opt_flags_str();
+	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
 	return test_info;
 }
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
-void setup_execute(Parameters& parameters,
-		GemmCaller<COUNT, half_t, real_t>& mult_env, const uint32_t threshold =
-				0) {
+void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mult_env,
+		const uint32_t threshold = 0) {
 	double elapsed_time = 0;
 
-	std::vector<real_t> a_vector_host(
-			parameters.size_matrices * parameters.size_matrices);
-	std::vector<real_t> b_vector_host(
-			parameters.size_matrices * parameters.size_matrices);
-	std::vector<real_t> c_vector_host(
-			parameters.size_matrices * parameters.size_matrices);
-	std::vector<real_t> d_vector_host(
-			parameters.size_matrices * parameters.size_matrices);
-	std::vector<real_t> gold_host(
-			parameters.size_matrices * parameters.size_matrices);
+	std::vector<real_t> a_vector_host(parameters.size_matrices * parameters.size_matrices);
+	std::vector<real_t> b_vector_host(parameters.size_matrices * parameters.size_matrices);
+	std::vector<real_t> c_vector_host(parameters.size_matrices * parameters.size_matrices);
+	std::vector<real_t> d_vector_host(parameters.size_matrices * parameters.size_matrices);
+	std::vector<real_t> gold_host(parameters.size_matrices * parameters.size_matrices);
 
 	//Output host vectors are set after computation
-	std::vector<half_t> c_vector_host_half_t(
-			parameters.size_matrices * parameters.size_matrices);
+	std::vector<half_t> c_vector_host_half_t(parameters.size_matrices * parameters.size_matrices);
 
 	if (parameters.generate) {
 		std::cout << "Generating input matrices\n";
 		auto read_abc_files_on_generate = (parameters.check_input_existence
-				&& exists(parameters.a_input_path)
-				&& exists(parameters.b_input_path)
+				&& exists(parameters.a_input_path) && exists(parameters.b_input_path)
 				&& exists(parameters.c_input_path));
 
-		get_input_matrices(parameters.size_matrices, a_vector_host,
-				b_vector_host, c_vector_host, parameters.a_input_path,
-				parameters.b_input_path, parameters.c_input_path,
+		get_input_matrices(parameters.size_matrices, a_vector_host, b_vector_host, c_vector_host,
+				parameters.a_input_path, parameters.b_input_path, parameters.c_input_path,
 				read_abc_files_on_generate);
 	} else {
 		std::cout << "Reading input matrices\n";
-		read_abc_files(parameters.a_input_path, a_vector_host,
-				parameters.b_input_path, b_vector_host, parameters.c_input_path,
-				c_vector_host);
+		read_abc_files(parameters.a_input_path, a_vector_host, parameters.b_input_path,
+				b_vector_host, parameters.c_input_path, c_vector_host);
 
 		read_gold(parameters.gold_inout_path, gold_host);
 	}
@@ -72,14 +60,16 @@ void setup_execute(Parameters& parameters,
 
 		parameters.start_iteration();
 
-		mult_env.gemm(a_vector_device, b_vector_device, c_vector_device,
-				c_vector_device_half_t, real_t(parameters.alpha),
-				real_t(parameters.beta), parameters.size_matrices,
+		mult_env.gemm(a_vector_device, b_vector_device, c_vector_device, c_vector_device_half_t,
+				real_t(parameters.alpha), real_t(parameters.beta), parameters.size_matrices,
 				parameters.size_matrices, threshold);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//		;
+//		rad::checkFrameworkErrors(cudaPeekAtLastError());
+//		;
+		//new DUE setup
+		bool status = rad::checkFrameworkErrorsAndReset(cudaDeviceSynchronize());
+		std::cout << "GPU STATUS " << status << "\n\n";
 
 		parameters.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
@@ -87,8 +77,7 @@ void setup_execute(Parameters& parameters,
 
 		double copy_time = rad::mysecond();
 
-		mult_env.memcpy_half_t_mem(c_vector_host_half_t,
-				c_vector_device_half_t);
+		mult_env.memcpy_half_t_mem(c_vector_host_half_t, c_vector_device_half_t);
 
 		c_vector_device.to_vector(d_vector_host);
 		copy_time = rad::mysecond() - copy_time;
@@ -96,20 +85,18 @@ void setup_execute(Parameters& parameters,
 		if (!parameters.generate) {
 
 			auto comparing_time = rad::mysecond();
-			auto errors = check_output_errors_dmr(gold_host, d_vector_host,
-					c_vector_host_half_t, parameters, threshold,
-					mult_env.duplicated);
+			auto errors = check_output_errors_dmr(gold_host, d_vector_host, c_vector_host_half_t,
+					parameters, threshold, mult_env.duplicated);
 
 			comparing_time = rad::mysecond() - comparing_time;
 
-			show_iteration_status(it, parameters.verbose, copy_time,
-					comparing_time, computation_time, errors);
+			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
+					computation_time, errors);
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				read_abc_files(parameters.a_input_path, a_vector_host,
-						parameters.b_input_path, b_vector_host,
-						parameters.c_input_path, c_vector_host);
+				read_abc_files(parameters.a_input_path, a_vector_host, parameters.b_input_path,
+						b_vector_host, parameters.c_input_path, c_vector_host);
 				read_gold(parameters.gold_inout_path, gold_host);
 
 				a_vector_device.resize(0);
@@ -129,8 +116,7 @@ void setup_execute(Parameters& parameters,
 	}
 	if (parameters.verbose) {
 
-		std::cout << "Elapsed time: " << (elapsed_time / parameters.iterations)
-				<< " s\n";
+		std::cout << "Elapsed time: " << (elapsed_time / parameters.iterations) << " s\n";
 	} else {
 		std::cout << "done.\n";
 	}
@@ -149,52 +135,49 @@ void setup_execute(Parameters& parameters,
 	}
 }
 
-void setup_gemm_unhardened(Parameters& parameters) {
+void setup_gemm_unhardened(Parameters &parameters) {
 	if (parameters.precision == "half") {
-		UnhardenedGemmCaller<half> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices);
+		UnhardenedGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
 	}
 //
 	if (parameters.precision == "float" || parameters.precision == "single") {
-		UnhardenedGemmCaller<float> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices);
+		UnhardenedGemmCaller<float> gemm_obj(parameters.size_matrices, parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
 	}
 
 	if (parameters.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices);
+		UnhardenedGemmCaller<double> gemm_obj(parameters.size_matrices, parameters.size_matrices);
 		setup_execute(parameters, gemm_obj);
 	}
 }
 
-void setup_gemm_cublas(Parameters& parameters) {
+void setup_gemm_cublas(Parameters &parameters) {
 	if (parameters.precision == "half") {
-		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
+		CUBLASGemmCaller<half> gemm_obj(parameters.size_matrices, parameters.size_matrices,
+				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
 
 	}
 
 	if (parameters.precision == "float" || parameters.precision == "single") {
-		CUBLASGemmCaller<float> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
+		CUBLASGemmCaller<float> gemm_obj(parameters.size_matrices, parameters.size_matrices,
+				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
 	}
 
 	if (parameters.precision == "double") {
-		CUBLASGemmCaller<double> gemm_obj(parameters.size_matrices,
-				parameters.size_matrices, parameters.use_tensor_cores);
+		CUBLASGemmCaller<double> gemm_obj(parameters.size_matrices, parameters.size_matrices,
+				parameters.use_tensor_cores);
 		setup_execute(parameters, gemm_obj);
 	}
 }
 
-void setup_gemm_cutlass(Parameters& parameters) {
+void setup_gemm_cutlass(Parameters &parameters) {
 	throw_line("CUTLASS GEMM not ready yet");
 }
 
-void setup_gemm_dmr(Parameters& parameters) {
+void setup_gemm_dmr(Parameters &parameters) {
 	if (parameters.precision == "float" || parameters.precision == "single") {
 		throw_line("Not ready yet");
 	}
@@ -204,8 +187,8 @@ void setup_gemm_dmr(Parameters& parameters) {
 		if (parameters.dmr == "mixed") {
 			switch (parameters.check_block) {
 			case ONE_OP_CHECK: {
-				DMRMixedGemmCaller<ONE_OP_CHECK, float, double> gemm_obj(
-						parameters.size_matrices, parameters.size_matrices);
+				DMRMixedGemmCaller<ONE_OP_CHECK, float, double> gemm_obj(parameters.size_matrices,
+						parameters.size_matrices);
 				setup_execute(parameters, gemm_obj, THRESHOLD_1);
 				break;
 
@@ -220,8 +203,7 @@ void setup_gemm_dmr(Parameters& parameters) {
 			}
 
 		} else if (parameters.dmr == "full") {
-			DMRGemmCaller<double> gemm_obj(parameters.size_matrices,
-					parameters.size_matrices);
+			DMRGemmCaller<double> gemm_obj(parameters.size_matrices, parameters.size_matrices);
 			setup_execute(parameters, gemm_obj);
 		}
 	}
