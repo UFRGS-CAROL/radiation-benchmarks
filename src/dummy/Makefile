@@ -4,7 +4,7 @@ EXEC = dummy
 SRC = dummy_application_for_test.cpp
 
 INCLUDE = -I../cuda/common -I../include
-LDFLAGS = -lLogHelper -L../include 
+LDFLAGS = -lLogHelper  -L../include 
 
 CXXFLAGS = -std=c++11 -O3 $(INCLUDE) -DLOGS
 
