@@ -106,7 +106,8 @@ def main():
 
                 # Set new timestamp
                 timestamp = time.time()
-                machines_hash[address].set_timestamp(timestamp=timestamp)
+                if address in machines_hash:
+                    machines_hash[address].set_timestamp(timestamp=timestamp)
 
                 # Close the connection
                 client_socket.close()
