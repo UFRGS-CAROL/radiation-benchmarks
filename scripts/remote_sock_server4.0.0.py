@@ -104,14 +104,14 @@ def main():
                 client_socket, address_list = server_socket.accept()
                 address = address_list[0]
 
-                # Set new timestamp
-                timestamp = time.time()
+                # Set new timestamp, only if machine is in the list
                 if address in machines_hash:
+                    timestamp = time.time()
                     machines_hash[address].set_timestamp(timestamp=timestamp)
+                    logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
 
                 # Close the connection
                 client_socket.close()
-                logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
     except KeyboardInterrupt:
         # Stop mac objects
         for mac_obj in machines_hash.values():
