@@ -49,7 +49,7 @@ def logging_setup():
     fh = logging.FileHandler(LOG_FILE, mode='a')
     fh.setLevel(logging.INFO)
     # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(filename)s:%(lineno)d',
                                   datefmt='%d-%m-%y %H:%M:%S')
 
     # add the handlers to the logger

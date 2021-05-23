@@ -11,9 +11,11 @@ import re
 import shutil
 import signal
 import json
-from datetime import datetime
 
-from server_parameters import SERVER_IP, SOCKET_PORT
+# PORT the socket will listen to
+SOCKET_PORT = 8080
+# IP of the remote socket server (hardware watchdog)
+SERVER_IP = "25.89.165.225"
 
 # Time in seconds to wait for the timestamp update
 TIMESTAMP_MAX_DIFF_DEFAULT = 30
@@ -31,6 +33,10 @@ CONF_FILE = '/etc/radiation-benchmarks.conf'
 DEFAULT_LOGGER_NAME = os.path.basename(__file__).upper()
 
 
+def execute_system_command():
+    pass
+
+
 def sock_connect():
     """
     Connect to server and close connection, kind of ping
@@ -39,21 +45,25 @@ def sock_connect():
     logger = logging.getLogger(DEFAULT_LOGGER_NAME)
     try:
         # create an INET, STREAMing socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # python 3 requires a TIMEOUT
-        s.settimeout(2)
-        # Now, connect with IP (or hostname) and PORT
-        s.connect((SERVER_IP, SOCKET_PORT))
-        s.close()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            # python 3 requires a TIMEOUT
+            client_socket.settimeout(2)
+            # Now, connect with IP (or hostname) and PORT
+            client_socket.connect((SERVER_IP, SOCKET_PORT))
     except socket.error:
         logger.debug("could not connect to remote server, socket error")
 
 
-def create_logger(log_path, logger_name):
+def create_logger(log_path):
+    """
+    Create the logger for this section
+    :param log_path: is the path for the output logging file
+    :return:
+    """
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                   datefmt='%d-%m-%y %H:%M:%S')
     # create logger
-    logger = logging.getLogger(logger_name)
+    logger = logging.getLogger(DEFAULT_LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
 
     # file handler
@@ -69,23 +79,14 @@ def create_logger(log_path, logger_name):
     return logger
 
 
-def update_timestamp_file(timestamp_file):
-    """
-    Update the timestamp file with machine current timestamp
-    :return:
-    """
-    command = "echo " + str(int(time.time())) + " > " + timestamp_file
-    return_code = os.system(command)
-    timestamp_signal = int(time.time())
-    return return_code, timestamp_signal
-
-
 def clean_command_exec_logs(var_dir):
     """
     Remove files with start timestamp of commands executing
     :return:
     """
-    os.system("rm -f " + var_dir + "command_execstart_*")
+    rm_outcome = os.system(f"rm -f {var_dir}command_execstart_*")
+    if rm_outcome != 0:
+        logging.getLogger(DEFAULT_LOGGER_NAME).debug(f"Problem when rm {var_dir}command_execstart_* files")
 
 
 def check_command_list_changes(var_dir, commands):
@@ -111,7 +112,12 @@ def check_command_list_changes(var_dir, commands):
 
 
 def get_command(index, commands):
-    # timestamp_max_diff = 0
+    """
+    Get a command from index
+    :param index:
+    :param commands:
+    :return:
+    """
     try:
         # if commands[index]["tmDiff"]:
         timestamp_max_diff = commands[index]["tmDiff"]
@@ -132,14 +138,14 @@ def select_command(var_dir, commands, timestamp):
 
     # Get the index of last existent file
     i = 0
-    while os.path.isfile(var_dir + "command_execstart_" + str(i)):
+    while os.path.isfile(var_dir + f"command_execstart_{i}"):
         i += 1
     i -= 1
 
     # If there is no file, create the first file with current timestamp
     # and return the first command of commands list
     if i == -1:
-        os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_0")
+        os.system(f"echo {int(time.time())} > {var_dir}command_execstart_0")
         return get_command(index=0, commands=commands)
 
     # Check if last command executed is still in the defined time window for each command
@@ -147,9 +153,8 @@ def select_command(var_dir, commands, timestamp):
 
     # Read the timestamp file
     try:
-        fp = open(var_dir + "command_execstart_" + str(i), 'r')
-        timestamp = int(float(fp.readline().strip()))
-        fp.close()
+        with open(f"{var_dir}command_execstart_{i}", 'r') as fp:
+            timestamp = int(float(fp.readline().strip()))
     except ValueError as eDetail:
         logger.info("Rebooting, command execstart timestamp read error: " + str(eDetail))
         sock_connect()
@@ -172,11 +177,11 @@ def select_command(var_dir, commands, timestamp):
         return get_command(index=0, commands=commands)
 
     # Finally, select the next command not executed so far
-    os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_" + str(i))
+    os.system(f"echo {int(time.time())} > {var_dir}command_execstart_{i}")
     return get_command(index=i, commands=commands)
 
 
-def execCommand(command):
+def exec_command(command):
     """
     Execute command
     :param command: cmd to execute
@@ -184,8 +189,6 @@ def execCommand(command):
     """
     logger = logging.getLogger(DEFAULT_LOGGER_NAME)
     try:
-        # TODO: Check why this update is here
-        # updateTimestamp(timestamp_file=)
         if re.match(r".*&\s*$", command):
             # print "command should be ok"
             return os.system(command)
@@ -193,7 +196,7 @@ def execCommand(command):
             # print "command not ok, inserting &"
             return os.system(command + " &")
     except OSError as detail:
-        logger.exception("Error launching command '" + command + "'; error detail: " + str(detail))
+        logger.exception(f"Error launching command '{command}'; error detail: {detail}")
         return None
 
 
@@ -207,12 +210,6 @@ def killall(commands):
             raise ValueError
     except (KeyError, ValueError, TypeError):
         logger.debug("Could not issue the kill command for each entry, config file error!")
-
-
-# When SIGUSR1 or SIGUSR2 is received update timestamp
-def receive_signal(signum, stack):
-    global timestampSignal
-    timestampSignal = int(time.time())
 
 
 def read_commands(file_list):
@@ -233,7 +230,14 @@ def read_commands(file_list):
     return commands
 
 
+# When SIGUSR1 or SIGUSR2 is received update timestamp
+def receive_signal(signum, stack):
+    global timestamp_signal
+    timestamp_signal = int(time.time())
+
+
 def main():
+    global timestamp_signal
     ################################################
     # KillTest Main Execution
     ################################################
@@ -263,10 +267,9 @@ def main():
         # sys.exit(1)
 
     log_file = log_dir + "killtest.log"
-    timestamp_file = var_dir + "timestamp.txt"
 
     # create the logger
-    logger = create_logger(log_path=log_file, logger_name=DEFAULT_LOGGER_NAME)
+    logger = create_logger(log_path=log_file)
 
     if len(sys.argv) != 2:
         logger.debug(f"Usage: {sys.argv[0]} <file with absolute paths of json files>")
@@ -286,7 +289,7 @@ def main():
     try:
         kill_count = 0  # Counts how many kills were executed throughout execution
         cur_command, timestamp_max_diff = select_command(var_dir=var_dir, commands=commands, timestamp=timestamp_signal)
-        execCommand(cur_command)
+        exec_command(cur_command)
         while True:
             sock_connect()
 
@@ -321,7 +324,7 @@ def main():
                 else:
                     # select properly the current command to be executed
                     cur_command = select_command(var_dir=var_dir, commands=commands, timestamp=timestamp_signal)
-                    execCommand(cur_command)  # start the command
+                    exec_command(cur_command)  # start the command
 
             time.sleep(1)
     except KeyboardInterrupt:  # Ctrl+c
@@ -332,5 +335,5 @@ def main():
 
 
 if __name__ == '__main__':
-    timestampSignal = 0
+    timestamp_signal = 0
     main()
