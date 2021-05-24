@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import collections
 import logging
 import socket
 import time
@@ -6,9 +7,7 @@ import os
 import os.path
 import configparser
 import sys
-import filecmp
 import re
-import shutil
 import signal
 import json
 
@@ -30,11 +29,90 @@ TIME_WINDOW_COMMANDS = 3600
 CONF_FILE = '/etc/radiation-benchmarks.conf'
 
 # logger name
-DEFAULT_LOGGER_NAME = os.path.basename(__file__).upper()
+DEFAULT_LOGGER_NAME = os.path.basename(__file__).upper().replace(".PY", "")
+
+# Default amount of benchmarks for each json config file
+# 24h  * week of experiments
+MAX_BENCHMARK_QUEUE = 24 * 7
+
+# Default file to store the Queue
+DEFAULT_QUEUE_FILE = "commandExecutionStart"
+
+# Kill test log
+KILL_TEST_LOG = "killtest.log"
 
 
-def execute_system_command():
-    pass
+def execute_system_command(command):
+    logger = logging.getLogger(DEFAULT_LOGGER_NAME)
+    sys_return = os.system(command)
+    if sys_return != 0:
+        logger.debug(f"Could not execute command {command}")
+
+
+class Benchmark:
+    def __init__(self, kill_command, execution_command, timestamp_max_diff=TIMESTAMP_MAX_DIFF_DEFAULT):
+        # Mandatory execute command from json
+        self.__execution_command = execution_command
+        # Mandatory kill command from json
+        self.__kill_command = kill_command
+        # Attribute to keep the timestamp diff
+        self.__timestamp_diff = 0
+        # Counts how many kills were executed throughout execution
+        self.__kill_counter = 0
+        # Start last kill timestamp with an old enough timestamp
+        self.__last_kill_timestamp = int(time.time()) - 50 * timestamp_max_diff
+        # Max diff allowed
+        self.__timestamp_max_diff = timestamp_max_diff
+        # Max kill counter
+        self.__max_kill_counter = MAX_KILL
+        # Last timestamp registered
+        self.__last_timestamp_registered = int(time.time())
+
+    # Following PEP8 all the attribute must be private
+    @property
+    def execution_command(self): return self.__execution_command
+
+    @property
+    def kill_counter(self): return self.__kill_counter
+
+    @property
+    def timestamp_diff(self): return self.__timestamp_diff
+
+    def is_inside_benchmark_time_window(self):
+        # Get the current timestamp
+        now = int(time.time())
+        return (now - self.__last_timestamp_registered) < self.__timestamp_max_diff
+
+    def is_timestamp_outdated(self, timestamp):
+        # Get the current timestamp
+        now = int(time.time())
+        self.__timestamp_diff = now - timestamp
+        return self.__timestamp_diff > self.__timestamp_max_diff
+
+    def was_the_last_kill_too_recent(self):
+        now = int(time.time())
+        return (now - self.__last_kill_timestamp) < 3 * self.__timestamp_max_diff
+
+    def reach_max_kill(self):
+        return self.__kill_counter >= self.__max_kill_counter
+
+    def execute_command(self):
+        """ Treat and execute this benchmark
+        :return: None
+        """
+        command = self.execution_command
+        if not re.match(r".*&\s*$", command):
+            # "command not ok, inserting &"
+            command += " &"
+        execute_system_command(command)
+
+    def kill_this_benchmark(self):
+        """ Kill this benchmark
+        :return: None
+        """
+        self.__kill_counter += 1
+        execute_system_command(self.__kill_command)
+        self.__last_kill_timestamp = int(time.time())
 
 
 def sock_connect():
@@ -60,7 +138,7 @@ def create_logger(log_path):
     :param log_path: is the path for the output logging file
     :return:
     """
-    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(filename)s:%(lineno)d',
                                   datefmt='%d-%m-%y %H:%M:%S')
     # create logger
     logger = logging.getLogger(DEFAULT_LOGGER_NAME)
@@ -79,168 +157,70 @@ def create_logger(log_path):
     return logger
 
 
-def clean_command_exec_logs(var_dir):
-    """
-    Remove files with start timestamp of commands executing
-    :return:
-    """
-    rm_outcome = os.system(f"rm -f {var_dir}command_execstart_*")
-    if rm_outcome != 0:
-        logging.getLogger(DEFAULT_LOGGER_NAME).debug(f"Problem when rm {var_dir}command_execstart_* files")
-
-
-def check_command_list_changes(var_dir, commands):
-    """
-    Return True if the commandFile changed from the
-    last time it was executed. If the file was never executed returns False
-    :return:
-    """
-    cur_file = var_dir + "currentCommandFile"
-    last_file = var_dir + "lastCommandFile"
-    with open(cur_file, "w") as fp:
-        json.dump(commands, fp)
-
-    if not os.path.isfile(last_file):
-        shutil.copyfile(cur_file, last_file)
-        return True
-
-    if filecmp.cmp(cur_file, last_file, shallow=False):
-        return False
-    else:
-        shutil.copyfile(cur_file, last_file)
-        return True
-
-
-def get_command(index, commands):
-    """
-    Get a command from index
-    :param index:
-    :param commands:
-    :return:
-    """
-    try:
-        # if commands[index]["tmDiff"]:
-        timestamp_max_diff = commands[index]["tmDiff"]
-    except (KeyError, IndexError, ValueError, TypeError):
-        timestamp_max_diff = TIMESTAMP_MAX_DIFF_DEFAULT
-    return commands[index]["exec"], timestamp_max_diff
-
-
-def select_command(var_dir, commands, timestamp):
+def select_command(benchmarks_command_file, benchmarks_queue: collections.deque):
     """
     Select the correct command to be executed from the commands
     :return:
     """
     logger = logging.getLogger(DEFAULT_LOGGER_NAME)
-
-    if check_command_list_changes(var_dir=var_dir, commands=commands):
-        clean_command_exec_logs(var_dir=var_dir)
-
-    # Get the index of last existent file
-    i = 0
-    while os.path.isfile(var_dir + f"command_execstart_{i}"):
-        i += 1
-    i -= 1
-
-    # If there is no file, create the first file with current timestamp
-    # and return the first command of commands list
-    if i == -1:
-        os.system(f"echo {int(time.time())} > {var_dir}command_execstart_0")
-        return get_command(index=0, commands=commands)
-
-    # Check if last command executed is still in the defined time window for each command
-    # and return it
-
-    # Read the timestamp file
-    try:
-        with open(f"{var_dir}command_execstart_{i}", 'r') as fp:
-            timestamp = int(float(fp.readline().strip()))
-    except ValueError as eDetail:
-        logger.info("Rebooting, command execstart timestamp read error: " + str(eDetail))
-        sock_connect()
-        os.system("rm -f " + var_dir + "command_execstart_" + str(i))
-        os.system("shutdown -r now")
-        time.sleep(20)
-    # fp = open(varDir+"command_execstart_"+str(i),'r')
-    # timestamp = int(float(fp.readline().strip()))
-    # fp.close()
-
-    now = int(time.time())
-    if (now - timestamp) < TIME_WINDOW_COMMANDS:
-        return get_command(index=i, commands=commands)
-
-    i += 1
-    # If all commands executed their time window, start all over again
-    if i >= len(commands):
-        clean_command_exec_logs(var_dir=var_dir)
-        os.system("echo " + str(int(time.time())) + " > " + var_dir + "command_execstart_0")
-        return get_command(index=0, commands=commands)
-
-    # Finally, select the next command not executed so far
-    os.system(f"echo {int(time.time())} > {var_dir}command_execstart_{i}")
-    return get_command(index=i, commands=commands)
+    # TODO: correct the command selection
+    current_benchmark = benchmarks_queue.pop()
+    benchmarks_queue.appendleft(current_benchmark)
 
 
-def exec_command(command):
-    """
-    Execute command
-    :param command: cmd to execute
-    :return:
-    """
-    logger = logging.getLogger(DEFAULT_LOGGER_NAME)
-    try:
-        if re.match(r".*&\s*$", command):
-            # print "command should be ok"
-            return os.system(command)
-        else:
-            # print "command not ok, inserting &"
-            return os.system(command + " &")
-    except OSError as detail:
-        logger.exception(f"Error launching command '{command}'; error detail: {detail}")
-        return None
-
-
-def killall(commands):
-    logger = logging.getLogger(DEFAULT_LOGGER_NAME)
-    sys_return = 0
-    try:
-        for cmd in commands:
-            sys_return += os.system(cmd["killcmd"])
-        if sys_return != 0:
-            raise ValueError
-    except (KeyError, ValueError, TypeError):
-        logger.debug("Could not issue the kill command for each entry, config file error!")
+    return current_benchmark
 
 
 def read_commands(file_list):
+    """
+    This function reads from the json config file
+    then populate a deque with each benchmark
+    :param file_list:
+    :return:
+    """
     logger = logging.getLogger(DEFAULT_LOGGER_NAME)
-    commands = list()
+    # now it is a Circular Queue of benchmarks
+    benchmarks_queue = collections.deque(maxlen=MAX_BENCHMARK_QUEUE)
+    benchmarks_counter = 0
     if os.path.isfile(file_list):
         with open(file_list, "r") as fp:
-            for f in fp:
-                f = f.strip()
-                if f.startswith("#") or f.startswith("%"):
-                    continue
-                if os.path.isfile(f):
-                    with open(f, "r") as fjson:
-                        data = json.load(fjson)
-                    commands.extend(data)
+            for line in fp:
+                line = line.strip()
+                if not line.startswith("#") and not line.startswith("%") and os.path.isfile(line):
+                    with open(line, "r") as fjson:
+                        benchmarks = json.load(fjson)
+                    for benchmark in benchmarks:
+                        benchmarks_counter += 1
+                        timestamp_max_diff = TIMESTAMP_MAX_DIFF_DEFAULT
+                        if "tmDiff" in benchmark:
+                            timestamp_max_diff = benchmark["tmDiff"]
+                        benchmarks_queue.appendleft(
+                            Benchmark(kill_command=benchmark["killcmd"], execution_command=benchmark["exec"],
+                                      timestamp_max_diff=timestamp_max_diff))
                 else:
-                    logger.error(f"ERROR: File with commands not found - {f} - continuing with other files")
-    return commands
+                    logger.error(f"ERROR: File with commands not found - {line} - continuing with other files")
+    # It must have more than 1 benchmark
+    assert benchmarks_counter >= 1, "ERROR: No commands read, there is nothing to execute"
+    return benchmarks_queue
 
 
-# When SIGUSR1 or SIGUSR2 is received update timestamp
 def receive_signal(signum, stack):
+    """
+    When SIGUSR1 or SIGUSR2 is received update timestamp
+    :param signum:
+    :param stack:
+    :return:
+    """
     global timestamp_signal
     timestamp_signal = int(time.time())
 
 
 def main():
+    """
+    KillTest Main Execution
+    :return: None
+    """
     global timestamp_signal
-    ################################################
-    # KillTest Main Execution
-    ################################################
     # call the routine "receive_sginal" when SIGUSR1 is received
     signal.signal(signal.SIGUSR1, receive_signal)
     # call the routine "receive_sginal" when SIGUSR2 is received
@@ -252,21 +232,16 @@ def main():
     try:
         config = configparser.RawConfigParser()
         config.read(CONF_FILE)
-
-        install_dir = config.get('DEFAULT', 'installdir') + "/"
         var_dir = config.get('DEFAULT', 'vardir') + "/"
         log_dir = config.get('DEFAULT', 'logdir') + "/"
-        tmp_dir = config.get('DEFAULT', 'tmpdir') + "/"
 
         if not os.path.isdir(log_dir):
             os.mkdir(log_dir, 0o777)
             os.chmod(log_dir, 0o777)
-
     except IOError as e:
-        raise IOError("System configuration setup error: " + str(e))
-        # sys.exit(1)
+        raise IOError(f"System configuration setup error: {e}")
 
-    log_file = log_dir + "killtest.log"
+    log_file = f"{log_dir}/{KILL_TEST_LOG}"
 
     # create the logger
     logger = create_logger(log_path=log_file)
@@ -275,61 +250,47 @@ def main():
         logger.debug(f"Usage: {sys.argv[0]} <file with absolute paths of json files>")
         sys.exit(1)
 
-    commands = read_commands(sys.argv[1])
-
-    if len(commands) < 1:
-        raise ValueError("ERROR: No commands read, there is nothing to execute")
-        # sys.exit(1)
-
-    timestamp_max_diff = TIMESTAMP_MAX_DIFF_DEFAULT
-    # Start last kill timestamp with an old enough timestamp
-    last_kill_timestamp = int(time.time()) - 50 * timestamp_max_diff
-    timestamp_signal = int(time.time())
+    benchmarks_command_file = f"{var_dir}/{DEFAULT_QUEUE_FILE}"
+    commands = read_commands(file_list=sys.argv[1])
 
     try:
-        kill_count = 0  # Counts how many kills were executed throughout execution
-        cur_command, timestamp_max_diff = select_command(var_dir=var_dir, commands=commands, timestamp=timestamp_signal)
-        exec_command(cur_command)
+        current_benchmark = select_command(benchmarks_command_file=benchmarks_command_file, benchmarks_queue=commands)
+        current_benchmark.execute_command()
         while True:
             sock_connect()
-
-            # Get the current timestamp
-            now = int(time.time())
-            # timestampDiff = now - timestamp
-            timestamp_diff = now - timestamp_signal
             # If timestamp was not update properly
-            if timestamp_diff > timestamp_max_diff:
+            if current_benchmark.is_timestamp_outdated(timestamp=timestamp_signal):
+                # Kill this benchmark running
+                current_benchmark.kill_this_benchmark()
                 # Check if last kill was in the last 60 seconds and reboot
-                killall(commands=commands)
-                now = int(time.time())
-                if (now - last_kill_timestamp) < 3 * timestamp_max_diff:
+                if current_benchmark.was_the_last_kill_too_recent():
                     logger.info(
-                        f"Rebooting, last kill too recent, timestampDiff: {timestamp_diff}, "
-                        f"current command:{cur_command}")
+                        f"Rebooting, last kill too recent, timestampDiff: {current_benchmark.timestamp_diff}, "
+                        f"current command:{current_benchmark.execution_command}")
                     sock_connect()
-                    os.system("shutdown -r now")
+                    execute_system_command("shutdown -r now")
                     time.sleep(20)
-                else:
-                    last_kill_timestamp = now
 
-                kill_count += 1
-                logger.info("timestampMaxDiff kill(#" + str(kill_count) + "), timestampDiff:" + str(
-                    timestamp_diff) + " command '" + cur_command + "'")
+                logger.info(f"timestampMaxDiff kill(#{current_benchmark.kill_counter}),"
+                            f" timestampDiff:{current_benchmark.timestamp_diff} {current_benchmark.execution_command}")
                 # Reboot if we reach the max number of kills allowed
-                if kill_count >= MAX_KILL:
-                    logger.info("Rebooting, maxKill reached, current command:" + cur_command)
+                if current_benchmark.reach_max_kill():
+                    logger.info(f"Rebooting, maxKill reached, current command:{current_benchmark.execution_command}")
                     sock_connect()
-                    os.system("shutdown -r now")
+                    execute_system_command("shutdown -r now")
                     time.sleep(20)
                 else:
                     # select properly the current command to be executed
-                    cur_command = select_command(var_dir=var_dir, commands=commands, timestamp=timestamp_signal)
-                    exec_command(cur_command)  # start the command
+                    current_benchmark = select_command(benchmarks_command_file=benchmarks_command_file,
+                                                       benchmarks_queue=commands)
+                    # start the benchmark
+                    current_benchmark.execute_command()
 
             time.sleep(1)
     except KeyboardInterrupt:  # Ctrl+c
         logger.debug("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
-        killall(commands=commands)
+        for benchmark in commands:
+            benchmark.kill_this_benchmark()
         # 130 is the key for CTRL + c
         exit(130)
 
