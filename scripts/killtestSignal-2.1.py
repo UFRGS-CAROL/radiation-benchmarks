@@ -227,6 +227,7 @@ def killall(commands):
         logger.debug("Could not issue the kill command for each entry, config file error!")
 
 
+# noinspection PyUnusedLocal
 def receive_signal(signum, stack):
     """
      When SIGUSR1 or SIGUSR2 is received update timestamp
@@ -268,9 +269,9 @@ def main():
     """
     global timestamp_signal
 
-    # call the routine "receive_sginal" when SIGUSR1 is received
+    # call the routine "receive_signal" when SIGUSR1 is received
     signal.signal(signal.SIGUSR1, receive_signal)
-    # call the routine "receive_sginal" when SIGUSR2 is received
+    # call the routine "receive_signal" when SIGUSR2 is received
     signal.signal(signal.SIGUSR2, receive_signal)
 
     if not os.path.isfile(CONF_FILE):
