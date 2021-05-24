@@ -53,7 +53,7 @@ static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 	//write before reset
 	cudaError_t lastError = cudaPeekAtLastError();
 
-	if (error != cudaSuccess || lastError) {
+	if (error != cudaSuccess || lastError != cudaSuccess) {
 		char errorDescription[256];
 		snprintf(errorDescription, 256, "CUDA possible DUE: %s. Error code %d LastError code %d",
 				cudaGetErrorString(error), (int) error, (int) lastError);
