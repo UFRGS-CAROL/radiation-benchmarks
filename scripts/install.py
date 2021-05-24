@@ -88,7 +88,7 @@ mic_log = "/micNfs/carol/logs"
 
 # signal_cmd = "killall -q -USR1 killtestSignal.py;"
 # signal_cmd += " killall -q -USR1 test_killtest_commands_json.py; killall -q -USR1 python"
-signal_cmd = "killall -q -USR1 killtestSignal-2.0.py;"
+signal_cmd = "killall -q -USR1 killtestSignal-2.0.py; killall -q -USR1 killtestSignal*.py;"
 signal_cmd += " killall -q -USR1 test_killtest_commands_json-2.0.py; killall -q -USR1 python3"
 
 config = configparser.ConfigParser()

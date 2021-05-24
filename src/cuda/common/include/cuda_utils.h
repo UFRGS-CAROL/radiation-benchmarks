@@ -39,13 +39,15 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 	end_log_file();
 #endif
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
-	exit (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
-#define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__)
+#define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
 
 /**
  * Check function to not finish the log file and reset the GPU
+ * Return true if there is an error with the GPU and it was reseted
+ * Return false if The GPU is ok and no need to reset
  */
 static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
 	//write before reset
@@ -64,8 +66,9 @@ static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 
 		//if the reset is not successful we need terminate the app
 		checkFrameworkErrors(cudaDeviceReset());
+		return true;
 	}
-	return true;
+	return false;
 }
 
 /**
@@ -84,13 +87,13 @@ static void _checkCublasErrors(cublasStatus_t error, int line, const char *file)
 	end_log_file();
 #endif
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
-	exit (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
-#define checkCublasErrors(error) _checkCublasErrors(error, __LINE__, __FILE__)
+#define checkCublasErrors(error) _checkCublasErrors(error, __LINE__, __FILE__);
 
 // This will output the proper error string when calling cudaGetLastError
-#define checkLastCudaError(msg) _checkLastCudaError (msg, __FILE__, __LINE__)
+#define checkLastCudaError(msg) _checkLastCudaError (msg, __FILE__, __LINE__);
 
 static void _checkLastCudaError(const char *errorMessage, const char *file, const int line) {
 	cudaError_t err = cudaGetLastError();
@@ -104,7 +107,7 @@ static void _checkLastCudaError(const char *errorMessage, const char *file, cons
 		end_log_file();
 #endif
 		cudaDeviceReset();
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 }
 
