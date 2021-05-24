@@ -42,7 +42,7 @@ def execute_system_command(command):
     :return:
     """
     sys_return = os.system(command)  # if "shutdown" not in command else 1
-    # TODO: improve the way of checking the output of the system commands
+    # TODO: improve the checking of the system commands' outputs
     return sys_return
 
 
