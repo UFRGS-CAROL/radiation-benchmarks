@@ -26,9 +26,6 @@ TIME_WINDOW_COMMANDS = 3600
 CONF_FILE = '/etc/radiation-benchmarks.conf'
 # logger name
 DEFAULT_LOGGER_NAME = os.path.basename(__file__).upper().replace(".PY", "")
-# Default amount of benchmarks for each json config file
-# 24h  * week of experiments
-MAX_BENCHMARK_QUEUE = 24 * 7
 # Default file to store the Queue
 DEFAULT_QUEUE_FILE = "commandExecutionStart"
 # Kill test log
