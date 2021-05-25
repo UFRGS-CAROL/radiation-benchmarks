@@ -24,6 +24,9 @@ MAX_KILL = 5
 TIME_WINDOW_COMMANDS = 3600
 # Config file
 CONF_FILE = '/etc/radiation-benchmarks.conf'
+"""
+Parameters related to the script directly
+"""
 # logger name
 DEFAULT_LOGGER_NAME = os.path.basename(__file__).upper().replace(".PY", "")
 # Default file to store the Queue
