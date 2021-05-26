@@ -1,9 +1,7 @@
-GPU=1
 DEBUG=0
 #for radiation setup
 LOGS=1
 OMP=1
-
 ALPHA=1.0
 BETA=0.0
 SIZE?=4096
@@ -40,20 +38,17 @@ endif
 VPATH=./src/
 TARGET=gemm
 OBJDIR=./obj/
-
 CXX=g++
-
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-O3
-LDFLAGS= 
-COMMON= 
+LDFLAGS=  -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
+COMMON= --std=c++11
 CFLAGS= -Wall -Wfatal-errors
 
 RAD_DIR=/home/carol/radiation-benchmarks
 
-INCLUDE=-I$(CUDAPATH)/include -I../common
-
+INCLUDE=-I$(CUDAPATH)/include -I../common  -I$(CUDAPATH)/include/
 
 ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
@@ -72,23 +67,9 @@ ifeq ($(BUILDRELATIVEERROR), 1)
 NVCCFLAGS+= -DBUILDRELATIVEERROR=1
 endif
 
-CFLAGS+=$(OPTS)
-STDVERSION=--std=c++11
-
-COMMON+= $(STDVERSION)
-
-ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I$(CUDAPATH)/include/
-CFLAGS+= -DGPU
-LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
-endif
-
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
 endif
-
-
-OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
@@ -96,6 +77,10 @@ NVCCFLAGS+= -DLOGS
 CFLAGS+= -DLOGS
 LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
 endif
+
+
+OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
+CFLAGS+=$(OPTS)
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
