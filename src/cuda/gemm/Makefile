@@ -16,7 +16,7 @@ CHECKBLOCK=1
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
 
 # NVCC optmizations flags
-NVCCOPTFLAGS?=
+NVCCOPTFLAGS=
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler
@@ -69,6 +69,7 @@ endif
 
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
+NVCCFLAGS+= -Xcompiler -fopenmp
 endif
 
 ifeq ($(LOGS), 1)
