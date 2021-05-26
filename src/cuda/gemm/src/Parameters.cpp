@@ -80,7 +80,7 @@ Parameters::Parameters(int argc, char** argv) :
 
 	// Info for compiler test
 	test_info += get_multi_compiler_header();
-	std::string app = "gemm_tensor_cores_" + this->precision;
+	std::string app = "gemm" + this->precision;
 	this->log = std::make_shared<rad::Log>(app, test_info);
 }
 
