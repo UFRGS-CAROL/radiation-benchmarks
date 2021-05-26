@@ -69,7 +69,7 @@ endif
 
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
-NVCCFLAGS+= -Xcompiler -fopenmp
+NVCCFLAGS+= -Xcompiler "-DOMP -fopenmp"
 endif
 
 ifeq ($(LOGS), 1)
