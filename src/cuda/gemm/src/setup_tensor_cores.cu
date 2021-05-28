@@ -9,7 +9,7 @@
 
 extern void show_iteration_status(int it, bool verbose, double copy_time,
 		double comparing_time, double computation_time,
-		std::pair<int, int> errors);
+		std::pair<int, int> errors, bool DUE_status);
 
 template<typename half_t, typename real_t>
 void setup_execute(Parameters& parameters,
@@ -74,9 +74,10 @@ void setup_execute(Parameters& parameters,
 				d_vector_device, d_vector_half_t_device,
 				real_t(parameters.alpha), real_t(parameters.beta),
 				parameters.size_matrices, parameters.size_matrices, threshold);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//		;
+//		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		bool DUE_status = rad::checkFrameworkErrorsAndReset(cudaDeviceSynchronize());
 
 		//end iteration
 		parameters.end_iteration();
@@ -99,10 +100,10 @@ void setup_execute(Parameters& parameters,
 			comparing_time = rad::mysecond() - comparing_time;
 
 			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
-					computation_time, errors);
+					computation_time, errors, DUE_status);
 
 			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0) {
+			if (errors.first != 0 || errors.second != 0 || DUE_status != false) {
 				read_abc_files(parameters.a_input_path, a_vector_host,
 						parameters.b_input_path, b_vector_host,
 						parameters.c_input_path, c_vector_host);

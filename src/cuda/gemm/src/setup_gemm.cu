@@ -6,7 +6,7 @@
 #include "GemmCaller.h"
 
 extern void show_iteration_status(int it, bool verbose, double copy_time, double comparing_time,
-		double computation_time, std::pair<int, int> errors);
+		double computation_time, std::pair<int, int> errors, bool DUE_status);
 
 std::string get_multi_compiler_header() {
 	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
@@ -68,7 +68,7 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 //		rad::checkFrameworkErrors(cudaPeekAtLastError());
 //		;
 		//new DUE setup
-		bool due_status = rad::checkFrameworkErrorsAndReset(cudaDeviceSynchronize());
+		bool DUE_status = rad::checkFrameworkErrorsAndReset(cudaDeviceSynchronize());
 
 		parameters.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
@@ -90,10 +90,10 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 			comparing_time = rad::mysecond() - comparing_time;
 
 			show_iteration_status(it, parameters.verbose, copy_time, comparing_time,
-					computation_time, errors);
+					computation_time, errors, DUE_status);
 
 			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0 || due_status != false) {
+			if (errors.first != 0 || errors.second != 0 || DUE_status != false) {
 				read_abc_files(parameters.a_input_path, a_vector_host, parameters.b_input_path,
 						b_vector_host, parameters.c_input_path, c_vector_host);
 				read_gold(parameters.gold_inout_path, gold_host);
