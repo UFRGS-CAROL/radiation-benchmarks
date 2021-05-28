@@ -114,7 +114,12 @@ class RebootMachine(threading.Thread):
         cmd += '-o /dev/null '
         self.__reboot_status = self.__execute_command(cmd)
 
-    def get_reboot_status(self):
+    @property
+    def reboot_status(self):
+        """
+        Get the reboot status
+        :return:
+        """
         return self.__reboot_status
 
     @staticmethod
@@ -144,4 +149,4 @@ if __name__ == '__main__':
     reboot.join()
     # reboot.off()
 
-    print(f"Reboot status {reboot.get_reboot_status()}")
+    print(f"Reboot status {reboot.reboot_status}")

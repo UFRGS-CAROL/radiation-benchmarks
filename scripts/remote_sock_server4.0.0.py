@@ -107,8 +107,8 @@ def main():
                 # Set new timestamp, only if machine is in the list
                 if address in machines_hash:
                     timestamp = time.time()
-                    machines_hash[address].set_timestamp(timestamp=timestamp)
-                    logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
+                    machines_hash[address].update_machine_timestamp(timestamp=timestamp)
+                    logger.debug(f"\tConnection from {address} machine {machines_hash[address].hostname}")
 
                 # Close the connection
                 client_socket.close()

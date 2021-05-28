@@ -163,7 +163,7 @@ class Machine(threading.Thread):
                                       logger_name=self.__logger_name)
         reboot_thread.start()
         reboot_thread.join()
-        self.__reboot_status = reboot_thread.get_reboot_status()
+        self.__reboot_status = reboot_thread.reboot_status
 
         return last_reboot_timestamp
 
@@ -180,9 +180,9 @@ class Machine(threading.Thread):
                                       logger_name=self.__logger_name)
         self.__log(ErrorCodes.TURN_ON)
         reboot_thread.on()
-        self.__reboot_status = reboot_thread.get_reboot_status()
+        self.__reboot_status = reboot_thread.reboot_status
 
-    def set_timestamp(self, timestamp):
+    def update_machine_timestamp(self, timestamp):
         """
         Set the timestamp for the connection machine
         :param timestamp: current timestamp for this board
@@ -199,7 +199,8 @@ class Machine(threading.Thread):
         self.__stop_event.set()
         super(Machine, self).join(*args, **kwargs)
 
-    def get_hostname(self):
+    @property
+    def hostname(self):
         """
         Return hostname
         :return: hostname str
@@ -236,7 +237,7 @@ if __name__ == '__main__':
     )
 
     print("EXECUTING THE MACHINE")
-    machine.set_timestamp(time.time())
+    machine.update_machine_timestamp(time.time())
 
     machine.start()
 
