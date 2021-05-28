@@ -75,7 +75,7 @@ def config(device, compiler, flag, debug):
             cuda_path = f"/usr/local/cuda-{cuda_version}"
 
             input_file = data_path
-            input_distances = f"{input_file}/'lava_distances_{arith_type}_{size[0]}_{cuda_version}_{flags_parsed}"
+            input_distances = f"{input_file}/lava_distances_{arith_type}_{size[0]}_{cuda_version}_{flags_parsed}"
             input_charges = f"{input_file}/lava_charges_{arith_type}_{size[0]}_{cuda_version}_{flags_parsed}"
             output_gold = f"{input_file}/lava_gold_{arith_type}_{size[0]}_{cuda_version}_{flags_parsed}"
             execute_cmd = f'sudo env LD_LIBRARY_PATH={cuda_path}/' + 'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} '
