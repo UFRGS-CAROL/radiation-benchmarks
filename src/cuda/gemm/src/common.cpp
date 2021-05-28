@@ -9,7 +9,7 @@ void exception(std::string msg, std::string file, int line) {
 
 void show_iteration_status(int it, bool verbose, double copy_time,
 		double comparing_time, double computation_time,
-		std::pair<int, int> errors, bool DUE_status) {
+		std::pair<int, int> errors) {
 	if (verbose) {
 		auto wasted_time = copy_time + comparing_time;
 		auto full_time = wasted_time + computation_time;
@@ -20,7 +20,6 @@ void show_iteration_status(int it, bool verbose, double copy_time,
 				<< "Time spent on copying: " << copy_time << "s. " << std::endl;
 		std::cout << "Wasted time " << wasted_time << " ("
 				<< int((wasted_time / full_time) * 100.0f) << "%)" << std::endl;
-		std::cout << "Was the GPU in a Device Unrecoverable Error status: " << DUE_status << std::endl;
 	} else {
 //				std::cout << "Iteration: " << it << " DMR errors "
 //						<< errors.first << ". " << "Radiation errors: "
