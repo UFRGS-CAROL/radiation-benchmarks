@@ -371,9 +371,9 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
-		bool check_DUE_status = false;
+		bool DUE_status = false;
 		for (auto i = 0; i < streams.size(); i++) {
-			check_DUE_status = check_DUE_status || streams[i].sync();
+			DUE_status = DUE_status || streams[i].sync();
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
@@ -409,7 +409,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 				reload_flag = reload_flag || error;
 			}
 
-			if (reload_flag || check_DUE_status != false) {
+			if (reload_flag || DUE_status != false) {
 				readInput(dim_cpu, parameters.input_distances, rv_cpu,
 						parameters.input_charges, qv_cpu,
 						parameters.fault_injection);
@@ -451,6 +451,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 			std::cout << "Iteration time: " << iteration_time << "s ("
 					<< (kernel_time / iteration_time) * 100.0 << "% of Device)"
 					<< std::endl;
+			std::cout << "Was the GPU in a Device Unrecoverable Error status: " << DUE_status << std::endl;
 
 			std::cout << "===================================" << std::endl;
 		} else {
