@@ -19,6 +19,8 @@ void setup_gemm_tensor_cores_dmr(Parameters&);
  */
 
 int main(int argc, char** argv) {
+	std::cout << std::boolalpha;
+
 	Parameters parameters(argc, argv);
 	if (parameters.verbose)
 		std::cout << parameters << std::endl;

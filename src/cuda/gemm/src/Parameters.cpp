@@ -85,7 +85,6 @@ Parameters::Parameters(int argc, char** argv) :
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {
-	os << std::boolalpha;
 	os << "Generate: " << parameter.generate << std::endl;
 	os << "A input path: " << parameter.a_input_path << std::endl;
 	os << "B input path: " << parameter.b_input_path << std::endl;

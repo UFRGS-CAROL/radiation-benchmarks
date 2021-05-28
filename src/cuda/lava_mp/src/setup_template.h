@@ -312,7 +312,6 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 	//	STREAMS
 	//=====================================================================
 	std::vector<CudaStream> streams(parameters.nstreams);
-
 	//=====================================================================
 	//	VECTORS
 	//=====================================================================
@@ -369,12 +368,13 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 					d_rv_gpu[stream_idx].data(), d_qv_gpu[stream_idx].data(),
 					d_fv_gpu[stream_idx].data(), stream_idx);
 
-			rad::checkFrameworkErrors (cudaGetLastError());;
+			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
-		for (auto& st : streams) {
-			st.sync();
-			rad::checkFrameworkErrors (cudaGetLastError());;
+		bool check_DUE_status = false;
+		for (auto i = 0; i < streams.size(); i++) {
+			check_DUE_status = check_DUE_status || streams[i].sync();
+			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
 		log.end_iteration();
@@ -396,7 +396,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		} else {
 			timestamp = rad::mysecond();
 
-			bool reloadFlag = false;
+			bool reload_flag = false;
 #pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
 			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
 					stream_idx++) {
@@ -406,10 +406,10 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 						fv_cpu_GOLD, log);
 
 #pragma omp atomic
-				reloadFlag = reloadFlag || error;
+				reload_flag = reload_flag || error;
 			}
 
-			if (reloadFlag) {
+			if (reload_flag || check_DUE_status != false) {
 				readInput(dim_cpu, parameters.input_distances, rv_cpu,
 						parameters.input_charges, qv_cpu,
 						parameters.fault_injection);
