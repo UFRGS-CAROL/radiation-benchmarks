@@ -10,7 +10,7 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 # Size and streams
-SIZES = [[23, 2]]
+SIZES = [[16, 2]]
 REDUNDANCY = ["none"]
 PRECISIONS = ["float"]
 ITERATIONS = int(1e9)
@@ -65,7 +65,6 @@ def config(device, compiler, flag, debug):
     generate = [
         "sudo mkdir -p " + bin_path,
         "cd " + src_benchmark,
-        "make clean",
         "make -C ../../include ",
         f"sudo rm -f {data_path}/*{cuda_version}*{flags_parsed}*",
     ]
@@ -81,9 +80,9 @@ def config(device, compiler, flag, debug):
             output_gold = f"{input_file}/lava_gold_{arith_type}_{size[0]}_{cuda_version}_{flags_parsed}"
             execute_cmd = f'sudo env LD_LIBRARY_PATH={cuda_path}/' + 'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} '
             gen = [
-                [execute_cmd, f"{bin_path}/{new_binary} "],
-                ['-boxes {}'.format(size[0])],
-                ['-streams {}'.format(size[1])],
+                [execute_cmd, new_binary],
+                [f'-boxes {size[0]}'],
+                [f'-streams {size[1]}'],
                 [f'-input_distances {input_distances}'],
                 [f'-input_charges {input_charges}'],
                 [f'-output_gold {output_gold}'],
