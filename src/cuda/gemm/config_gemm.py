@@ -3,6 +3,7 @@
 import configparser
 import copy
 import os
+import re
 import sys
 
 sys.path.append("../../include")
@@ -18,19 +19,18 @@ USE_CUBLAS = [False]
 MEMTMR = False
 
 COMPILER_VERSION = [
-    ("10.1", "g++"),
-    ("7.0", "g++-4.8")
+    ("10.2", "g++"),
+    ("11.3", "g++")
 ]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
     '--maxrregcount=16',
-
-    # Enable (disable) to allow compiler to perform expensive optimizations
-    # using maximum available resources (memory and compile-time).
-    # '"-Xptxas --allow-expensive-optimizations=false"',
-
-    # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
+    '"-Xptxas -O0 -Xcompiler -O0"',
+    '"-Xptxas -O1 -Xcompiler -O1"',
+    # Baseline
+    '"-Xptxas -O3 -Xcompiler -O3"',
+    # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
     "--use_fast_math",
 )
 
@@ -39,7 +39,7 @@ def config(device, compiler, debug, flag):
     benchmark_bin = "gemm"
     cuda_version = compiler[0]
     cxx_version = compiler[1]
-    flags_parsed = flag.replace("-", "").replace("=", "")
+    flags_parsed = re.sub("-*=*[ ]*\"*", "", flag)
 
     new_bench_bin = f"{benchmark_bin}_{cuda_version}_{flags_parsed}"
     print(f"Generating {benchmark_bin} for CUDA, board:{device}")
@@ -76,7 +76,7 @@ def config(device, compiler, debug, flag):
                 for cublas in USE_CUBLAS:
                     new_binary = f"{bin_path}/{new_bench_bin}"
                     cuda_path = f"/usr/local/cuda-{cuda_version}"
-                    default_path = f'size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}'
+                    default_path = f'size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}_'
                     default_path += f'precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
                     gen = [
                         [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
@@ -113,7 +113,7 @@ def config(device, compiler, debug, flag):
     execute_and_write_json_to_file(execute, generate, install_dir, new_bench_bin, debug=debug)
 
 
-if __name__ == "__main__":
+def main():
     debug_mode = False
     try:
         parameter = str(sys.argv[-1]).upper()
@@ -122,8 +122,11 @@ if __name__ == "__main__":
             debug_mode = True
     except IndexError:
         debug_mode = False
-
     board, _ = discover_board()
     for compiler in COMPILER_VERSION:
         for flag in COMPILER_FLAGS:
             config(device=board, compiler=compiler, debug=debug_mode, flag=flag)
+
+
+if __name__ == "__main__":
+    main()
