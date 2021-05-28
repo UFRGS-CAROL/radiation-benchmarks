@@ -31,8 +31,8 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 	if (error == cudaSuccess) {
 		return;
 	}
-	char errorDescription[250];
-	snprintf(errorDescription, 250, "CUDA Framework error: %s. Bailing.",
+	char errorDescription[256];
+	snprintf(errorDescription, 256, "CUDA Framework error: %s. Bailing.",
 			cudaGetErrorString(error));
 #ifdef LOGS
 	log_error_detail((char *)errorDescription);
@@ -49,9 +49,9 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
  * Return true if there is an error with the GPU and it was reseted
  * Return false if The GPU is ok and no need to reset
  */
-static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
+static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file, bool resetGPU) {
 	//write before reset
-	cudaError_t lastError = cudaPeekAtLastError();
+	cudaError_t lastError = cudaGetLastError();
 
 	if (error != cudaSuccess || lastError != cudaSuccess) {
 		char errorDescription[256];
@@ -65,16 +65,18 @@ static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 #endif
 
 		//if the reset is not successful we need terminate the app
-		checkFrameworkErrors(cudaDeviceReset());
-		return true;
+		if (resetGPU){
+			checkFrameworkErrors(cudaDeviceReset());
+		}
 	}
-	return false;
 }
 
 /**
  * Don't worry, it is a macro that returns the status
  */
-#define checkFrameworkErrorsAndReset(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
+#define checkFrameworkErrorsAndResetGPU(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__, true);
+#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__, false);
+
 
 static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {
