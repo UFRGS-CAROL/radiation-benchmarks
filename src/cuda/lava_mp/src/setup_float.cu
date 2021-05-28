@@ -15,6 +15,8 @@
 #include "Parameters.h"
 #include "include/generic_log.h"
 
+#include "include/multi_compiler_analysis.h"
+
 /**
  * Define the threshold to use on
  * the comparison method
@@ -38,6 +40,12 @@
 //4e-03
 #define THRESHOLD_MAX 4194304
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
+
+std::string get_multi_compiler_header() {
+	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
+	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
+	return test_info;
+}
 
 void setup_float(Parameters& parameters, rad::Log& log) {
 	if (parameters.redundancy == NONE) {
