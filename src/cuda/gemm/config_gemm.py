@@ -11,7 +11,7 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 ALPHA = 1.0
 BETA = 0.0
-SIZES = [8192]
+SIZES = [4096]
 PRECISIONS = ["float"]  # , "half"]
 ITERATIONS = 10000000
 USE_TENSOR_CORES = [False]
