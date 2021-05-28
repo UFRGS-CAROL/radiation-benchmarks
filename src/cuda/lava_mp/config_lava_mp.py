@@ -94,9 +94,9 @@ def config(device, compiler, flag, debug):
             ]
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
-            gen.append(['--generate'])
+            gen.append(['-generate'])
             # gen.append(['--check_input_existence'])
-            gen.append(['--verbose'])
+            gen.append(['-verbose'])
             variable_gen = ["make clean",
                             f"make -j 4 LOGS=1 NVCCOPTFLAGS={flag} CXX={cxx_version} CUDAPATH={cuda_path}",
                             f"sudo rm -f {new_binary}",
