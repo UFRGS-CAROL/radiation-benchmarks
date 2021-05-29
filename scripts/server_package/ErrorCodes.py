@@ -20,3 +20,10 @@ class ErrorCodes(Enum):
     HTTP_ERROR = 8
     CONNECTION_ERROR = 9
     TIMEOUT_ERROR = 10
+
+    def __str__(self):
+        """
+        Override the str method
+        :return:
+        """
+        return self.name

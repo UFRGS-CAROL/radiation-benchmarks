@@ -134,7 +134,7 @@ class Machine(threading.Thread):
             reboot_msg = f"Waiting {self.__boot_problem_max_delta}s due boot problem IP:{self.__ip} "
             reboot_msg += f"HOSTNAME:{self.__hostname}"
         elif kind == ErrorCodes.WAITING_FOR_POSSIBLE_BOOT:
-            reboot_msg = f"Waiting for a possible boot in the future from  IP:{self.__ip} HOSTNAME:{self.__hostname}"
+            reboot_msg = f"Waiting for a possible boot in the future from IP:{self.__ip} HOSTNAME:{self.__hostname}"
             logger_function = self.__logger.debug
         elif kind == ErrorCodes.BOOT_PROBLEM:
             reboot_msg = f"Boot Problem IP:{self.__ip} HOSTNAME:{self.__hostname}. "
