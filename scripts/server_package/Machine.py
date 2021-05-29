@@ -16,13 +16,6 @@ class Machine(threading.Thread):
     __TIME_MIN_REBOOT_THRESHOLD = 3
     __TIME_MAX_REBOOT_THRESHOLD = 10
 
-    """
-    DO NOT SET this parameter to a high value
-    it is the maximum HARD REBOOT sequentially executed
-    """
-
-    # __MAX_SEQUENTIAL_REBOOT_ALLOWED = 10
-
     def __init__(self, *args, **kwargs):
         """
         Initialize a new thread that represents a setup machine
@@ -64,17 +57,13 @@ class Machine(threading.Thread):
         # lower and upper threshold for reboot interval
         lower_threshold = self.__TIME_MIN_REBOOT_THRESHOLD * self.__diff_reboot
         upper_threshold = self.__TIME_MAX_REBOOT_THRESHOLD * self.__diff_reboot
-
         # mandatory: It must start the machine on
         self.__turn_machine_on()
         # Last reboot timestamp. It makes sense set it to now,
         # since the first thing performed is the machine on
         last_reboot_timestamp = time.time()
-
         # boot problem disable
         boot_problem_disable = False
-        # Count sequential reboot after last_conn_delta > upper_threshold
-        # sequential_reboot_counter = 0
 
         while not self.__stop_event.isSet():
             # Check if machine is working fine
@@ -96,22 +85,11 @@ class Machine(threading.Thread):
                     self.__log(ErrorCodes.BOOT_PROBLEM)
                     # Disable only when upper threshold is reached
                     boot_problem_disable = True
-
-                    # Old approach, does not seem to work
-                    # last_reboot_timestamp = self.__reboot_this_machine()
-                    # self.__log(ErrorCodes.REBOOTING)
-                    # sequential_reboot_counter += 1
-                    #
-                    # # Check if it is ok to reboot, otherwise wait
-                    # if sequential_reboot_counter > self.__MAX_SEQUENTIAL_REBOOT_ALLOWED:
-                    #     sequential_reboot_counter = 0
-                    #     boot_problem_disable = True
-                    #     self.__log(ErrorCodes.MAX_SEQ_REBOOT_REACHED)
             else:
                 self.__log(ErrorCodes.WAITING_BOOT_PROBLEM)
-                self.__stop_event.wait(self.__boot_problem_max_delta)  # instead of sleeping
+                # instead of sleeping
+                self.__stop_event.wait(self.__boot_problem_max_delta)
                 boot_problem_disable = False
-
             # sleep before re-check again
             self.__stop_event.wait(self.__sleep_time)
 
