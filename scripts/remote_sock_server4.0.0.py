@@ -108,7 +108,7 @@ def main():
                 if address in machines_hash:
                     timestamp = time.time()
                     machines_hash[address].update_machine_timestamp(timestamp=timestamp)
-                    logger.debug(f"\tConnection from {address} machine {machines_hash[address].hostname}")
+                    logger.debug(f"Connection from {address} machine {machines_hash[address].hostname}")
 
                 # Close the connection
                 client_socket.close()
