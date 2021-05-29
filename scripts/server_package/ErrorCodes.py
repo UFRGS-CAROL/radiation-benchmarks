@@ -8,14 +8,15 @@ class ErrorCodes(Enum):
     SUCCESS = 0
 
     # Codes for Machine class
-    WAITING = 1
+    WAITING_BOOT_PROBLEM = 1
     REBOOTING = 2
     BOOT_PROBLEM = 3
-    MAX_SEQ_REBOOT_REACHED = 4
-    TURN_ON = 5
+    WAITING_FOR_POSSIBLE_BOOT = 4
+    MAX_SEQ_REBOOT_REACHED = 5
+    TURN_ON = 6
 
     # Codes for RebootMachine
-    GENERAL_ERROR = 6
-    HTTP_ERROR = 7
-    CONNECTION_ERROR = 8
-    TIMEOUT_ERROR = 9
+    GENERAL_ERROR = 7
+    HTTP_ERROR = 8
+    CONNECTION_ERROR = 9
+    TIMEOUT_ERROR = 10

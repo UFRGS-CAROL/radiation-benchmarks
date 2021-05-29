@@ -24,7 +24,7 @@ class RebootMachine(threading.Thread):
         self.__rebooting_sleep = rebooting_sleep
 
     def run(self):
-        self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
+        self.__logger.info(f"Rebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
         self.off()
         time.sleep(self.__rebooting_sleep)
@@ -100,7 +100,7 @@ class RebootMachine(threading.Thread):
         :param err:
         :return:
         """
-        self.__logger.error(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
+        self.__logger.error(f"Could not change Lindy IP switch status, portNumber: {self.__switch_port} "
                             f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
 
     def __common_switch_command(self, status):
