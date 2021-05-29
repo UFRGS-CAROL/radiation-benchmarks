@@ -90,7 +90,7 @@ def main():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             # Bind the socket to a public host, and a well-known port
             server_socket.bind((SERVER_IP, SOCKET_PORT))
-            logger.info(f"\tServer bind to: {SERVER_IP}")
+            logger.info(f"Server bind to: {SERVER_IP}")
 
             # Initialize a list that contains all Machines
             machines_hash = generate_machine_hash(messages_queue)
