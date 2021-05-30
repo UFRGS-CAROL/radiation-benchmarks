@@ -57,9 +57,9 @@ endif
 
 NVCCFLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
-PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
 NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
