@@ -23,7 +23,7 @@ NVCC=$(CUDAPATH)/bin/nvcc
 NVCCFLAGS= -std=c++11 -Xptxas -v
 
 # Kepler, Volta
-SMS= 35 70
+SMS= 35 53 70
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 
