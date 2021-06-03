@@ -93,7 +93,7 @@ class CopyLogs(threading.Thread):
 
         except (paramiko.BadHostKeyException, paramiko.AuthenticationException,
                 paramiko.SSHException, socket.error, paramiko.ChannelException,
-                scp.SCPException, paramiko.ssh_exception) as ex:
+                scp.SCPException, paramiko.ssh_exception.NoValidConnectionsError) as ex:
             self.__logger.error(f"Could not download logs from {ip}. Exception {ex}")
 
     def join(self, *args, **kwargs):
