@@ -103,11 +103,12 @@ class Machine(threading.Thread):
         logger_function = self.__logger.info
         if kind == ErrorCodes.REBOOTING:
             if self.__reboot_status == ErrorCodes.SUCCESS:
-                reboot_msg = f"Rebooted IP:{self.__ip} HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
+                reboot_msg = f"Rebooted IP:{self.__ip}"
             else:
-                reboot_msg = f"Reboot failed for IP:{self.__ip} "
-                reboot_msg += f" HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
+                reboot_msg = f"Reboot failed for IP:{self.__ip}"
                 logger_function = self.__logger.error
+            reboot_msg += f" HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
+            reboot_msg += f" PORT_NUMBER: {self.__switch_port} SWITCH_IP: {self.__switch_ip}"
         elif kind == ErrorCodes.WAITING_BOOT_PROBLEM:
             reboot_msg = f"Waiting {self.__boot_problem_max_delta}s due boot problem IP:{self.__ip} "
             reboot_msg += f"HOSTNAME:{self.__hostname}"
