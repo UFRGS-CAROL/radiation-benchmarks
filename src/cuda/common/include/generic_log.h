@@ -122,6 +122,7 @@ struct Log {
 	void update_errors() {
 		this->_was_error_updated = true;
 		if (this->_error != 0) {
+			this->_error = (this->_error < this->_max_errors_per_iteration) ? this->_error : this->_max_errors_per_iteration - 1;
 #ifdef LOGS
 			::log_error_count(this->_error);
 #endif
@@ -130,7 +131,9 @@ struct Log {
 
 	void update_infos() {
 		this->_was_info_updated = true;
-		if (this->_info != 0) {
+		if (this->_info != 0 && this->_info < this->_max_infos_per_iteration) {
+			this->_info = (this->_info < this->_max_infos_per_iteration) ? this->_info : this->_max_infos_per_iteration - 1;
+
 #ifdef LOGS
 			::log_info_count(this->_info);
 #endif
@@ -184,8 +187,8 @@ private:
 	bool _was_info_updated = false;
 
 	//Max errors and info lines per iteration
-	uint64_t _max_errors_per_iteration;
-	uint64_t _max_infos_per_iteration;
+	const uint64_t _max_errors_per_iteration;
+	const uint64_t _max_infos_per_iteration;
 
 #ifdef LOGS
 #ifdef BUILDPROFILER
