@@ -34,7 +34,7 @@
 
 // STABLE
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
-#define MAX_LOGGED_ERRORS_PER_STREAM 100
+#define MAX_LOGGED_ERRORS_PER_STREAM 500
 
 //Subtraction considering the signal
 #define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
