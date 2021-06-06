@@ -122,7 +122,9 @@ struct Log {
 	void update_errors() {
 		this->_was_error_updated = true;
 		if (this->_error != 0) {
-			this->_error = (this->_error < this->_max_errors_per_iteration) ? this->_error : this->_max_errors_per_iteration - 1;
+			this->_error =
+					(this->_error < this->_max_errors_per_iteration) ?
+							this->_error : this->_max_errors_per_iteration - 1;
 #ifdef LOGS
 			::log_error_count(this->_error);
 #endif
@@ -132,7 +134,9 @@ struct Log {
 	void update_infos() {
 		this->_was_info_updated = true;
 		if (this->_info != 0 && this->_info < this->_max_infos_per_iteration) {
-			this->_info = (this->_info < this->_max_infos_per_iteration) ? this->_info : this->_max_infos_per_iteration - 1;
+			this->_info =
+					(this->_info < this->_max_infos_per_iteration) ?
+							this->_info : this->_max_infos_per_iteration - 1;
 
 #ifdef LOGS
 			::log_info_count(this->_info);
@@ -149,7 +153,9 @@ struct Log {
 		os << "Error: " << d._error << std::endl;
 		os << "Info: " << d._info << std::endl;
 		os << "Test info: " << d._test_info << std::endl;
-		os << "Test name: " << d._test_name;
+		os << "Test name: " << d._test_name << std::endl;
+		os << "Max errors per iteration: " << d._max_errors_per_iteration << std::endl;
+		os << "Max infos per iteration: " << d._max_infos_per_iteration;
 		return os;
 	}
 
