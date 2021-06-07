@@ -77,7 +77,7 @@ void setup_execute(Parameters& parameters,
 //		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 //		;
 //		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		bool is_memory_reload_needed = rad::checkFrameworkErrorsAndResetGPU(cudaDeviceSynchronize());
+		rad::checkFrameworkErrorsAndResetErrorStatus(cudaDeviceSynchronize());
 
 		//end iteration
 		parameters.end_iteration();
@@ -103,7 +103,7 @@ void setup_execute(Parameters& parameters,
 					computation_time, errors);
 
 			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0 || is_memory_reload_needed == true) {
+			if (errors.first != 0 || errors.second != 0) {
 				read_abc_files(parameters.a_input_path, a_vector_host,
 						parameters.b_input_path, b_vector_host,
 						parameters.c_input_path, c_vector_host);
