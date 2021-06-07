@@ -87,8 +87,9 @@ log_dir = var_dir + "/log"
 mic_log = "/micNfs/carol/logs"
 
 # Each update demands addition here
-signal_cmd = "killall -q -USR1 killtestSignal.py; killall -q -USR1 killtestSignal-2.1.py;"
-signal_cmd += " killall -q -USR1 test_killtest_commands_json.py; killall -q -USR1 python3"
+kill_test_version = "-2.0"
+signal_cmd = f"killall -q -USR1 killtestSignal{kill_test_version}.py;"
+signal_cmd += f" killall -q -USR1 test_killtest_commands_json{kill_test_version}.py; killall -q -USR1 python3"
 
 config = configparser.ConfigParser()
 

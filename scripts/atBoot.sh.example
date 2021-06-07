@@ -5,7 +5,7 @@ NUMBEROFPROCESSORS=7
 HOMEDIR=/home/carol
 RADDIR=${HOMEDIR}/radiation-benchmarks
 
-#sudo nvidia-smi -i 0 -pm ENABLED
+sudo nvidia-smi -i 0 -pm ENABLED
 
 # set mce check interval to short
 for i in $(seq 0 ${NUMBEROFPROCESSORS})
@@ -24,7 +24,12 @@ echo 0 > /sys/module/edac_core/parameters/edac_mc_panic_on_ue
 # NTP date update for a specific server
 sudo ntpdate -u 192.168.1.5 > "${HOMEDIR}"/log_ntpdate.log 2>>"${HOMEDIR}"/log_ntpdate.log
 
+########## TEST HERE #####
+# OLD WAY
 #sudo "${RADDIR}"/scripts/killtestSignal-2.0.py "${RADDIR}"/scripts/json_files/json_parameter &
 #sudo "${RADDIR}"/scripts/test_killtest_commands_json-2.0.py "${RADDIR}"/scripts/json_files/json_parameter
+
+# NEW way
+#sudo -u carol screen -d -m -S radiation_setup sudo "${RADDIR}"/scripts/killtestSignal-2.0.py "${RADDIR}"/scripts/json_files/json_parameter
 
 exit 0
