@@ -89,7 +89,6 @@ def config(device, compiler, flag, debug):
                 [f'-iterations {ITERATIONS}'],
                 ['-redundancy none'],
                 [f'-precision {arith_type}'],
-                ['-verbose'],
                 [f'-redundancy none'], ['-opnum 0']
             ]
             # change mode and iterations for exe
