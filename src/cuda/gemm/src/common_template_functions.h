@@ -298,7 +298,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::cout << "#";
 		std::string error_detail;
 		error_detail = "errors: " + std::to_string(host_errors);
-		parameter.log_error(error_detail);
+		//log as info to not count as error detail
+		parameter.log_info(error_detail);
 	}
 	return {dmr_err, host_errors};
 }
