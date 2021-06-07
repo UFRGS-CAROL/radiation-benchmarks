@@ -27,12 +27,14 @@
 namespace rad {
 #endif //C++ compiler defined
 
+#define ERROR_STRING_SIZE 512
+
 static void _checkFrameworkErrors(cudaError_t error, int line, const char *file) {
 	if (error == cudaSuccess) {
 		return;
 	}
-	char errorDescription[256];
-	snprintf(errorDescription, 256, "CUDA Framework error: %s. Bailing.",
+	char errorDescription[ERROR_STRING_SIZE];
+	snprintf(errorDescription, ERROR_STRING_SIZE, "CUDA Framework error: %s. Bailing.",
 			cudaGetErrorString(error));
 #ifdef LOGS
 	log_error_detail((char *)errorDescription);
@@ -45,17 +47,17 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 #define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
 
 /**
- * Check function to not finish the log file and reset the GPU
- * Return true if there is an error with the GPU and it was reseted
- * Return false if The GPU is ok and no need to reset
+	Try first to reset the only the error code, then if it is not possible
+	finish the application. Some stick errors cannot be reset without finishing the app
+	https://stackoverflow.com/questions/56329377/reset-cuda-context-after-exception/56330491#56330491
  */
-static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
+static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
 	//write before reset
 	cudaError_t lastError = cudaGetLastError();
 
 	if (error != cudaSuccess || lastError != cudaSuccess) {
-		char errorDescription[256];
-		snprintf(errorDescription, 256, "CUDA possible DUE: %s. Error code %d LastError code %d",
+		char errorDescription[ERROR_STRING_SIZE];
+		snprintf(errorDescription, ERROR_STRING_SIZE, "CUDA possible DUE: %s. Error code %d LastError code %d",
 				cudaGetErrorString(error), (int) error, (int) lastError);
 		printf("%s - Line: %d at %s\n", errorDescription, line, file);
 
@@ -63,15 +65,9 @@ static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 		log_info_detail((char *)errorDescription);
 		log_info_count(1);
 #endif
-
-		//if the reset is not successful we need terminate the app
-		checkFrameworkErrors(cudaDeviceReset());
-		//we need to chek if the reset is ok, if it is we must reset the memories
-		//cudaGetLastError only does not work, it is necessary to reset the whole GPU
-		//https://stackoverflow.com/questions/43659314/how-to-reset-cuda-error-to-success-with-driver-api
-		return true;
+		//Make sure it is a non stick error
+		_checkFrameworkErrors(cudaDeviceSynchronize(), line, file);
 	}
-	return false;
 }
 
 /**
