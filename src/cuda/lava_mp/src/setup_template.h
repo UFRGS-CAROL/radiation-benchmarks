@@ -371,8 +371,9 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
+		bool is_memory_reload_needed = false;
 		for (auto i = 0; i < streams.size(); i++) {
-			streams[i].sync();
+			is_memory_reload_needed = streams[i].sync() || is_memory_reload_needed;
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
@@ -408,7 +409,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 				reload_flag = reload_flag || error;
 			}
 
-			if (reload_flag) {
+			if (reload_flag || is_memory_reload_needed) {
 				readInput(dim_cpu, parameters.input_distances, rv_cpu,
 						parameters.input_charges, qv_cpu,
 						parameters.fault_injection);

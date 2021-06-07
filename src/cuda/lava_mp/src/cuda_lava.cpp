@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 			+ "_lava";
 	std::cout << "=================================" << std::endl;
 
-	rad::Log log(test_name, test_info, 10, MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
+	rad::Log log(test_name, test_info, LOGGING_ITERATION_INTERVAL, MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
 	std::cout << log << std::endl;
 
 	/**

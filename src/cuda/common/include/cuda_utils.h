@@ -49,7 +49,7 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
  * Return true if there is an error with the GPU and it was reseted
  * Return false if The GPU is ok and no need to reset
  */
-static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file, bool resetGPU) {
+static bool _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
 	//write before reset
 	cudaError_t lastError = cudaGetLastError();
 
@@ -65,18 +65,19 @@ static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 #endif
 
 		//if the reset is not successful we need terminate the app
-		if (resetGPU){
-			checkFrameworkErrors(cudaDeviceReset());
-		}
+		checkFrameworkErrors(cudaDeviceReset());
+		//we need to chek if the reset is ok, if it is we must reset the memories
+		//cudaGetLastError only does not work, it is necessary to reset the whole GPU
+		//https://stackoverflow.com/questions/43659314/how-to-reset-cuda-error-to-success-with-driver-api
+		return true;
 	}
+	return false;
 }
 
 /**
  * Don't worry, it is a macro that returns the status
  */
-#define checkFrameworkErrorsAndResetGPU(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__, true);
-#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__, false);
-
+#define checkFrameworkErrorsAndResetGPU(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
 
 static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {

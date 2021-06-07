@@ -10,6 +10,9 @@
 
 #include <unordered_map>
 
+//define the logging iteration interval
+#define LOGGING_ITERATION_INTERVAL 10
+
 #define __DEVICE_INLINE__ __device__ __forceinline__
 #define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
