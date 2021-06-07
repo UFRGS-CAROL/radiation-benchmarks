@@ -300,7 +300,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		//log as info to not count as error detail
 		parameter.log_info(error_detail);
 	}
-	parameter.update_error_count(host_errors);
+//	parameter.update_error_count(host_errors);
 
 	return {dmr_err, host_errors};
 }

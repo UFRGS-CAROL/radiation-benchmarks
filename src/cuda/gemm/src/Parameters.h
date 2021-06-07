@@ -32,8 +32,8 @@ struct Parameters {
 //	void update_timestamp();
 	void log_error(std::string error_detail);
 	void log_info(std::string info_detail);
-	void update_error_count(long error_count);
-	void update_info_count(long info_count);
+//	void update_error_count(long error_count);
+//	void update_info_count(long info_count);
 
 	bool generate;
 	size_t size_matrices;
