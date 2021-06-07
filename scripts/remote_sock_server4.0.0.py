@@ -37,6 +37,29 @@ def generate_machine_hash(messages_queue):
     return machines_hash
 
 
+def generate_copy_threads():
+    """
+    Start the copy threads
+    :return:
+    """
+    copy_thread_list = list()
+    for mac in MACHINES:
+        if mac["enabled"]:
+            copy_obj = CopyLogs(
+                ip=mac["ip"],
+                password=mac["password"],
+                username=mac["username"],
+                hostname=mac["hostname"],
+                sleep_copy_interval=COPY_LOG_INTERVAL,
+                to_copy_folder=DEFAULT_RADIATION_LOGS_PATH,
+                destination_folder=SERVER_LOG_PATH
+            )
+
+            copy_obj.start()
+            copy_thread_list.append(copy_obj)
+    return copy_thread_list
+
+
 def logging_setup():
     """
     Logging setup
@@ -72,10 +95,7 @@ def main():
     logger = logging_setup()
 
     # copy obj and logging
-    server_logs_path = "logs/"
-    copy_obj = CopyLogs(machines=MACHINES, sleep_copy_interval=COPY_LOG_INTERVAL,
-                        destination_folder=server_logs_path, to_copy_folder="/var/radiation-benchmarks/log/")
-    copy_obj.start()
+    copy_thread_list = generate_copy_threads()
 
     # Queue to print the messages in a good way
     messages_queue = queue.Queue()
@@ -121,8 +141,9 @@ def main():
         if client_socket:
             client_socket.close()
 
-        # Stop copy thread
-        copy_obj.join()
+        # Stop copy threads
+        for copy_thread in copy_thread_list:
+            copy_thread.join()
 
         logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(130)
