@@ -91,25 +91,12 @@ static void _checkCublasErrors(cublasStatus_t error, int line, const char *file)
 
 #define checkCublasErrors(error) _checkCublasErrors(error, __LINE__, __FILE__);
 
-// This will output the proper error string when calling cudaGetLastError
+/*
+ * DEPRECATED
 #define checkLastCudaError(msg) _checkLastCudaError (msg, __FILE__, __LINE__);
-
-static void _checkLastCudaError(const char *errorMessage, const char *file, const int line) {
-	cudaError_t err = cudaGetLastError();
-
-	if (cudaSuccess != err) {
-		char errorDescription[800];
-		sprintf(errorDescription, "%s(%i) : getLastCudaError() CUDA error : %s : (%d) %s.\n", file,
-				line, errorMessage, (int) err, cudaGetErrorString(err));
-#ifdef LOGS
-		log_error_detail((char *)errorDescription);
-		end_log_file();
-#endif
-		cudaDeviceReset();
-		exit(EXIT_FAILURE);
-	}
-}
-
+static void _checkLastCudaError(const char *errorMessage, const char *file, const int line);
+USE THE ABOVE FUNCTIONS INSTEAD
+*/
 static cudaDeviceProp get_device() {
 //================== Retrieve and set the default CUDA device
 	cudaDeviceProp prop = cudaDevicePropDontCare;

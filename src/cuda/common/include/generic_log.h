@@ -119,31 +119,6 @@ struct Log {
 #endif
 	}
 
-	void update_errors() {
-		this->_was_error_updated = true;
-		if (this->_error != 0) {
-			this->_error =
-					(this->_error < this->_max_errors_per_iteration) ?
-							this->_error : this->_max_errors_per_iteration - 1;
-#ifdef LOGS
-			::log_error_count(this->_error);
-#endif
-		}
-	}
-
-	void update_infos() {
-		this->_was_info_updated = true;
-		if (this->_info != 0 && this->_info < this->_max_infos_per_iteration) {
-			this->_info =
-					(this->_info < this->_max_infos_per_iteration) ?
-							this->_info : this->_max_infos_per_iteration - 1;
-
-#ifdef LOGS
-			::log_info_count(this->_info);
-#endif
-		}
-	}
-
 	friend std::ostream &operator<<(std::ostream &os, Log &d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
@@ -195,6 +170,35 @@ private:
 	//Max errors and info lines per iteration
 	const uint64_t _max_errors_per_iteration;
 	const uint64_t _max_infos_per_iteration;
+
+
+	/*
+	 * There is no need for update_errors and update_infos to be public
+	 */
+	void update_errors() {
+		this->_was_error_updated = true;
+		if (this->_error != 0) {
+			this->_error =
+					(this->_error < this->_max_errors_per_iteration) ?
+							this->_error : this->_max_errors_per_iteration - 1;
+#ifdef LOGS
+			::log_error_count(this->_error);
+#endif
+		}
+	}
+
+	void update_infos() {
+		this->_was_info_updated = true;
+		if (this->_info != 0) {
+			this->_info =
+					(this->_info < this->_max_infos_per_iteration) ?
+							this->_info : this->_max_infos_per_iteration - 1;
+
+#ifdef LOGS
+			::log_info_count(this->_info);
+#endif
+		}
+	}
 
 #ifdef LOGS
 #ifdef BUILDPROFILER
