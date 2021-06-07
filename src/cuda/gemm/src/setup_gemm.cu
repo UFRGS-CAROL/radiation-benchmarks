@@ -68,7 +68,7 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 //		rad::checkFrameworkErrors(cudaPeekAtLastError());
 //		;
 		//new DUE setup
-		rad::checkFrameworkErrorsAndResetErrorStatus(cudaDeviceSynchronize());
+		bool is_memory_reload_needed = rad::checkFrameworkErrorsAndResetGPU(cudaDeviceSynchronize());
 
 		parameters.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
@@ -93,7 +93,7 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 					computation_time, errors);
 
 			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0) {
+			if (errors.first != 0 || errors.second != 0 || is_memory_reload_needed == true) {
 				read_abc_files(parameters.a_input_path, a_vector_host, parameters.b_input_path,
 						b_vector_host, parameters.c_input_path, c_vector_host);
 				read_gold(parameters.gold_inout_path, gold_host);

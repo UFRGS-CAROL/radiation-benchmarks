@@ -5,6 +5,9 @@
 
 extern std::string get_multi_compiler_header();
 
+#define LOGGING_ITERATION_INTERVAL 10
+
+
 Parameters::Parameters(int argc, char** argv) :
 		alpha(1), beta(0) {
 
@@ -81,7 +84,7 @@ Parameters::Parameters(int argc, char** argv) :
 	// Info for compiler test
 	test_info += get_multi_compiler_header();
 	std::string app = "gemm_" + this->precision;
-	this->log = std::make_shared<rad::Log>(app, test_info);
+	this->log = std::make_shared<rad::Log>(app, test_info, LOGGING_ITERATION_INTERVAL);
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {

@@ -294,9 +294,12 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	}
 
 	parameter.update_error_count(host_errors);
-	if (host_errors != 0)
+	if (host_errors != 0){
 		std::cout << "#";
-
+		std::string error_detail;
+		error_detail = "errors: " + std::to_string(host_errors);
+		parameter.log_error(error_detail);
+	}
 	return {dmr_err, host_errors};
 }
 
