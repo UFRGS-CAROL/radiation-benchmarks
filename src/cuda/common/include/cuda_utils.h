@@ -27,7 +27,7 @@
 namespace rad {
 #endif //C++ compiler defined
 
-#define ERROR_STRING_SIZE 512
+#define ERROR_STRING_SIZE 1024
 
 static void _checkFrameworkErrors(cudaError_t error, int line, const char *file) {
 	if (error == cudaSuccess) {

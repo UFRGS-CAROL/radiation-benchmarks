@@ -29,7 +29,7 @@ void generateInput(dim_str dim_cpu, std::string& input_distances,
 		std::vector<FOUR_VECTOR<real_t>>& rv_cpu, std::string& input_charges,
 		std::vector<real_t>& qv_cpu) {
 
-	if (File<real_t>::exists(input_distances) && File<real_t>::exists(input_charges)){
+	if (File<real_t>::exists(input_distances) && File<real_t>::exists(input_charges)) {
 		return;
 	}
 
@@ -86,8 +86,7 @@ void readInput(dim_str dim_cpu, std::string& input_distances,
 	// =============== Fault injection
 	if (fault_injection) {
 		qv_cpu[2] = 0.732637263; // must be in range 0.1 - 1.0
-		std::cout << "!!> Fault injection: qv_cpu[2]= " << qv_cpu[2]
-				<< std::endl;
+		std::cout << "!!> Fault injection: qv_cpu[2]= " << qv_cpu[2] << std::endl;
 	}
 	// ========================
 }
@@ -124,12 +123,10 @@ void writeGold(dim_str dim_cpu, std::string& output_gold,
 }
 
 template<typename real_t>
-void gpu_memory_setup(const Parameters& parameters,
-		VectorOfDeviceVector<box_str>& d_box_gpu, std::vector<box_str>& box_cpu,
-		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu,
-		std::vector<FOUR_VECTOR<real_t>>& rv_cpu,
-		VectorOfDeviceVector<real_t>& d_qv_gpu, std::vector<real_t>& qv_cpu,
-		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_fv_gpu,
+void gpu_memory_setup(const Parameters& parameters, VectorOfDeviceVector<box_str>& d_box_gpu,
+		std::vector<box_str>& box_cpu, VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu,
+		std::vector<FOUR_VECTOR<real_t>>& rv_cpu, VectorOfDeviceVector<real_t>& d_qv_gpu,
+		std::vector<real_t>& qv_cpu, VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_fv_gpu,
 		std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu,
 rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD) {
 
@@ -146,10 +143,8 @@ rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<r
 }
 
 template<typename real_t>
-void gpu_memory_unset(const Parameters& parameters,
-		VectorOfDeviceVector<box_str>& d_box_gpu,
-		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu,
-		VectorOfDeviceVector<real_t>& d_qv_gpu,
+void gpu_memory_unset(const Parameters& parameters, VectorOfDeviceVector<box_str>& d_box_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu, VectorOfDeviceVector<real_t>& d_qv_gpu,
 		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_fv_gpu,
 		rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu) {
 
@@ -199,8 +194,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 	//	DIMENSIONS
 	//=====================================================================
 	// total number of boxes
-	dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg
-			* dim_cpu.boxes1d_arg;
+	dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg;
 	// how many particles space has in each direction
 	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
 	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<real_t> );
@@ -212,7 +206,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 	//=====================================================================
 	// prepare host memory to receive kernel output
 	// output (forces)
-	std::vector<std::vector<FOUR_VECTOR<real_t>>>fv_cpu(parameters.nstreams);
+	std::vector < std::vector<FOUR_VECTOR<real_t>>>fv_cpu(parameters.nstreams);
 	kernel_caller.set_half_t_vectors(parameters.nstreams, dim_cpu.space_elem);
 
 	for (auto& fv_cpu_i : fv_cpu) {
@@ -249,27 +243,23 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 						// neighbor boxes in x direction
 						for (int n = -1; n < 2; n++) {
 							// check if (this neighbor exists) and (it is not the same as home box)
-							if ((((i + l) >= 0 && (j + m) >= 0 && (k + n) >= 0)
-									== true
+							if ((((i + l) >= 0 && (j + m) >= 0 && (k + n) >= 0) == true
 									&& ((i + l) < dim_cpu.boxes1d_arg
 											&& (j + m) < dim_cpu.boxes1d_arg
-											&& (k + n) < dim_cpu.boxes1d_arg)
-											== true)
+											&& (k + n) < dim_cpu.boxes1d_arg) == true)
 									&& (l == 0 && m == 0 && n == 0) == false) {
 								// current neighbor box
 								box_cpu[nh].nei[box_cpu[nh].nn].x = (k + n);
 								box_cpu[nh].nei[box_cpu[nh].nn].y = (j + m);
 								box_cpu[nh].nei[box_cpu[nh].nn].z = (i + l);
 								box_cpu[nh].nei[box_cpu[nh].nn].number =
-										(box_cpu[nh].nei[box_cpu[nh].nn].z
-												* dim_cpu.boxes1d_arg
+										(box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg
 												* dim_cpu.boxes1d_arg)
 												+ (box_cpu[nh].nei[box_cpu[nh].nn].y
 														* dim_cpu.boxes1d_arg)
 												+ box_cpu[nh].nei[box_cpu[nh].nn].x;
 								box_cpu[nh].nei[box_cpu[nh].nn].offset =
-										box_cpu[nh].nei[box_cpu[nh].nn].number
-												* NUMBER_PAR_PER_BOX;
+										box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
 								// increment neighbor box
 								box_cpu[nh].nn = box_cpu[nh].nn + 1;
 								number_nn += box_cpu[nh].nn;
@@ -286,13 +276,13 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 	  //	PARAMETERS, DISTANCE, CHARGE AND FORCE
 	  //=====================================================================
 	if (parameters.generate) {
-		generateInput(dim_cpu, parameters.input_distances, rv_cpu,
-				parameters.input_charges, qv_cpu);
-		readInput(dim_cpu, parameters.input_distances, rv_cpu,
-				parameters.input_charges, qv_cpu, parameters.fault_injection);
+		generateInput(dim_cpu, parameters.input_distances, rv_cpu, parameters.input_charges,
+				qv_cpu);
+		readInput(dim_cpu, parameters.input_distances, rv_cpu, parameters.input_charges, qv_cpu,
+				parameters.fault_injection);
 	} else {
-		readInput(dim_cpu, parameters.input_distances, rv_cpu,
-				parameters.input_charges, qv_cpu, parameters.fault_injection);
+		readInput(dim_cpu, parameters.input_distances, rv_cpu, parameters.input_charges, qv_cpu,
+				parameters.fault_injection);
 		readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 	}
 	//=====================================================================
@@ -324,8 +314,8 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
-	gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu,
-			qv_cpu, d_fv_gpu, fv_cpu, d_fv_gold_gpu, fv_cpu_GOLD);
+	gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu,
+			fv_cpu, d_fv_gold_gpu, fv_cpu_GOLD);
 
 	//LOOP START
 	for (int loop = 0; loop < parameters.iterations; loop++) {
@@ -339,8 +329,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		//=====================================================================
 		//	GPU SETUP
 		//=====================================================================
-		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
-				stream_idx++) {
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
 			auto& it = fv_cpu[stream_idx];
 			std::fill(it.begin(), it.end(), FOUR_VECTOR<real_t>());
 			d_fv_gpu[stream_idx].clear();
@@ -349,8 +338,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		kernel_caller.clear_half_t();
 
 		if (parameters.verbose)
-			std::cout << "Setup prepare time: " << rad::mysecond() - timestamp
-					<< "s\n";
+			std::cout << "Setup prepare time: " << rad::mysecond() - timestamp << "s\n";
 
 		//=====================================================================
 		//	KERNEL
@@ -360,20 +348,17 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		log.start_iteration();
 
 		// launch kernel - all boxes
-		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
-				stream_idx++) {
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
 
-			kernel_caller.kernel_call(blocks, threads, streams[stream_idx],
-					par_cpu, dim_cpu, d_box_gpu[stream_idx].data(),
-					d_rv_gpu[stream_idx].data(), d_qv_gpu[stream_idx].data(),
-					d_fv_gpu[stream_idx].data(), stream_idx);
+			kernel_caller.kernel_call(blocks, threads, streams[stream_idx], par_cpu, dim_cpu,
+					d_box_gpu[stream_idx].data(), d_rv_gpu[stream_idx].data(),
+					d_qv_gpu[stream_idx].data(), d_fv_gpu[stream_idx].data(), stream_idx);
 
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
-		bool is_memory_reload_needed = false;
 		for (auto i = 0; i < streams.size(); i++) {
-			is_memory_reload_needed = streams[i].sync() || is_memory_reload_needed;
+			streams[i].sync();
 			//rad::checkFrameworkErrors (cudaGetLastError());;
 		}
 
@@ -381,8 +366,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		kernel_time = rad::mysecond() - kernel_time;
 
 		auto cpy_time = rad::mysecond();
-		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
-				stream_idx++) {
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
 			fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
 		}
 		cpy_time = rad::mysecond() - cpy_time;
@@ -398,33 +382,28 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 
 			bool reload_flag = false;
 #pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
-			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
-					stream_idx++) {
+			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
 //				fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
-				auto error = kernel_caller.check_output_errors(
-						parameters.verbose, stream_idx, fv_cpu[stream_idx],
-						fv_cpu_GOLD, log);
+				auto error = kernel_caller.check_output_errors(parameters.verbose, stream_idx,
+						fv_cpu[stream_idx], fv_cpu_GOLD, log);
 
 #pragma omp atomic
 				reload_flag = reload_flag || error;
 			}
 
-			if (reload_flag || is_memory_reload_needed) {
-				readInput(dim_cpu, parameters.input_distances, rv_cpu,
-						parameters.input_charges, qv_cpu,
-						parameters.fault_injection);
+			if (reload_flag) {
+				readInput(dim_cpu, parameters.input_distances, rv_cpu, parameters.input_charges,
+						qv_cpu, parameters.fault_injection);
 				readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 
-				gpu_memory_unset(parameters, d_box_gpu, d_rv_gpu, d_qv_gpu,
-						d_fv_gpu, d_fv_gold_gpu);
-				gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu,
-						rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, fv_cpu,
-						d_fv_gold_gpu, fv_cpu_GOLD);
+				gpu_memory_unset(parameters, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
+						d_fv_gold_gpu);
+				gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu,
+						d_fv_gpu, fv_cpu, d_fv_gold_gpu, fv_cpu_GOLD);
 			}
 
 			if (parameters.verbose)
-				std::cout << "Gold check time: " << rad::mysecond() - timestamp
-						<< std::endl;
+				std::cout << "Gold check time: " << rad::mysecond() - timestamp << std::endl;
 		}
 
 		//================= PERF
@@ -436,8 +415,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 		flop *= 46;
 		flop *= parameters.nstreams;
 		double flops = flop / kernel_time;
-		double outputpersec = dim_cpu.space_elem * 4 * parameters.nstreams
-				/ kernel_time;
+		double outputpersec = dim_cpu.space_elem * 4 * parameters.nstreams / kernel_time;
 		double iteration_time = rad::mysecond() - globaltimer;
 
 		if (parameters.verbose) {
@@ -449,8 +427,7 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 			std::cout << "Kernel time:" << kernel_time << std::endl;
 			std::cout << "Copy time:" << cpy_time << std::endl;
 			std::cout << "Iteration time: " << iteration_time << "s ("
-					<< (kernel_time / iteration_time) * 100.0 << "% of Device)"
-					<< std::endl;
+					<< (kernel_time / iteration_time) * 100.0 << "% of Device)" << std::endl;
 			std::cout << "===================================" << std::endl;
 		} else {
 			std::cout << ".";
@@ -460,8 +437,8 @@ void setup_execution(Parameters& parameters, rad::Log& log,
 
 	if (parameters.generate) {
 		kernel_caller.sync_half_t();
-		std::cout << "Max element threshold "
-				<< kernel_caller.get_max_threshold(fv_cpu) << std::endl;
+		std::cout << "Max element threshold " << kernel_caller.get_max_threshold(fv_cpu)
+				<< std::endl;
 	}
 
 }
