@@ -68,7 +68,7 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 //		rad::checkFrameworkErrors(cudaPeekAtLastError());
 //		;
 		//new DUE setup
-		rad::checkFrameworkErrorsAndResetGPU(cudaDeviceSynchronize());
+		rad::checkFrameworkErrorsAndResetErrorStatus(cudaDeviceSynchronize());
 
 		parameters.end_iteration();
 		computation_time = rad::mysecond() - computation_time;

@@ -73,7 +73,7 @@ static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const cha
 /**
  * Don't worry, it is a macro that returns the status
  */
-#define checkFrameworkErrorsAndResetGPU(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
+#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
 
 static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {
