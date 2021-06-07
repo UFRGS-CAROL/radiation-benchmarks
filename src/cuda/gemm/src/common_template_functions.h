@@ -293,7 +293,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		parameter.log_info("dmr1_equals_dmr2_detected");
 	}
 
-	parameter.update_error_count(host_errors);
 	if (host_errors != 0){
 		std::cout << "#";
 		std::string error_detail;
@@ -301,6 +300,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		//log as info to not count as error detail
 		parameter.log_info(error_detail);
 	}
+	parameter.update_error_count(host_errors);
+
 	return {dmr_err, host_errors};
 }
 
