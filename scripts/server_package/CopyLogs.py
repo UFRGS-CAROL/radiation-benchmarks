@@ -43,7 +43,8 @@ class CopyLogs(threading.Thread):
         # create logger with 'spam_application'
         fh = logging.FileHandler(log_messages_file, mode='a')
         fh.setFormatter(formatter)
-        self.__logger = logging.getLogger(__name__)
+        board_logger_name = f"{__name__}.{self.__hostname}"
+        self.__logger = logging.getLogger(board_logger_name)
         self.__logger.setLevel(logging.DEBUG)
         self.__logger.addHandler(fh)
 
