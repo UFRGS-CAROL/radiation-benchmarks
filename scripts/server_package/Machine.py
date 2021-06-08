@@ -78,13 +78,13 @@ class Machine(threading.Thread):
                     # If the reboot delta is bigger than the allowed reboot
                     if (now - last_reboot_timestamp) > self.__diff_reboot:
                         last_reboot_timestamp = self.__reboot_this_machine()
-                        self.__log(ErrorCodes.REBOOTING)
+                        self.__log(ErrorCodes.REBOOTING, "Common reboot")
                 # If machine did not reboot, log this and set it to not check again
                 elif lower_threshold < last_conn_delta < upper_threshold:
                     self.__log(ErrorCodes.WAITING_FOR_POSSIBLE_BOOT)
                 # Sanity checks
                 elif last_conn_delta > upper_threshold:
-                    self.__log(ErrorCodes.BOOT_PROBLEM, "Common reboot")
+                    self.__log(ErrorCodes.BOOT_PROBLEM)
                     # Disable only when upper threshold is reached
                     boot_problem_disable = True
             else:
