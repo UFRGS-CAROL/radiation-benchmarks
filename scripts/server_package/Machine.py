@@ -84,7 +84,7 @@ class Machine(threading.Thread):
                     self.__log(ErrorCodes.WAITING_FOR_POSSIBLE_BOOT)
                 # Sanity checks
                 elif last_conn_delta > upper_threshold:
-                    self.__log(ErrorCodes.BOOT_PROBLEM)
+                    self.__log(ErrorCodes.BOOT_PROBLEM, "Common reboot")
                     # Disable only when upper threshold is reached
                     boot_problem_disable = True
             else:
@@ -98,12 +98,12 @@ class Machine(threading.Thread):
                 #       f"LAST REBOOT FROM PROBLEM {last_reboot_from_problem}")
                 if last_reboot_from_problem_delta >= self.__REBOOT_AGAIN_INTERVAL_AFTER_BOOT_PROBLEM:
                     last_reboot_timestamp = self.__reboot_this_machine()
-                    self.__log(ErrorCodes.REBOOTING)
+                    self.__log(ErrorCodes.REBOOTING, "Reboot after boot problem")
                     last_reboot_from_problem = time.time()
             # sleep before re-check again
             self.__stop_event.wait(self.__sleep_time)
 
-    def __log(self, kind):
+    def __log(self, kind, reboot_message=None):
         """
         Log some behavior
         :param kind:
@@ -119,6 +119,8 @@ class Machine(threading.Thread):
                 logger_function = self.__logger.error
             reboot_msg += f" HOSTNAME:{self.__hostname} STATUS:{self.__reboot_status}"
             reboot_msg += f" PORT_NUMBER: {self.__switch_port} SWITCH_IP: {self.__switch_ip}"
+            if reboot_message:
+                reboot_msg += f" WHY: {reboot_message}"
         elif kind == ErrorCodes.WAITING_BOOT_PROBLEM:
             reboot_msg = f"Waiting {self.__boot_problem_max_delta}s due boot problem IP:{self.__ip} "
             reboot_msg += f"HOSTNAME:{self.__hostname}"
