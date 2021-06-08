@@ -15,6 +15,7 @@ class Machine(threading.Thread):
     """
     __TIME_MIN_REBOOT_THRESHOLD = 3
     __TIME_MAX_REBOOT_THRESHOLD = 10
+    __REBOOT_AGAIN_INTERVAL_AFTER_BOOT_PROBLEM = 3600
 
     def __init__(self, *args, **kwargs):
         """
@@ -64,6 +65,7 @@ class Machine(threading.Thread):
         last_reboot_timestamp = time.time()
         # boot problem disable
         boot_problem_disable = False
+        last_reboot_from_problem = time.time()
 
         while not self.__stop_event.isSet():
             # Check if machine is working fine
@@ -90,6 +92,14 @@ class Machine(threading.Thread):
                 # instead of sleeping
                 self.__stop_event.wait(self.__boot_problem_max_delta)
                 boot_problem_disable = False
+                # Try again after some interval
+                last_reboot_from_problem_delta = time.time() - last_reboot_from_problem
+                # print(f"PASSOU AQUI LAST DELTA {last_reboot_from_problem_delta} "
+                #       f"LAST REBOOT FROM PROBLEM {last_reboot_from_problem}")
+                if last_reboot_from_problem_delta >= self.__REBOOT_AGAIN_INTERVAL_AFTER_BOOT_PROBLEM:
+                    last_reboot_timestamp = self.__reboot_this_machine()
+                    self.__log(ErrorCodes.REBOOTING)
+                    last_reboot_from_problem = time.time()
             # sleep before re-check again
             self.__stop_event.wait(self.__sleep_time)
 
