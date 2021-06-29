@@ -19,8 +19,8 @@ OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TEN
 NVCCOPTFLAGS=
 
 # This is what I use, uncomment if you know your arch and want to specify
-# Kepler
-ARCH=-gencode arch=compute_35,code=[sm_35,compute_35]
+# Kepler, Volta
+SMS= 35
 
 # check for cuda 7.0 or lower
 ifneq (, $(findstring cuda-7.0, $(CUDAPATH)))
@@ -30,10 +30,13 @@ else
 # Tegra X2
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]
 # Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]
+SMS+= 53 70
 # Xavier
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 endif
+
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))ARCH=-gencode arch=compute_35,code=[sm_35,compute_35]
+
 
 VPATH=./src/
 TARGET=gemm
