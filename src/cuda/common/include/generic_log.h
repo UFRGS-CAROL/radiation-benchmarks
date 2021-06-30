@@ -146,8 +146,7 @@ struct Log {
 #ifndef LOGS
 		return "";
 #else
-//return std::string(::get_log_file_name());
-		return "";
+		return std::string(::get_log_file_name());
 #endif
 	}
 
