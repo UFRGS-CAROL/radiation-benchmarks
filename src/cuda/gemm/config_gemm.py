@@ -20,18 +20,18 @@ MEMTMR = False
 
 COMPILER_VERSION = [
     ("10.2", "g++"),
-    ("11.3", "g++")
+    # ("11.3", "g++")
 ]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
-    '--maxrregcount=16',
-    '"-Xptxas -O0 -Xcompiler -O0"',
-    '"-Xptxas -O1 -Xcompiler -O1"',
-    # Baseline
+    # '--maxrregcount=16',
+    # '"-Xptxas -O0 -Xcompiler -O0"',
+    # '"-Xptxas -O1 -Xcompiler -O1"',
+    # # Baseline
     '"-Xptxas -O3 -Xcompiler -O3"',
-    # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    "--use_fast_math",
+    # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
+    # "--use_fast_math",
 )
 
 
