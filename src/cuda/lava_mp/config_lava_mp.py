@@ -10,28 +10,28 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 # Size and streams
-SIZES = [[16, 2]]
+SIZES = [[16, 1]]
 REDUNDANCY = ["none"]
 PRECISIONS = ["float"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
 CHECK_BLOCK = []
-BUILDPROFILER = 1
+BUILDPROFILER = 0
 
 COMPILER_VERSION = [
     ("10.2", "g++"),
-    ("11.3", "g++")
+    # ("11.3", "g++")
 ]
 
 COMPILER_FLAGS = (
-    # append to parameter list the number of the registers
-    '--maxrregcount=16',
-    '"-Xptxas -O0 -Xcompiler -O0"',
-    '"-Xptxas -O1 -Xcompiler -O1"',
-    # Baseline
+    # # append to parameter list the number of the registers
+    # '--maxrregcount=16',
+    # '"-Xptxas -O0 -Xcompiler -O0"',
+    # '"-Xptxas -O1 -Xcompiler -O1"',
+    # # Baseline
     '"-Xptxas -O3 -Xcompiler -O3"',
-    # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    "--use_fast_math",
+    # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
+    # "--use_fast_math",
 )
 
 
