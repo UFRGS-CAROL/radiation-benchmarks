@@ -113,10 +113,10 @@ struct KernelCaller {
 				std::cout << error_detail << std::endl;
 			}
 			log.log_info_detail(error_detail);
-//			log.update_infos();
+			log.update_infos();
 		}
-// 		the error update is done inside the class
-//		log.update_errors();
+// 		the error update is done inside the class <-- IS NOT EFFICIENT
+		log.update_errors();
 		return (host_errors == 0);
 	}
 
