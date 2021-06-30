@@ -53,24 +53,24 @@ the ones which enabled parameter is false are not checked
 """
 MACHINES = [
     {
-     "ip": "192.168.2.60",
-     "enabled": True,
-     "diff_reboot": 100,
-     "hostname": "Coral",
-     "power_switch_ip": "192.168.2.100",
-     "power_switch_port": 1,
-     "power_switch_model": "lindy",
-     "username": "carol",
-     "password": "R@di@tion"
-     },
+        "ip": "192.168.2.60",
+        "enabled": True,
+        "diff_reboot": 100,
+        "hostname": "Coral",
+        "power_switch_ip": "192.168.2.100",
+        "power_switch_port": 1,
+        "power_switch_model": "default",
+        "username": "carol",
+        "password": "R@di@tion"
+    },
     {
         "ip": "192.168.2.80",
-         "enabled": True,
-         "diff_reboot": 100,
+        "enabled": True,
+        "diff_reboot": 100,
         "hostname": "carolnano",
         "power_switch_ip": "192.168.2.100",
         "power_switch_port": 2,
-        "power_switch_model": "lindy",
+        "power_switch_model": "default",
         "username": "carol",
         "password": "R@di@tion"
     },
