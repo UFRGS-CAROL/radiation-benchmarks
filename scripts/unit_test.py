@@ -63,7 +63,7 @@ def test_copy_logs():
 
             copy_obj.start()
             copy_thread_list.append(copy_obj)
-            copy_obj.start()
+
     time.sleep(10)
     for cp in copy_thread_list:
         cp.join()
