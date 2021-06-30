@@ -10,8 +10,8 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [1024]
-ITERATIONS = 100
-SIMTIME = [1000]
+ITERATIONS = 1000000
+SIMTIME = [100]
 STREAMS = 4
 PRECISIONS = ["single"]
 BUILDPROFILER = 0
