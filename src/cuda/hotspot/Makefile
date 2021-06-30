@@ -16,7 +16,7 @@ NVCCOPTFLAGS?=
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
-TEST_SIM_TIME=10000
+TEST_SIM_TIME=1000
 DATA_DIR=../../../data/hotspot
 DEF_INPUT_POWER=$(DATA_DIR)/power_$(DEF_SIZE)
 DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(DEF_SIZE)
@@ -25,15 +25,10 @@ DEF_GOLD=$(DATA_DIR)/gold_temp_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(TEST_SIM_TI
 # Kepler, Volta
 SMS= 35
 
-ifeq ($(UPPERCASED_PRECISION),HALF)
-SMS+= 53 60
-else
-
 # check for cuda 7.0 or lower
 ifneq (, $(findstring cuda-7.0, $(CUDAPATH)))
 else
-SMS+= 70
-endif
+SMS+= 53 70
 endif
 
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
