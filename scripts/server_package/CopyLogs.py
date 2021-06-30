@@ -106,19 +106,3 @@ class CopyLogs(threading.Thread):
         """
         self.__stop_event.set()
         super(CopyLogs, self).join(*args, **kwargs)
-
-
-if __name__ == '__main__':
-    # FOR DEBUG USE ONLY
-    import sys
-
-    sys.path.append("..")
-    from server_parameters import MACHINES
-
-    # copy_logs = CopyLogs(hostname=MACHINES,
-    #                      sleep_copy_interval=10,
-    #                      destination_folder="/tmp",
-    #                      to_copy_folder="/var/radiation-benchmarks/log/", log_messages_file="unit_test_CopyLogs.log")
-    # copy_logs.start()
-    # time.sleep(10)
-    # copy_logs.join()

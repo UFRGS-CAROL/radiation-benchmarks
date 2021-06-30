@@ -78,6 +78,8 @@ class Machine(threading.Thread):
                     # If the reboot delta is bigger than the allowed reboot
                     if (now - last_reboot_timestamp) > self.__diff_reboot:
                         last_reboot_timestamp = self.__reboot_this_machine()
+                        # TODO: check if it is ok
+                        last_reboot_from_problem = last_reboot_timestamp
                         self.__log(ErrorCodes.REBOOTING, "Common reboot")
                 # If machine did not reboot, log this and set it to not check again
                 elif lower_threshold < last_conn_delta < upper_threshold:
@@ -202,46 +204,3 @@ class Machine(threading.Thread):
         :return: hostname str
         """
         return self.__hostname
-
-
-if __name__ == '__main__':
-    # FOR DEBUG ONLY
-    from queue import Queue
-
-    # from RebootMachine import RebootMachine
-
-    print("CREATING THE MACHINE")
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%d-%m-%y %H:%M:%S',
-        filename="unit_test_log_Machine.log",
-        filemode='w'
-    )
-    machine = Machine(
-        ip="127.0.0.1",
-        diff_reboot=1,
-        hostname="test",
-        power_switch_ip="127.0.0.1",
-        power_switch_port=1,
-        power_switch_model="lindy",
-        messages_queue=Queue(),
-        sleep_time=5,
-        logger_name="MACHINE_LOG",
-        boot_problem_max_delta=10,
-        reboot_sleep_time=2,
-    )
-
-    print("EXECUTING THE MACHINE")
-    machine.update_machine_timestamp(time.time())
-
-    machine.start()
-
-    sleep_time = 100
-    print(f"SLEEPING THE MACHINE FOR {sleep_time}s")
-    time.sleep(sleep_time)
-
-    print("JOINING THE MACHINE")
-    machine.join()
-
-    print("RAGE AGAINST THE MACHINE")
