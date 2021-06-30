@@ -4,6 +4,7 @@
 import configparser
 import copy
 import os
+import re
 import sys
 
 sys.path.insert(0, '../../include')
@@ -68,7 +69,7 @@ def config(board, arith_type, debug, compiler_version, flag):
                 # "mv ./" + benchmark_bin + " " + bin_path + "/"
                 ]
     execute = []
-    flag_parsed = flag.replace("=", "").replace("--", "")
+    flag_parsed = re.sub("-*=*[ ]*\"*", "", flag)
     benchmark_bin_new = f"{benchmark_bin}_{cuda_version}_{flag_parsed}"
     for i in SIZES:
         for s in SIMTIME:
