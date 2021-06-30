@@ -67,7 +67,7 @@ MACHINES = [
         "ip": "192.168.2.80",
         "enabled": True,
         "diff_reboot": 100,
-        "hostname": "carolnano",
+        "hostname": "carolnano80",
         "power_switch_ip": "192.168.2.100",
         "power_switch_port": 2,
         "power_switch_model": "default",
@@ -75,7 +75,6 @@ MACHINES = [
         "password": "R@di@tion"
     },
     {
-        #
         "ip": "192.168.1.80",
         "enabled": False,
         "diff_reboot": 100,
