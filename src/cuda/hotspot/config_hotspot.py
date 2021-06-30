@@ -17,20 +17,19 @@ PRECISIONS = ["single"]
 BUILDPROFILER = 1
 
 COMPILER_VERSION = [
-    ("10.1", "g++"),
-    ("7.0", "g++-4.8")
+    ("10.2", "g++"),
+    # ("11.3", "g++")
 ]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
-    '--maxrregcount=16',
-
-    # Enable (disable) to allow compiler to perform expensive optimizations
-    # using maximum available resources (memory and compile-time).
-    # '"-Xptxas --allow-expensive-optimizations=false"',
-
+    # '--maxrregcount=16',
+    # '"-Xptxas -O0 -Xcompiler -O0"',
+    # '"-Xptxas -O1 -Xcompiler -O1"',
+    # # Baseline
+    '"-Xptxas -O3 -Xcompiler -O3"',
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    "--use_fast_math",
+    # "--use_fast_math",
 )
 
 
