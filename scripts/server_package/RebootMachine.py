@@ -122,9 +122,9 @@ class RebootMachine(threading.Thread):
         """
         return self.__reboot_status
 
-    @staticmethod
-    def __execute_command(cmd):
-        tmp_file = "/tmp/server_error_execute_command"
+    def __execute_command(self, cmd):
+        # Write only one error file for each thread
+        tmp_file = f"/tmp/server_error_execute_command_{self.__address}"
         result = os.system(f"{cmd} 2>{tmp_file}")
         with open(tmp_file) as err:
             if len(err.readlines()) != 0 or result != 0:
