@@ -22,35 +22,22 @@ DEF_INPUT_POWER=$(DATA_DIR)/power_$(DEF_SIZE)
 DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(DEF_SIZE)
 DEF_GOLD=$(DATA_DIR)/gold_temp_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(TEST_SIM_TIME)
 
+# Kepler, Volta
+SMS= 35
 
 ifeq ($(UPPERCASED_PRECISION),HALF)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+SMS+= 53 60
 else
-
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Tesla K40
-#ARCH+= 	-gencode arch=compute_53,code=[sm_53,compute_53]	# Tegra X1
-#ARCH+= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 # check for cuda 7.0 or lower
 ifneq (, $(findstring cuda-7.0, $(CUDAPATH)))
 else
-# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]
-# Tegra X2
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]
-# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]
-# Xavier
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
+SMS+= 70
+endif
 endif
 
-endif
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
+
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/

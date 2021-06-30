@@ -125,13 +125,13 @@ void Parameters::log_info(std::string info_detail) {
 	this->log->log_info_detail(info_detail);
 }
 
-//void Parameters::update_error_count(long error_count) {
-//	this->log->update_errors();
-//}
-//
-//void Parameters::update_info_count(long info_count) {
-//	this->log->update_infos();
-//}
+void Parameters::update_error_count(long error_count) {
+	this->log->update_errors();
+}
+
+void Parameters::update_info_count(long info_count) {
+	this->log->update_infos();
+}
 
 void Parameters::usage(char** argv){
 		std::cout << "./" << argv[0]

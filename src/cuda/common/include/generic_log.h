@@ -55,7 +55,7 @@ struct Log {
 		 * must build libraries before build with this macro
 		 */
 #ifdef BUILDPROFILER
-		//		std::string log_file_name(get_log_file_name());
+		//      std::string log_file_name(get_log_file_name());
 		this->profiler_thread = std::make_shared<NVMLWrapper>(0, this->get_log_file_name());
 
 		//START PROFILER THREAD
@@ -146,31 +146,10 @@ struct Log {
 #ifndef LOGS
 		return "";
 #else
-		return std::string(::get_log_file_name());
+//return std::string(::get_log_file_name());
+		return "";
 #endif
 	}
-
-private:
-	//Hide copy constructor to avoid copies
-	//pass only as reference to the function/method
-	Log(const Log &l) :
-			_error(l._error), _info(l._info), _was_error_updated(l._was_error_updated), _was_info_updated(
-					l._was_info_updated), _max_errors_per_iteration(l._max_errors_per_iteration), _max_infos_per_iteration(
-					l._max_infos_per_iteration) {
-	}
-
-	uint64_t _error = 0;
-	uint64_t _info = 0;
-	std::string _test_name;
-	std::string _test_info;
-
-	bool _was_error_updated = false;
-	bool _was_info_updated = false;
-
-	//Max errors and info lines per iteration
-	const uint64_t _max_errors_per_iteration;
-	const uint64_t _max_infos_per_iteration;
-
 
 	/*
 	 * There is no need for update_errors and update_infos to be public
@@ -200,6 +179,27 @@ private:
 		}
 	}
 
+private:
+	//Hide copy constructor to avoid copies
+	//pass only as reference to the function/method
+	Log(const Log &l) :
+			_error(l._error), _info(l._info), _was_error_updated(l._was_error_updated), _was_info_updated(
+					l._was_info_updated), _max_errors_per_iteration(l._max_errors_per_iteration), _max_infos_per_iteration(
+					l._max_infos_per_iteration) {
+	}
+
+	uint64_t _error = 0;
+	uint64_t _info = 0;
+	std::string _test_name;
+	std::string _test_info;
+
+	bool _was_error_updated = false;
+	bool _was_info_updated = false;
+
+	//Max errors and info lines per iteration
+	const uint64_t _max_errors_per_iteration;
+	const uint64_t _max_infos_per_iteration;
+
 #ifdef LOGS
 #ifdef BUILDPROFILER
 	std::shared_ptr<Profiler> profiler_thread;
@@ -209,17 +209,17 @@ private:
 	/**
 	 * Only the constructor is necessary from now
 	 */
-//	void set_iter_interval_print(size_t print_interval) {
+//  void set_iter_interval_print(size_t print_interval) {
 //#warning "set_iter_interval_print is not allowed anymore, use the constructor to set the interval"
-//	}
+//  }
 //
-//	void set_max_errors_iter(size_t max_errors) {
+//  void set_max_errors_iter(size_t max_errors) {
 //#warning "set_max_errors_iter is not allowed anymore, use the constructor to set the interval"
-//	}
+//  }
 //
-//	void set_max_infos_iter(size_t max_errors) {
+//  void set_max_infos_iter(size_t max_errors) {
 //#warning "set_max_infos_iter is not allowed anymore, use the constructor to set the interval"
-//	}
+//  }
 };
 
 }
