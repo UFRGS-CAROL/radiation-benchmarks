@@ -69,6 +69,10 @@ def test_copy_logs():
         cp.join()
 
 
+def test_reboo_machine():
+    raise NotImplemented("Implement it first")
+
+
 if __name__ == '__main__':
     # FOR DEBUG USE ONLY
     # test_machine()
