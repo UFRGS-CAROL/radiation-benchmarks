@@ -11,11 +11,11 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 ALPHA = 1.0
 BETA = 0.0
-SIZES = [4096]
+SIZES = [2048]
 PRECISIONS = ["float"]  # , "half"]
 ITERATIONS = 10000000
 USE_TENSOR_CORES = [False]
-USE_CUBLAS = [False]
+USE_CUBLAS = [True]
 MEMTMR = False
 
 COMPILER_VERSION = [
