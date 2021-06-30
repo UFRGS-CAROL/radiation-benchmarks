@@ -72,7 +72,7 @@ MACHINES = [
         "power_switch_port": 2,
         "power_switch_model": "default",
         "username": "carol",
-        "password": "R@di@tion"
+        "password": "R@diation"
     },
     {
         "ip": "192.168.1.80",
