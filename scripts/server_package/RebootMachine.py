@@ -110,7 +110,7 @@ class RebootMachine(threading.Thread):
         cmd = 'curl --data \"'
         cmd += port_default_cmd % ("On" if status == self.__ON else "Off")
         cmd += '&Apply=Apply\" '
-        cmd += f'http://%s/tgi/iocontrol.tgi {self.__switch_ip}'
+        cmd += f'http://{self.__switch_ip}/tgi/iocontrol.tgi '
         cmd += '-o /dev/null '
         self.__reboot_status = self.__execute_command(cmd)
         print(cmd)
