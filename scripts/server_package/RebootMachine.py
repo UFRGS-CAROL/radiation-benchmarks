@@ -128,6 +128,6 @@ class RebootMachine(threading.Thread):
         tmp_file = f"/tmp/server_error_execute_command_{self.__address}"
         result = os.system(f"{cmd} 2>{tmp_file}")
         with open(tmp_file) as err:
-            if len(err.readlines()) != 0 or result != 0:
+            if not any(["Received" in e for e in err.readlines()]) or result != 0:
                 return ErrorCodes.GENERAL_ERROR
         return ErrorCodes.SUCCESS
