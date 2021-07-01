@@ -20,7 +20,7 @@ class RebootMachine(threading.Thread):
         self.__switch_ip = switch_ip
         self.__reboot_status = ErrorCodes.SUCCESS
         self.__switch_model = switch_model
-        self.__logger = logging.getLogger(logger_name)
+        self.__logger = logging.getLogger(__name__)
         self.__rebooting_sleep = rebooting_sleep
 
     def run(self):
@@ -113,6 +113,7 @@ class RebootMachine(threading.Thread):
         cmd += f'http://%s/tgi/iocontrol.tgi {self.__switch_ip}'
         cmd += '-o /dev/null '
         self.__reboot_status = self.__execute_command(cmd)
+        print(cmd)
 
     @property
     def reboot_status(self):
@@ -130,23 +131,3 @@ class RebootMachine(threading.Thread):
             if len(err.readlines()) != 0 or result != 0:
                 return ErrorCodes.GENERAL_ERROR
         return ErrorCodes.SUCCESS
-
-
-if __name__ == '__main__':
-    # FOR DEBUG ONLY
-    print("CREATING THE RebootMachine")
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%m-%d %H:%M',
-        filename="unit_test_log_RebootMachine.log",
-        filemode='w'
-    )
-    reboot = RebootMachine(machine_address="192.168.1.11", switch_model="lindy", switch_port=1,
-                           switch_ip="192.168.1.102", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
-    print("Rebooting")
-    reboot.start()
-    reboot.join()
-    # reboot.off()
-
-    print(f"Reboot status {reboot.reboot_status}")

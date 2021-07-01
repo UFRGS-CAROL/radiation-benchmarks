@@ -7,6 +7,7 @@ import logging
 from server_parameters import *
 from server_package.Machine import Machine
 from server_package.CopyLogs import CopyLogs
+from server_package.RebootMachine import RebootMachine
 
 
 def test_machine():
@@ -69,11 +70,28 @@ def test_copy_logs():
         cp.join()
 
 
-def test_reboo_machine():
-    raise NotImplemented("Implement it first")
+def test_reboot_machine():
+    # FOR DEBUG ONLY
+    print("CREATING THE RebootMachine")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt='%m-%d %H:%M',
+        filename="unit_test_log_RebootMachine.log",
+        filemode='w'
+    )
+    reboot = RebootMachine(machine_address="192.168.2.80", switch_model="lindy", switch_port=1,
+                           switch_ip="192.168.2.100", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
+    print("Rebooting")
+    reboot.start()
+    reboot.join()
+    # reboot.off()
+
+    print(f"Reboot status {reboot.reboot_status}")
 
 
 if __name__ == '__main__':
     # FOR DEBUG USE ONLY
     # test_machine()
-    test_copy_logs()
+    # test_copy_logs()
+    test_reboot_machine()
