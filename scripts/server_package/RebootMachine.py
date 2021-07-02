@@ -104,11 +104,17 @@ class RebootMachine(threading.Thread):
                             f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
 
     def __common_switch_command(self, status):
-        port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
-            self.__switch_port, self.__switch_port - 1, self.__switch_port - 1, self.__switch_port - 1)
-
+        # port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
+        #     self.__switch_port, self.__switch_port - 1, self.__switch_port - 1, self.__switch_port - 1)
+        to_switch_port = self.__switch_port - 1
         cmd = 'curl --data \"'
-        cmd += port_default_cmd % ("On" if status == self.__ON else "Off")
+        # TODO: parametrize it
+        for port in range(0, 4):
+            on_off = "%s"
+            if port == to_switch_port:
+                on_off = "On" if status == self.__ON else "Off"
+            cmd += f"pw{port + 1}Name=&P6{port}={on_off}&P6{port}_TS=&P6{port}_TC=&"
+
         cmd += '&Apply=Apply\" '
         cmd += f'http://{self.__switch_ip}/tgi/iocontrol.tgi '
         cmd += '-o /dev/null '
