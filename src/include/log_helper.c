@@ -8,6 +8,12 @@
 #include <unistd.h>
 #include <assert.h>
 
+/**
+ * This flag is necessary when we want to re-write the
+ * log filename if the tiem is incorrect
+ */
+#define USE_DUPLICATE_LOG_FILENAME 1
+
 //Buff for ECC check
 #define BUFSIZE 128
 
@@ -294,8 +300,7 @@ int start_log_file(char *benchmark_name, char *test_info) {
 	char log_file_name[190] = "";
 
 	file_time = time(NULL);
-	//CHANGE FOR LOCAL TIME
-//	ptm = gmtime(&file_time);
+	//Local time is the correct one
 	ptm = localtime(&file_time);
 
 	snprintf(day, sizeof(day), "%02d", ptm->tm_mday);
@@ -361,6 +366,7 @@ int start_log_file(char *benchmark_name, char *test_info) {
 	strcat(full_log_file_name, log_file_name);
 // ~ printf("%s\n", full_log_file_name);
 
+#ifndef USE_DUPLICATE_LOG_FILENAME
 	struct stat buf;
 	if (stat(full_log_file_name, &buf) == 0) {
 		fprintf(stderr,
@@ -368,10 +374,9 @@ int start_log_file(char *benchmark_name, char *test_info) {
 				full_log_file_name);
 		return 1;
 	}
+#endif
 
-	FILE *file = NULL;
-
-	file = fopen(full_log_file_name, "a");
+	FILE *file = fopen(full_log_file_name, "a");
 	if (file == NULL) {
 		fprintf(stderr,
 				"[ERROR in create_log_file(char *)] Unable to open file %s\n",
