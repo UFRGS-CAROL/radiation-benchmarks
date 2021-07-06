@@ -16,7 +16,6 @@ GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(SIZE)
 ITERATIONS=10
 RELATIVEERROR=0
 
-
 VPATH=./src
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
