@@ -5,7 +5,7 @@ EXEC=cuda_lava
 LOGS=1
 BUILDPROFILER=0
 OPERATIONNUM=194
-PRECISION=single
+PRECISION=float
 DMR=none
 DATA_DIR=../../../data/lava
 DEF_SIZE=23
@@ -23,7 +23,7 @@ NVCC=$(CUDAPATH)/bin/nvcc
 NVCCFLAGS= -std=c++11 -Xptxas -v
 
 # Kepler, Volta
-SMS= 35 53 70
+SMS= 35 53 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 
@@ -94,21 +94,4 @@ test:
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT) \
 				-output_gold $(GOLD) \
-				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
-				
-
-test_no_dmr:
-	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
-				-iterations 10 -verbose \
-				-input_distances $(DISTANCES_INPUT) \
-				-input_charges $(CHARGES_INPUT) \
-				-output_gold $(GOLD) \
-				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy none
-	
-test_dmr_till_end:
-	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
-				-iterations 10 -verbose \
-				-input_distances $(DISTANCES_INPUT) \
-				-input_charges $(CHARGES_INPUT) \
-				-output_gold $(GOLD) -opnum 44444\
 				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
