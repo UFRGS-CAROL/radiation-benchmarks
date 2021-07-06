@@ -8,11 +8,11 @@ OPERATIONNUM=194
 PRECISION=float
 DMR=none
 DATA_DIR=../../../data/lava
-DEF_SIZE=23
+SIZE=23
 STREAMS=1
-CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(DEF_SIZE)
-DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(DEF_SIZE)
-GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(DEF_SIZE)
+CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(SIZE)
+DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(SIZE)
+GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(SIZE)
 ITERATIONS=10
 RELATIVEERROR=0
 
@@ -81,7 +81,7 @@ clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 generate:
-	./$(EXEC) -boxes $(DEF_SIZE) -generate -streams $(STREAMS) \
+	./$(EXEC) -boxes $(SIZE) -generate -streams $(STREAMS) \
 				-iterations 1 -verbose \
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT)	\
@@ -89,7 +89,7 @@ generate:
 				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
 
 test:
-	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
+	./$(EXEC) -boxes $(SIZE) -streams $(STREAMS) \
 				-iterations $(ITERATIONS) -verbose \
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT) \
