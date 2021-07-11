@@ -55,10 +55,10 @@ struct test_arrays {
 	std::vector<float_type> gold_temperature;
 
 	void allocate(size_t size) {
-		this->in_temperature = std::vector < float_type > (size); //(float_type *) malloc(size * sizeof(float_type));
-		this->in_power = std::vector < float_type > (size); //(float_type *) malloc(size * sizeof(float_type));
-		this->out_temperature = std::vector < float_type > (size); //(float_type *) calloc(size, sizeof(float_type));
-		this->gold_temperature = std::vector < float_type > (size); //(float_type *) calloc(size, sizeof(float_type));
+		this->in_temperature = std::vector < float_type > (size, 0); //(float_type *) malloc(size * sizeof(float_type));
+		this->in_power = std::vector < float_type > (size, 0); //(float_type *) malloc(size * sizeof(float_type));
+		this->out_temperature = std::vector < float_type > (size, 0); //(float_type *) calloc(size, sizeof(float_type));
+		this->gold_temperature = std::vector < float_type > (size, 0); //(float_type *) calloc(size, sizeof(float_type));
 	}
 };
 
@@ -611,8 +611,8 @@ void run(parameters params, test_arrays<float_type> arrays) {
 							sizeof(float_type) * size, cudaMemcpyHostToDevice));
 
 			rad::checkFrameworkErrors(
-					cudaMemcpy(MatrixPower[streamIdx], arrays.in_power.data(), sizeof(float_type) * size,
-							cudaMemcpyHostToDevice));
+					cudaMemcpy(MatrixPower[streamIdx], arrays.in_power.data(),
+							sizeof(float_type) * size, cudaMemcpyHostToDevice));
 
 			// Setup output (Temperature)
 			rad::checkFrameworkErrors(
@@ -662,8 +662,9 @@ void run(parameters params, test_arrays<float_type> arrays) {
 		} else {
 			for (int streamIdx = 0; streamIdx < (params.nstreams); streamIdx++) {
 				rad::checkFrameworkErrors(
-						cudaMemcpy(arrays.out_temperature.data(), MatrixTemp[streamIdx][ret[streamIdx]],
-								sizeof(float_type) * size, cudaMemcpyDeviceToHost));
+						cudaMemcpy(arrays.out_temperature.data(),
+								MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float_type) * size,
+								cudaMemcpyDeviceToHost));
 
 				check_output_errors(params, arrays, streamIdx, log);
 			}
@@ -688,10 +689,8 @@ void run(parameters params, test_arrays<float_type> arrays) {
 		rad::checkFrameworkErrors(cudaFree(MatrixPower[streamIdx]));
 		rad::checkFrameworkErrors(cudaFree(MatrixTemp[streamIdx][0]));
 		rad::checkFrameworkErrors(cudaFree(MatrixTemp[streamIdx][1]));
-
 		rad::checkFrameworkErrors(cudaStreamDestroy(streams[streamIdx]));
 	}
-
 }
 
 int main(int argc, char** argv) {
