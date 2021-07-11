@@ -65,7 +65,7 @@ struct test_arrays {
 struct parameters {
 	int grid_cols, grid_rows;
 	std::string tested_type;
-	char *tfile, *pfile, *ofile;
+	std::string tfile, pfile, ofile;
 	int nstreams;
 	int sim_time;
 	int pyramid_height;
@@ -73,15 +73,6 @@ struct parameters {
 	int verbose;
 	int fault_injection;
 	int generate;
-
-	virtual ~parameters() {
-		if (this->tfile)
-			delete this->tfile;
-		if (this->pfile)
-			delete this->pfile;
-		if (this->ofile)
-			delete this->ofile;
-	}
 
 	void usage(int argc, char** argv) {
 		printf("Usage: %s [-size=N] [-generate] [-sim_time=N] [-input_temp=<path>]"
@@ -136,28 +127,34 @@ struct parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
-			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(this->tfile));
+			char temp[128];
+			char *tt = static_cast<char*>(temp);
+			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tt));
+			this->tfile = std::string(tt);
 		} else {
-			this->tfile = new char[100];
-			snprintf(this->tfile, 100, "temp_%i", this->grid_rows);
-			printf("Using default input_temp path: %s\n", this->tfile);
+			this->tfile = "temp_" + std::to_string(this->grid_rows);
+			printf("Using default input_temp path: %s\n", this->tfile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
-			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(this->pfile));
+			char temp[128];
+			char *tt = static_cast<char*>(temp);
+			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tt));
+			this->pfile = std::string(tt);
 		} else {
-			this->pfile = new char[100];
-			snprintf(this->pfile, 100, "power_%i", this->grid_rows);
-			printf("Using default input_power path: %s\n", this->pfile);
+			this->pfile = "power_" + std::to_string(this->grid_rows);
+			printf("Using default input_power path: %s\n", this->pfile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "gold_temp")) {
-			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(this->ofile));
+			char temp[128];
+			char *tt = static_cast<char*>(temp);
+			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tt));
+			this->ofile = std::string(tt);
 		} else {
-			this->ofile = new char[100];
-			snprintf(this->ofile, 100, "gold_temp_%s_%i_%i", this->tested_type.c_str(),
-					this->grid_rows, this->sim_time);
-			printf("Using default gold path: %s\n", this->ofile);
+			this->ofile = "gold_temp_" + this->tested_type + "_" + std::to_string(this->grid_rows)
+					+ "_" + std::to_string(this->sim_time);
+			printf("Using default gold path: %s\n", this->ofile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
@@ -204,13 +201,13 @@ void readInput(parameters& params, test_arrays<float_type>& arrays) {
 	int num_zeros = 0;
 	int num_nans = 0;
 
-	if ((ftemp = fopen(params.tfile, "r")) == 0)
+	if ((ftemp = fopen(params.tfile.c_str(), "r")) == 0)
 		fatal("The temp file was not opened");
-	if ((fpower = fopen(params.pfile, "r")) == 0)
+	if ((fpower = fopen(params.pfile.c_str(), "r")) == 0)
 		fatal("The power file was not opened");
 
 	if (!(params.generate))
-		if ((fgold = fopen(params.ofile, "rb")) == 0)
+		if ((fgold = fopen(params.ofile.c_str(), "rb")) == 0)
 			fatal("The gold was not opened");
 
 	for (i = 0; i <= (params.grid_rows) - 1; i++) {
@@ -281,7 +278,7 @@ void writeOutput(parameters& params, test_arrays<float_type>& arrays) {
 	int num_zeros = 0;
 	int num_nans = 0;
 
-	if ((fgold = fopen(params.ofile, "wb")) == 0)
+	if ((fgold = fopen(params.ofile.c_str(), "wb")) == 0)
 		fatal("The gold was not opened");
 
 	for (i = 0; i <= (params.grid_rows) - 1; i++) {
