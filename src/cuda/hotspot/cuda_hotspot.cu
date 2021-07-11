@@ -97,12 +97,49 @@ struct parameters {
 		if (checkCmdLineFlag(argc, (const char **) argv, "precision")) {
 			char *tmp = new char[16];
 			getCmdLineArgumentString(argc, (const char **) argv, "precision", &(tmp));
-			this->tested_type = tmp;
+			this->tested_type = std::string(tmp);
 			delete tmp;
+			printf("Precision %s\n", this->tested_type.c_str());
 		} else {
 			this->tested_type = "float";
 			printf("Using default precision float\n");
 		}
+
+		if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
+			char *tmp = new char[128];
+			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tmp));
+			this->tfile = std::string(tmp);
+			printf("Input temp: %s\n", this->tfile.c_str());
+			delete tmp;
+		} else {
+			this->tfile = "temp_" + std::to_string(this->grid_rows);
+			printf("Using default input_temp path: %s\n", this->tfile.c_str());
+		}
+
+		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
+			char *tmp = new char[128];
+			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
+			this->pfile =  std::string(tmp);
+			printf("Input power: %s\n", this->pfile.c_str());
+			delete tmp;
+		} else {
+			this->pfile = "power_" + std::to_string(this->grid_rows);
+			printf("Using default input_power path: %s\n", this->pfile.c_str());
+		}
+
+		if (checkCmdLineFlag(argc, (const char **) argv, "gold_temp")) {
+			char *tmp = new char[128];
+			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tmp));
+			this->ofile = std::string(tmp);
+			printf("Gold/output file: %s\n", this->ofile.c_str());
+			delete tmp;
+		} else {
+			this->ofile = "gold_temp_" + this->tested_type + "_" + std::to_string(this->grid_rows)
+					+ "_" + std::to_string(this->sim_time);
+			printf("Using default gold path: %s\n", this->ofile.c_str());
+		}
+
+		//-------------------------------------------------------
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "size")) {
 			this->grid_cols = getCmdLineArgumentInt(argc, (const char **) argv, "size");
@@ -124,38 +161,6 @@ struct parameters {
 				printf("Invalid sim_time given on the command-line: %d\n", this->sim_time);
 				exit (EXIT_FAILURE);
 			}
-		}
-
-		if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
-			char *tmp = new char[128];
-			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tmp));
-			this->tfile = tmp;
-			printf("Input temp: %s\n", tmp);
-			delete tmp;
-		} else {
-			this->tfile = "temp_" + std::to_string(this->grid_rows);
-			printf("Using default input_temp path: %s\n", this->tfile.c_str());
-		}
-
-		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
-			char *tmp = new char[128];
-			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
-			printf("Input power: %s\n", this->pfile.c_str());
-			this->pfile = tmp;
-			delete tmp;
-		} else {
-			this->pfile = "power_" + std::to_string(this->grid_rows);
-			printf("Using default input_power path: %s\n", this->pfile.c_str());
-		}
-
-		if (checkCmdLineFlag(argc, (const char **) argv, "gold_temp")) {
-			char *tmp = (char*) this->ofile.c_str();
-			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tmp));
-			printf("Gold/output file: %s\n", this->ofile.c_str());
-		} else {
-			this->ofile = "gold_temp_" + this->tested_type + "_" + std::to_string(this->grid_rows)
-					+ "_" + std::to_string(this->sim_time);
-			printf("Using default gold path: %s\n", this->ofile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
