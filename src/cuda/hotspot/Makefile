@@ -76,7 +76,7 @@ generate: $(TARGET)
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
 				-sim_time=$(SIM_TIME) -verbose -iterations=$(ITERATIONS) -streams=1
 
-test: $(TARGET) generate
+test: $(TARGET)
 	./$(TARGET) -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
 				-sim_time=$(SIM_TIME) -iterations=$(ITERATIONS) -verbose
