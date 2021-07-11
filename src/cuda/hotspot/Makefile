@@ -14,9 +14,9 @@ LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 SIZE?=1024
 SIM_TIME=1000
 DATA_DIR=../../../data/hotspot
-DEF_INPUT_POWER=$(DATA_DIR)/power_$(DEF_SIZE)
-DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(DEF_SIZE)
-DEF_GOLD=$(DATA_DIR)/gold_temp_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(SIM_TIME)
+DEF_INPUT_POWER=$(DATA_DIR)/power_$(SIZE)
+DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(SIZE)
+DEF_GOLD=$(DATA_DIR)/gold_temp_$(LOWERCASED_PRECISION)_$(SIZE)_$(SIM_TIME)
 
 
 # Kepler, Volta
@@ -71,12 +71,12 @@ clean:
 	rm -rf $(TARGET) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -generate -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
+	./$(TARGET) -generate -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
 				-sim_time=$(SIM_TIME) -verbose -iterations=1 -streams=1
 
 test: $(TARGET) generate
-	./$(TARGET) -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) \
+	./$(TARGET) -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
 				-sim_time=$(SIM_TIME) -iterations=10 -verbose
 				
