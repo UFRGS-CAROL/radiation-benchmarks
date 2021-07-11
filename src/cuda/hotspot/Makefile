@@ -11,6 +11,7 @@ BUILDPROFILER=0
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
+ITERATIONS=10
 SIZE?=1024
 SIM_TIME=1000
 DATA_DIR=../../../data/hotspot
@@ -73,10 +74,10 @@ clean:
 generate: $(TARGET)
 	./$(TARGET) -generate -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
-				-sim_time=$(SIM_TIME) -verbose -iterations=1 -streams=1
+				-sim_time=$(SIM_TIME) -verbose -iterations=$(ITERATIONS) -streams=1
 
 test: $(TARGET) generate
 	./$(TARGET) -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \
 				-input_temp=$(DEF_INPUT_TEMP) -gold_temp=$(DEF_GOLD) \
-				-sim_time=$(SIM_TIME) -iterations=10 -verbose
+				-sim_time=$(SIM_TIME) -iterations=$(ITERATIONS) -verbose
 				
