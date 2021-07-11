@@ -98,7 +98,7 @@ struct parameters {
 			char *tmp;
 			getCmdLineArgumentString(argc, (const char **) argv, "precision", &(tmp));
 			this->tested_type = std::string(tmp);
-			printf("Precision %s\n", this->tested_type.c_str());
+			printf("Precision: %s\n", this->tested_type.c_str());
 		} else {
 			this->tested_type = "float";
 			printf("Using default precision float\n");
@@ -161,6 +161,7 @@ struct parameters {
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
 			this->setup_loops = getCmdLineArgumentInt(argc, (const char **) argv, "iterations");
+			printf("Iterations: %d\n", this->setup_loops);
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "streams")) {
@@ -179,8 +180,7 @@ struct parameters {
 		if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
 			this->generate = 1;
 			this->setup_loops = 1;
-			printf(
-					">> Output will be written to file. Only stream #0 output will be considered.\n");
+			printf("Output will be written to file. Only stream #0 output will be considered.\n");
 		}
 
 	}
