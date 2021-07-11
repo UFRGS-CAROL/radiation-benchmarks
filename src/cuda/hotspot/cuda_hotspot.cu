@@ -195,7 +195,7 @@ void fatal(const char *s) {
 }
 
 template<typename float_type>
-void readInput(parameters params, test_arrays<float_type> arrays) {
+void readInput(parameters params, test_arrays<float_type>& arrays) {
 	// =================== Read all files
 	int i, j;
 	FILE *ftemp, *fpower, *fgold;
@@ -273,7 +273,7 @@ void readInput(parameters params, test_arrays<float_type> arrays) {
 }
 
 template<typename float_type>
-void writeOutput(parameters params, test_arrays<float_type> arrays) {
+void writeOutput(parameters params, test_arrays<float_type>& arrays) {
 	// =================== Write output to gold file
 	int i, j;
 	FILE *fgold;
@@ -484,7 +484,7 @@ int compute_tran_temp(float_type *MatrixPower, float_type *MatrixTemp[2], int co
 
 // Returns true if no errors are found. False if otherwise.
 template<typename float_type>
-int check_output_errors(parameters setup_parameters, test_arrays<float_type> arrays, int streamIdx,
+int check_output_errors(parameters setup_parameters, test_arrays<float_type>& arrays, int streamIdx,
 		rad::Log& log) {
 	int host_errors = 0;
 
@@ -526,7 +526,7 @@ int check_output_errors(parameters setup_parameters, test_arrays<float_type> arr
 }
 
 template<typename float_type>
-void run(parameters params, test_arrays<float_type> arrays) {
+void run(parameters params, test_arrays<float_type>& arrays) {
 	//int streamIdx;
 	double timestamp, globaltime;
 
