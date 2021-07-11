@@ -46,7 +46,7 @@ typedef half_float::half tested_type_host;
 #error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 #define STR_SIZE 256
 
@@ -412,11 +412,6 @@ void getParams(int argc, char** argv, parameters *params) {
 		exit (EXIT_FAILURE);
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
-		params->generate = 1;
-		printf(">> Output will be written to file. Only stream #0 output will be considered.\n");
-	}
-
 	if (checkCmdLineFlag(argc, (const char **) argv, "sim_time")) {
 		params->sim_time = getCmdLineArgumentInt(argc, (const char **) argv, "sim_time");
 
@@ -467,6 +462,13 @@ void getParams(int argc, char** argv, parameters *params) {
 		params->fault_injection = 1;
 		printf("!! Will be injected an input error\n");
 	}
+
+	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
+		params->generate = 1;
+		params->setup_loops = 1;
+		printf(">> Output will be written to file. Only stream #0 output will be considered.\n");
+	}
+
 }
 
 // Returns true if no errors are found. False if otherwise.
@@ -489,13 +491,9 @@ int check_output_errors(parameters *setup_parameters, int streamIdx, rad::Log& l
 							streamIdx, i, j, (double) valOutput, (double) valGold);
 					if (setup_parameters->verbose && (host_errors < 10))
 						printf("%s\n", error_detail);
-//#ifdef LOGS
 					if (!setup_parameters->generate) {
-//						log_error_detail(error_detail);
 						log.log_error_detail(std::string(error_detail));
-
 					}
-//#endif
 					host_errors++;
 
 				}
@@ -503,12 +501,9 @@ int check_output_errors(parameters *setup_parameters, int streamIdx, rad::Log& l
 		}
 	}
 
-//#ifdef LOGS
 	if (!setup_parameters->generate) {
-//		log_error_count(host_errors);
 		log.update_errors();
 	}
-//#endif
 	if ((host_errors != 0) && (!setup_parameters->verbose))
 		printf("#");
 	if ((host_errors != 0) && (setup_parameters->verbose))
@@ -552,21 +547,6 @@ void run(int argc, char** argv) {
 		fatal(setupParams, "unable to allocate memory");
 
 	//-----------------------------------------------------------------------------------
-
-//	char test_info[150];
-//	char test_name[90];
-//	snprintf(test_info, 150,
-//			"streams:%d precision:%s size:%d pyramidHeight:%d simTime:%d",
-//			setupParams->nstreams, test_precision_description,
-//			setupParams->grid_rows, setupParams->pyramid_height,
-//			setupParams->sim_time);
-//	snprintf(test_name, 90, "cuda_hotspot_%s", test_precision_description);
-
-//#ifdef LOGS
-//	if (!(setupParams->generate)) start_log_file(test_name, test_info);
-//#endif
-//	auto t_name = std::string(test_name);
-//	auto t_info = std::string(test_info);
 	auto test_name = "cuda_hotspot_" + std::string(test_precision_description);
 	auto test_info = "streams:" + std::to_string(setupParams->nstreams);
 	test_info += " precision:" + std::string(test_precision_description);
@@ -640,9 +620,6 @@ void run(int argc, char** argv) {
 
 		// ============ COMPUTE ============
 		double kernel_time = rad::mysecond();
-//#ifdef LOGS
-//		if (!(setupParams->generate)) start_iteration();
-//#endif
 		log.start_iteration();
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
@@ -655,9 +632,6 @@ void run(int argc, char** argv) {
 			rad::checkFrameworkErrors(cudaStreamSynchronize(streams[streamIdx]));
 		}
 		rad::checkFrameworkErrors(cudaGetLastError());
-//#ifdef LOGS
-//		if (!(setupParams->generate)) end_iteration();
-//#endif
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 
@@ -716,9 +690,6 @@ void run(int argc, char** argv) {
 		rad::checkFrameworkErrors(cudaStreamDestroy(streams[streamIdx]));
 	}
 
-//#ifdef LOGS
-//	if (!(setupParams->generate)) end_log_file();
-//#endif
 }
 
 int main(int argc, char** argv) {
