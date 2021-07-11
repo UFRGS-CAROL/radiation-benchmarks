@@ -130,6 +130,7 @@ struct parameters {
 			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tmp));
 			this->tfile = std::string(tmp);
 			memset(tmp, 0, 128);
+			printf("Input temp: %s\n", this->tfile.c_str());
 		} else {
 			this->tfile = "temp_" + std::to_string(this->grid_rows);
 			printf("Using default input_temp path: %s\n", this->tfile.c_str());
@@ -139,6 +140,8 @@ struct parameters {
 			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
 			this->pfile = std::string(tmp);
 			memset(tmp, 0, 128);
+			printf("Input power: %s\n", this->pfile.c_str());
+
 		} else {
 			this->pfile = "power_" + std::to_string(this->grid_rows);
 			printf("Using default input_power path: %s\n", this->pfile.c_str());
@@ -148,6 +151,8 @@ struct parameters {
 			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tmp));
 			this->ofile = std::string(tmp);
 			memset(tmp, 0, 128);
+			printf("Gold/output file: %s\n", this->ofile.c_str());
+
 		} else {
 			this->ofile = "gold_temp_" + this->tested_type + "_" + std::to_string(this->grid_rows)
 					+ "_" + std::to_string(this->sim_time);
