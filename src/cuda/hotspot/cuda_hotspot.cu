@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <vector>
 
 #ifdef USE_OMP
 #include <omp.h>
@@ -48,10 +49,17 @@
 
 template<typename float_type>
 struct test_arrays {
-	float_type *in_temperature = nullptr;
-	float_type *in_power = nullptr;
-	float_type *out_temperature = nullptr;
-	float_type *gold_temperature = nullptr;
+	std::vector<float_type> in_temperature;
+	std::vector<float_type> in_power;
+	std::vector<float_type> out_temperature;
+	std::vector<float_type> gold_temperature;
+
+	void allocate(size_t size) {
+		this->in_temperature = std::vector < float_type > (size); //(float_type *) malloc(size * sizeof(float_type));
+		this->in_power = std::vector < float_type > (size); //(float_type *) malloc(size * sizeof(float_type));
+		this->out_temperature = std::vector < float_type > (size); //(float_type *) calloc(size, sizeof(float_type));
+		this->gold_temperature = std::vector < float_type > (size); //(float_type *) calloc(size, sizeof(float_type));
+	}
 };
 
 struct parameters {
@@ -66,12 +74,19 @@ struct parameters {
 	int fault_injection;
 	int generate;
 
+	virtual ~parameters() {
+		if (this->tfile)
+			delete this->tfile;
+		if (this->pfile)
+			delete this->pfile;
+		if (this->ofile)
+			delete this->ofile;
+	}
+
 	void usage(int argc, char** argv) {
-		printf(
-				"Usage: %s [-size=N] [-generate] [-sim_time=N] [-input_temp=<path>]"
+		printf("Usage: %s [-size=N] [-generate] [-sim_time=N] [-input_temp=<path>]"
 				" [-input_power=<path>] [-gold_temp=<path>] [-iterations=N] [-streams=N]"
-				" [-debug] [-verbose] [-precision=<float|double>]\n",
-				argv[0]);
+				" [-debug] [-verbose] [-precision=<float|double>]\n", argv[0]);
 	}
 
 	parameters(int argc, char** argv) {
@@ -529,14 +544,11 @@ void run(parameters params, test_arrays<float_type> arrays) {
 	// =======================
 	//HARDENING AGAINST BAD BOARDS
 	//-----------------------------------------------------------------------------------
-	arrays.in_temperature = (float_type *) malloc(size * sizeof(float_type));
-	arrays.in_power = (float_type *) malloc(size * sizeof(float_type));
-	arrays.out_temperature = (float_type *) calloc(size, sizeof(float_type));
-	arrays.gold_temperature = (float_type *) calloc(size, sizeof(float_type));
-
-	if (!(arrays.in_power) || !(arrays.in_temperature)
-			|| !(arrays.out_temperature) || !(arrays.gold_temperature))
-		fatal("unable to allocate memory");
+	arrays.allocate(size);
+//
+//	if (!(arrays.in_power) || !(arrays.in_temperature) || !(arrays.out_temperature)
+//			|| !(arrays.gold_temperature))
+//		fatal("unable to allocate memory");
 
 	//-----------------------------------------------------------------------------------
 	auto test_name = "cuda_hotspot_" + params.tested_type;
@@ -558,7 +570,7 @@ void run(parameters params, test_arrays<float_type> arrays) {
 			test_name.c_str(), test_info.c_str());
 
 	timestamp = rad::mysecond();
-	readInput (params, arrays);
+	readInput(params, arrays);
 	if (params.verbose)
 		printf("readInput time: %.4fs\n", rad::mysecond() - timestamp);
 	fflush (stdout);
@@ -595,12 +607,12 @@ void run(parameters params, test_arrays<float_type> arrays) {
 
 			// Setup inputs (Power and Temperature)
 			rad::checkFrameworkErrors(
-					cudaMemcpy(MatrixTemp[streamIdx][0], arrays.in_temperature,
+					cudaMemcpy(MatrixTemp[streamIdx][0], arrays.in_temperature.data(),
 							sizeof(float_type) * size, cudaMemcpyHostToDevice));
 
 			rad::checkFrameworkErrors(
-					cudaMemcpy(MatrixPower[streamIdx], arrays.in_power,
-							sizeof(float_type) * size, cudaMemcpyHostToDevice));
+					cudaMemcpy(MatrixPower[streamIdx], arrays.in_power.data(), sizeof(float_type) * size,
+							cudaMemcpyHostToDevice));
 
 			// Setup output (Temperature)
 			rad::checkFrameworkErrors(
@@ -616,9 +628,8 @@ void run(parameters params, test_arrays<float_type> arrays) {
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (params.nstreams); streamIdx++) {
 			ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx], MatrixTemp[streamIdx],
-					params.grid_cols, params.grid_rows, params.sim_time,
-					params.pyramid_height, blockCols, blockRows, borderCols, borderRows,
-					streams[streamIdx]);
+					params.grid_cols, params.grid_rows, params.sim_time, params.pyramid_height,
+					blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
 		}
 		for (int streamIdx = 0; streamIdx < (params.nstreams); streamIdx++) {
 			rad::checkFrameworkErrors(cudaStreamSynchronize(streams[streamIdx]));
@@ -630,11 +641,11 @@ void run(parameters params, test_arrays<float_type> arrays) {
 		// ============ MEASURE PERFORMANCE ============
 		if (params.verbose) {
 
-			double outputpersec = (double) ((params.grid_rows * params.grid_rows
-					* params.nstreams) / kernel_time);
+			double outputpersec = (double) ((params.grid_rows * params.grid_rows * params.nstreams)
+					/ kernel_time);
 			printf("Kernel time: %.4lfs\n", kernel_time);
-			printf("Performance - SIZE:%d OUTPUT/S:%f FLOPS: %f (GFLOPS: %.2f)\n",
-					params.grid_rows, outputpersec, (double) flops / kernel_time,
+			printf("Performance - SIZE:%d OUTPUT/S:%f FLOPS: %f (GFLOPS: %.2f)\n", params.grid_rows,
+					outputpersec, (double) flops / kernel_time,
 					(double) flops / (kernel_time * 1000000000));
 		}
 		flops = 0;
@@ -644,16 +655,15 @@ void run(parameters params, test_arrays<float_type> arrays) {
 		int kernel_errors = 0;
 		if (params.generate) {
 			rad::checkFrameworkErrors(
-					cudaMemcpy(arrays.out_temperature, MatrixTemp[0][ret[0]],
+					cudaMemcpy(arrays.out_temperature.data(), MatrixTemp[0][ret[0]],
 							sizeof(float_type) * size, cudaMemcpyDeviceToHost));
 
 			writeOutput(params, arrays);
 		} else {
 			for (int streamIdx = 0; streamIdx < (params.nstreams); streamIdx++) {
 				rad::checkFrameworkErrors(
-						cudaMemcpy(arrays.out_temperature,
-								MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float_type) * size,
-								cudaMemcpyDeviceToHost));
+						cudaMemcpy(arrays.out_temperature.data(), MatrixTemp[streamIdx][ret[streamIdx]],
+								sizeof(float_type) * size, cudaMemcpyDeviceToHost));
 
 				check_output_errors(params, arrays, streamIdx, log);
 			}

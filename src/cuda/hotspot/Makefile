@@ -32,7 +32,7 @@ INCLUDE= -I$(CUDAPATH)/include -I../common/include  -I$(LOGHELPER_INC)
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
 
-TARGET=cuda_hotspot_$(LOWERCASED_PRECISION)
+TARGET=cuda_hotspot
 RUN_SOURCES=./cuda_hotspot.cu
 
 
