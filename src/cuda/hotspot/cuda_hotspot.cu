@@ -94,11 +94,13 @@ struct parameters {
 			exit (EXIT_FAILURE);
 		}
 
-		this->tested_type = "float";
 		if (checkCmdLineFlag(argc, (const char **) argv, "precision")) {
-			char *tmp = (char*) this->tested_type.c_str();
+			char *tmp = new char[16];
 			getCmdLineArgumentString(argc, (const char **) argv, "precision", &(tmp));
+			this->tested_type = tmp;
+			delete tmp;
 		} else {
+			this->tested_type = "float";
 			printf("Using default precision float\n");
 		}
 
@@ -125,19 +127,22 @@ struct parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
-			char *tmp = (char*) this->tfile.c_str();
+			char *tmp = new char[128];
 			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tmp));
+			this->tfile = tmp;
 			printf("Input temp: %s\n", tmp);
+			delete tmp;
 		} else {
 			this->tfile = "temp_" + std::to_string(this->grid_rows);
 			printf("Using default input_temp path: %s\n", this->tfile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
-			char *tmp = (char*) this->pfile.c_str();
+			char *tmp = new char[128];
 			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
 			printf("Input power: %s\n", this->pfile.c_str());
-
+			this->pfile = tmp;
+			delete tmp;
 		} else {
 			this->pfile = "power_" + std::to_string(this->grid_rows);
 			printf("Using default input_power path: %s\n", this->pfile.c_str());
