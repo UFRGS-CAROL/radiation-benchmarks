@@ -94,13 +94,13 @@ struct parameters {
 			exit (EXIT_FAILURE);
 		}
 
+		this->tested_type = "float";
+		char *tmp = new char[128];
 		if (checkCmdLineFlag(argc, (const char **) argv, "precision")) {
-			char precision_tmp[32];
-			char *tmp = static_cast<char*>(precision_tmp);
-			getCmdLineArgumentString(argc, (const char **) argv, "precision", &tmp);
-			this->tested_type = std::string(precision_tmp);
+			getCmdLineArgumentString(argc, (const char **) argv, "precision", &(tmp));
+			this->tested_type = std::string(tmp);
+			memset(tmp, 0, 128);
 		} else {
-			this->tested_type = "float";
 			printf("Using default precision float\n");
 		}
 
@@ -127,30 +127,27 @@ struct parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
-			char temp[128];
-			char *tt = static_cast<char*>(temp);
-			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tt));
-			this->tfile = std::string(tt);
+			getCmdLineArgumentString(argc, (const char **) argv, "input_temp", &(tmp));
+			this->tfile = std::string(tmp);
+			memset(tmp, 0, 128);
 		} else {
 			this->tfile = "temp_" + std::to_string(this->grid_rows);
 			printf("Using default input_temp path: %s\n", this->tfile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
-			char temp[128];
-			char *tt = static_cast<char*>(temp);
-			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tt));
-			this->pfile = std::string(tt);
+			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
+			this->pfile = std::string(tmp);
+			memset(tmp, 0, 128);
 		} else {
 			this->pfile = "power_" + std::to_string(this->grid_rows);
 			printf("Using default input_power path: %s\n", this->pfile.c_str());
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "gold_temp")) {
-			char temp[128];
-			char *tt = static_cast<char*>(temp);
-			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tt));
-			this->ofile = std::string(tt);
+			getCmdLineArgumentString(argc, (const char **) argv, "gold_temp", &(tmp));
+			this->ofile = std::string(tmp);
+			memset(tmp, 0, 128);
 		} else {
 			this->ofile = "gold_temp_" + this->tested_type + "_" + std::to_string(this->grid_rows)
 					+ "_" + std::to_string(this->sim_time);
