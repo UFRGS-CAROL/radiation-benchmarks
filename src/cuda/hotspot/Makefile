@@ -2,7 +2,7 @@ CUDAPATH=/usr/local/cuda
 CC=gcc
 CXX=g++
 NVCC=$(CUDAPATH)/bin/nvcc
-PRECISION?=single
+PRECISION?=float
 LOGS?=1
 USE_OMP=1
 
@@ -56,9 +56,6 @@ ifeq ($(BUILDPROFILER), 1)
 NVCCFLAGS+= -DBUILDPROFILER
 LIBRARY+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
-
-NVCCFLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 # It is necessary to multi compiler analysis
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"

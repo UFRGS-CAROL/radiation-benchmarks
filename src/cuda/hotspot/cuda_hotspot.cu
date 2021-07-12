@@ -117,7 +117,7 @@ struct parameters {
 		if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
 			char *tmp;
 			getCmdLineArgumentString(argc, (const char **) argv, "input_power", &(tmp));
-			this->pfile =  std::string(tmp);
+			this->pfile = std::string(tmp);
 			printf("Input power: %s\n", this->pfile.c_str());
 		} else {
 			this->pfile = "power_" + std::to_string(this->grid_rows);
@@ -550,7 +550,6 @@ void run(parameters& params, test_arrays<float_type>& arrays) {
 //		fatal("unable to allocate memory");
 
 	//-----------------------------------------------------------------------------------
-	auto test_name = "cuda_hotspot_" + params.tested_type;
 	auto test_info = "streams:" + std::to_string(params.nstreams);
 	test_info += " precision:" + params.tested_type;
 	test_info += " size:" + std::to_string(params.grid_rows);
@@ -560,13 +559,13 @@ void run(parameters& params, test_arrays<float_type>& arrays) {
 	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
 	;
 
-	rad::Log log(test_name, test_info);
+	rad::Log log("cuda_hotspot", test_info);
 	if (params.verbose) {
 		std::cout << log << std::endl;
 
 	}
-	printf("\n=================================\n%s\n%s\n=================================\n\n",
-			test_name.c_str(), test_info.c_str());
+	printf("\n=================================\ncuda_hotspot"
+			"\n%s\n=================================\n\n", test_info.c_str());
 
 	timestamp = rad::mysecond();
 	readInput(params, arrays);
