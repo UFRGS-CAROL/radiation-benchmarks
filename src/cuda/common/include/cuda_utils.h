@@ -34,8 +34,8 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 		return;
 	}
 	char errorDescription[ERROR_STRING_SIZE];
-	snprintf(errorDescription, ERROR_STRING_SIZE, "CUDA Framework error: %s. Bailing.",
-			cudaGetErrorString(error));
+	snprintf(errorDescription, ERROR_STRING_SIZE, "CUDA Framework error: %s. Error code %d.",
+			cudaGetErrorString(error), (int) error);
 #ifdef LOGS
 	log_error_detail((char *)errorDescription);
 	end_log_file();
@@ -45,41 +45,13 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 }
 
 #define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
-
-/**
-	Try first to reset the only the error code, then if it is not possible
-	finish the application. Some stick errors cannot be reset without finishing the app
-	https://stackoverflow.com/questions/56329377/reset-cuda-context-after-exception/56330491#56330491
- */
-static void _checkFrameworkErrorsAndReset(cudaError_t error, int line, const char *file) {
-	//write before reset
-	cudaError_t lastError = cudaGetLastError();
-
-	if (error != cudaSuccess || lastError != cudaSuccess) {
-		char errorDescription[ERROR_STRING_SIZE];
-		snprintf(errorDescription, ERROR_STRING_SIZE, "CUDA possible DUE: %s. Error code %d LastError code %d",
-				cudaGetErrorString(error), (int) error, (int) lastError);
-		printf("%s - Line: %d at %s\n", errorDescription, line, file);
-
-#ifdef LOGS
-		log_info_detail((char *)errorDescription);
-		log_info_count(1);
-#endif
-		//Make sure it is a non stick error
-		_checkFrameworkErrors(cudaDeviceSynchronize(), line, file);
-	}
-}
-
-/**
- * Don't worry, it is a macro that returns the status
- */
-#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrorsAndReset(error, __LINE__, __FILE__);
+#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
 
 static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {
 		return;
 	}
-	char errorDescription[250];
+	char errorDescription[ERROR_STRING_SIZE];
 	snprintf(errorDescription, 250, "CUDA CUBLAS error: %d. Bailing.", (error));
 #ifdef LOGS
 	log_error_detail((char *)errorDescription);
@@ -91,12 +63,6 @@ static void _checkCublasErrors(cublasStatus_t error, int line, const char *file)
 
 #define checkCublasErrors(error) _checkCublasErrors(error, __LINE__, __FILE__);
 
-/*
- * DEPRECATED
-#define checkLastCudaError(msg) _checkLastCudaError (msg, __FILE__, __LINE__);
-static void _checkLastCudaError(const char *errorMessage, const char *file, const int line);
-USE THE ABOVE FUNCTIONS INSTEAD
-*/
 static cudaDeviceProp get_device() {
 //================== Retrieve and set the default CUDA device
 	cudaDeviceProp prop = cudaDevicePropDontCare;
