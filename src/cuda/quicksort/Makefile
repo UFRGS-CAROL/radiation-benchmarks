@@ -71,10 +71,12 @@ generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
+	 		   -iterations=1 
+	 		   #-noinputensurance
 	 		   	
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
+	 		   -iterations=1
+	 		   #-noinputensurance
