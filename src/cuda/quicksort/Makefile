@@ -1,24 +1,22 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 EXEC=quicksort
 LOGS=1
 BUILDPROFILER=0
 DEBUG=0
-SIZE=134217728
+#SIZE=134217728
+SIZE=1048576
 
 VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
+NVCCFLAGS= -std=c++14 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp
+CXXFLAGS= -std=c++14 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp
-
-
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV 
-#-I$(CUDAPATH)/samples/common/inc
-INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common
+# Kepler, Volta
+SMS= 35 70 86
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 OBJDIR=./obj/
 OBJ= cdpBitonicSort.o cdpAdvancedQuicksort.o
@@ -46,6 +44,9 @@ LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: mkdir $(EXEC)
 
