@@ -1,35 +1,26 @@
+CUDAPATH=/usr/local/cuda
+CC=gcc
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
-EXEC=cudaACCL
+NVCC=$(CUDAPATH)/bin/nvcc
 LOGS=1
+USE_OMP=1
+
+EXEC=cudaACCL
 BUILDPROFILER=0
 ITERATIONS=10
 SIZE=7
 FRAMES=7
 GOLD=./gold_$(SIZE)_$(FRAMES).data
-#../gold_accl/gold_7_7 
 INPUT=../../../data/accl/7Frames.pgm
 
 VPATH=./src/
-CUDAPATH=/usr/local/cuda
-NVCC=$(CUDAPATH)/bin/nvcc
 
-NVCCFLAGS= -std=c++11 -Xptxas -v -dc  -Wno-deprecated-gpu-targets
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
+NVCCFLAGS= -std=c++11 -rdc=true
 
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-
-# check for cuda 7.0 or lower
-ifneq (, $(findstring cuda-7.0, $(CUDAPATH)))
-else
-# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]
-# Tegra X2
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]
-# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]
-# Xavier
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
-endif
+# Kepler, Volta
+SMS= 35 70 86
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
@@ -54,22 +45,17 @@ CXXFLAGS+= -DBUILDPROFILER
 LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
-
-NVCCFLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
-
 # It is necessary to multi compiler analysis
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
 NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 GPUOBJS = $(addprefix $(OBJDIR), $(GPUOBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-
 all: mkdir $(EXEC)
-
 
 $(EXEC): $(OBJS)  
 	$(CXX) $(CXXFLAGS) $(GPUOBJS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
@@ -79,7 +65,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE)
-	$(NVCC) -ccbin $(CXX) $(ARCH)  -dlink $@ -o $@_dlink.o -lcudadevrt
+	$(NVCC) -ccbin $(CXX) $(ARCH) -dlink $@ -o $@_dlink.o -lcudadevrt
 
 mkdir:
 	mkdir -p $(OBJDIR)

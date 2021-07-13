@@ -191,6 +191,7 @@ double acclCuda(rad::DeviceVector<int> &devOut,
                 const rad::DeviceVector<int> &devIn, uint nFrames, uint nFramsPerStream,
                 const int rows, const int cols, int logs_active, rad::Log &log,
                 std::vector<cudaStream_t> &streams) {
+	auto acc = rad::mysecond();
     const int colsSpans = ((cols + 2 - 1) / 2) * 2; /*ceil(cols/2)*2*/
     const int colsComponents = colsSpans / 2;
 
@@ -209,7 +210,7 @@ double acclCuda(rad::DeviceVector<int> &devOut,
     /*Streams Information*/
     uint nStreams = nFrames / nFramsPerStream;
     int rowsOccupancyMax = frameRows * nFramsPerStream;
-    rad::checkFrameworkErrorsAndResetErrorStatus(
+    rad::checkFrameworkErrors(
             cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize,
                                                findSpansKernel, 0, rowsOccupancyMax));
     // printf("Best Kernel Size\n");
@@ -218,22 +219,22 @@ double acclCuda(rad::DeviceVector<int> &devOut,
     // printf("\t Block Size: %d\n", blockSize);
     // printf("\t Rows Max Occupancy: %d\n", rowsOccupancyMax);
 
-    cudaEvent_t start, stop;
-    float time;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+//    cudaEvent_t start, stop;
+//    float time;
+//    cudaEventCreate(&start);
+//    cudaEventCreate(&stop);
 
     /* Choose which GPU to run on, change this on a multi-GPU system.*/
-    rad::checkFrameworkErrorsAndResetErrorStatus(cudaSetDevice(0));
+    rad::checkFrameworkErrors(cudaSetDevice(0));
 
     /* Allocate GPU buffers for three vectors (two input, one output)*/
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMalloc((void** )&devOut, sizeOut * sizeof(int)));
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMalloc((void** )&devComponents, sizeComponents * sizeof(int)));
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMalloc((void** )&devIn, sizeIn * sizeof(int)));
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devOut, sizeOut * sizeof(int)));
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devComponents, sizeComponents * sizeof(int)));
+//	rad::checkFrameworkErrors(cudaMalloc((void** )&devIn, sizeIn * sizeof(int)));
     /* Copy input vectors from host memory to GPU buffers*/
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMemcpy(devIn, in, sizeIn * sizeof(int), cudaMemcpyHostToDevice));
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMemcpy(devComponents, components, sizeComponents * sizeof(int),		cudaMemcpyHostToDevice));
-//	rad::checkFrameworkErrorsAndResetErrorStatus(cudaMemcpy(devOut, out, sizeOut * sizeof(int),		cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devIn, in, sizeIn * sizeof(int), cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devComponents, components, sizeComponents * sizeof(int),		cudaMemcpyHostToDevice));
+//	rad::checkFrameworkErrors(cudaMemcpy(devOut, out, sizeOut * sizeof(int),		cudaMemcpyHostToDevice));
 //	rad::DeviceVector<int> devIn = in;
 //	rad::DeviceVector<int> devComponents = components;
 //	rad::DeviceVector<int> devOut = out;
@@ -251,7 +252,7 @@ double acclCuda(rad::DeviceVector<int> &devOut,
     /* Launch a kernel on the GPU with one thread for each element*/
     // printf("Number of frames processed: %d\n", nFrames);
     // printf("Number of streams created: %d\n", nStreams);
-    cudaEventRecord(start, 0); /*measure time*/
+//    cudaEventRecord(start, 0); /*measure time*
     if (logs_active)
         log.start_iteration();
     for (int i = 0; i < nStreams; ++i) {
@@ -265,36 +266,36 @@ double acclCuda(rad::DeviceVector<int> &devOut,
                 devComponents.data() + i * frameCompSize,
                 devOut.data() + i * frameSpansSize, rows, cols, frameRows);
     }
-    rad::checkFrameworkErrorsAndResetErrorStatus(cudaDeviceSynchronize());
-    //rad::checkFrameworkErrorsAndResetErrorStatus(cudaGetLastError());
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
+    //rad::checkFrameworkErrors(cudaGetLastError());
 
     if (logs_active)
         log.end_iteration();
     /* Copy device to host*/
-//	rad::checkFrameworkErrorsAndResetErrorStatus(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(components, devComponents, sizeComponents * sizeof(int),
 //					cudaMemcpyDeviceToHost));
-//	rad::checkFrameworkErrorsAndResetErrorStatus(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(out, devOut, sizeOut * sizeof(int),
 //					cudaMemcpyDeviceToHost));
 //	devComponents.to_vector(components);
 //	devOut.to_vector(out);
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-
-    cudaEventElapsedTime(&time, start, stop);
+//    cudaEventRecord(stop, 0);
+//    cudaEventSynchronize(stop);
+//
+//    cudaEventElapsedTime(&time, start, stop);
     //printf ("Time kernel execution: %f ms\n", time);
 
 
     /* Analysis of occupancy*/
-    int maxActiveBlocks;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks,
-                                                  findSpansKernel, blockSize, 0);
+//    int maxActiveBlocks;
+//    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks,
+//                                                  findSpansKernel, blockSize, 0);
 
-    int device;
-    cudaDeviceProp props;
-    cudaGetDevice(&device);
-    cudaGetDeviceProperties(&props, device);
+//    int device;
+//    cudaDeviceProp props;
+//    cudaGetDevice(&device);
+//    cudaGetDeviceProperties(&props, device);
 //	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
 //			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
@@ -308,7 +309,7 @@ double acclCuda(rad::DeviceVector<int> &devOut,
 //	cudaFree(devOut);
 //	cudaFree(devIn);
 //	cudaFree(devComponents);
-    return time / 1000;
+    return rad::mysecond();
 }
 
 std::string get_multi_compiler_header() {
