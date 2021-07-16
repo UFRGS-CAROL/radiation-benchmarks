@@ -45,7 +45,6 @@ static void _checkFrameworkErrors(cudaError_t error, int line, const char *file)
 }
 
 #define checkFrameworkErrors(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
-#define checkFrameworkErrorsAndResetErrorStatus(error) _checkFrameworkErrors(error, __LINE__, __FILE__);
 
 static void _checkCublasErrors(cublasStatus_t error, int line, const char *file) {
 	if (error == CUBLAS_STATUS_SUCCESS) {
