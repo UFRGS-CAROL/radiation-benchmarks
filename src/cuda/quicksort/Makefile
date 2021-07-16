@@ -5,12 +5,13 @@ BUILDPROFILER=0
 DEBUG=0
 #SIZE=134217728
 SIZE=1048576
+ITERATIONS=10
 
 VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-NVCCFLAGS= -std=c++14 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp
+NVCCFLAGS= -std=c++14 -Xptxas -v -rdc=true -Xcompiler -fopenmp
 CXXFLAGS= -std=c++14 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 
 INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common
@@ -71,12 +72,12 @@ generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 
+	 		   -iterations=$(ITERATIONS) 
 	 		   #-noinputensurance
 	 		   	
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1
+	 		   -iterations=$(ITERATIONS)
 	 		   #-noinputensurance

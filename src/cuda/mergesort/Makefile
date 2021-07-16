@@ -11,7 +11,7 @@ VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-NVCCFLAGS= -std=c++14 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
+NVCCFLAGS= -std=c++14 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
 CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
 
 INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common
