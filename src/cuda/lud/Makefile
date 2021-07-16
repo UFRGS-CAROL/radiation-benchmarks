@@ -1,23 +1,28 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
 EXEC=cudaLUD
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
+RADDIR=/home/fernando/radiation-benchmarks
 SIZE=8192
+GOLD=$(RADDIR)/data/lud/gold_$(SIZE).data
+INPUT=$(RADDIR)/data/lud/input_$(SIZE).data
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
+NVCCFLAGS= -std=c++11 -Xptxas -v
+# NVCC optmizations flags
+NVCCOPTFLAGS=
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
+# This is what I use, uncomment if you know your arch and want to specify
+# Kepler, Volta
+SMS= 35 53 70 86
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
-
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common/include
 
 OBJDIR=./obj/
 OBJ=  lud_kernel.o  main.o Parameters.o
@@ -30,7 +35,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
@@ -39,14 +44,17 @@ LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
 
-all: mkdir $(EXEC)
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
+all: mkdir $(EXEC)
 
 $(EXEC): $(OBJS)  
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
@@ -65,8 +73,8 @@ clean:
 	
 
 generate:
-	./cudaLUD --size $(SIZE) --generate --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
-
-test:
-	./cudaLUD --size $(SIZE) --input ./input_$(SIZE).data --gold ./gold_$(SIZE).data --iterations $(ITERATIONS) --verbose;
+	./$(EXEC) --size $(SIZE) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
 	
+test:
+	./$(EXEC) --size $(SIZE) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
+

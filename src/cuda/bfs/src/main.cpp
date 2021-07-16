@@ -9,6 +9,8 @@
 #include "Parameters.h"
 #include "generic_log.h"
 
+extern std::string get_multi_compiler_header();
+
 int BFSGraph(rad::DeviceVector<Node>& d_graph_nodes,
 		rad::DeviceVector<bool_t>& d_graph_mask,
 		rad::DeviceVector<bool_t>& d_updating_graph_mask,
@@ -160,6 +162,7 @@ int main(int argc, char** argv) {
 	test_info += " source:" + std::to_string(source);
 	test_info += " inputFile:" + parameters.input;
 	test_info += " goldFile:" + parameters.gold;
+	test_info += " " + get_multi_compiler_header();
 
 	std::string test_name = "cudaBFS";
 	rad::Log log(test_name, test_info);

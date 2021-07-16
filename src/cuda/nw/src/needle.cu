@@ -14,6 +14,7 @@
 //helper kernels
 #include "include/cuda_utils.h"
 #include "include/device_vector.h"
+#include "include/multi_compiler_analysis.h"
 
 // includes, kernels
 #include "needle.h"
@@ -202,31 +203,18 @@ void runTest(int argc, char** argv) {
 	dim3 gchk_dimBlock(gchk_blocksize, gchk_blocksize);
 	dim3 gchk_dimGrid(gchk_gridsize, gchk_gridsize);
 	////////////////////////////////////////////////////
-
-	// Log files
-	/*FILE* file;
-	 FILE* log_file;
-	 */
 	//================== Init logs
-//#ifdef LOGS
-////"max_rows:%d max_cols:%d penalty:%d"
-//	std::string test_info = "";
-//	test_info += "max_rows:" + std::to_string(max_rows) + " ";
-//	test_info += "max_cols:" + std::to_string(max_cols) + " ";
-//	test_info += "penalty:" + std::to_string(penalty);
-//	start_log_file(CONST_CAST("cudaNW"), CONST_CAST(test_info.c_str()));
-//#endif
 	std::string test_info = "", test_name = "cudaNW";
 	test_info += "max_rows:" + std::to_string(max_rows) + " ";
 	test_info += "max_cols:" + std::to_string(max_cols) + " ";
-	test_info += "penalty:" + std::to_string(penalty);
+	test_info += "penalty:" + std::to_string(penalty) + " ";
+	test_info += rad::get_multi_compiler_header();
+
 	rad::Log log(test_name, test_info);
 	std::cout << log << std::endl;
 	//====================================
 	KErrorsType ea = 0; //wrong integers in the current loop
 	KErrorsType t_ea = 0; //total number of wrong integers
-//	KErrorsType old_ea = 0;
-
 	double total_time = 0.0;
 
 	max_rows++;
@@ -275,9 +263,6 @@ void runTest(int argc, char** argv) {
 		int block_width = (max_cols - 1) / BLOCK_SIZE;
 
 		auto kernel_time = rad::mysecond();
-//#ifdef LOGS
-//		start_iteration();
-//#endif
 		log.start_iteration();
 		//printf("Processing top-left matrix\n");
 		//process top-left matrix
@@ -297,10 +282,6 @@ void runTest(int argc, char** argv) {
 		}
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaGetLastError());
-
-//#ifdef LOGS
-//		end_iteration();
-//#endif
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 		total_time += kernel_time;
@@ -337,11 +318,7 @@ void runTest(int argc, char** argv) {
 #pragma omp critical
 							{
 								ea++;
-
-//#ifdef LOGS
-//								log_error_detail(CONST_CAST(error_detail.c_str()));
 								host_errors++;
-//#endif
 								log.log_error_detail(error_detail);
 							}
 
@@ -349,10 +326,6 @@ void runTest(int argc, char** argv) {
 					}
 				}
 				t_ea += host_errors;
-
-//#ifdef LOGS
-//				log_error_count(host_errors);
-//#endif
 				log.update_errors();
 			}
 
@@ -380,10 +353,6 @@ void runTest(int argc, char** argv) {
 		}
 
 	}
-
-//#ifdef LOGS
-//	end_log_file();
-//#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,4 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
 EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
@@ -12,10 +11,10 @@ VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-
-NVCCFLAGS= -std=c++11 -Xptxas -v
+NVCCFLAGS= -std=c++11 -Xptxas -v  -Wno-deprecated-gpu-targets
 # NVCC optmizations flags
 NVCCOPTFLAGS=
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
@@ -26,7 +25,6 @@ INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADD
 
 OBJDIR=./obj/
 OBJ= bfs.o main.o Parameters.o kernel.o
-
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -71,7 +69,6 @@ mkdir:
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
-	
 
 generate:
 	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
@@ -79,4 +76,3 @@ generate:
 test:
 	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
 
-	
