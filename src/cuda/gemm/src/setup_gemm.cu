@@ -61,13 +61,8 @@ void setup_execute(Parameters &parameters, GemmCaller<COUNT, half_t, real_t> &mu
 		mult_env.gemm(a_vector_device, b_vector_device, c_vector_device, c_vector_device_half_t,
 				real_t(parameters.alpha), real_t(parameters.beta), parameters.size_matrices,
 				parameters.size_matrices, threshold);
-//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-//		;
-//		rad::checkFrameworkErrors(cudaPeekAtLastError());
-//		;
-		//new DUE setup
-		rad::checkFrameworkErrorsAndResetErrorStatus(cudaDeviceSynchronize());
-
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		parameters.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
 		elapsed_time += computation_time;

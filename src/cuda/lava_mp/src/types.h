@@ -145,8 +145,7 @@ struct CudaStream {
 	}
 
 	void sync() {
-//		rad::checkFrameworkErrors(cudaStreamSynchronize(this->stream));
-		rad::checkFrameworkErrorsAndResetErrorStatus(cudaStreamSynchronize(this->stream));
+		rad::checkFrameworkErrors(cudaStreamSynchronize(this->stream));
 	}
 };
 

@@ -318,8 +318,8 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		int grid_rows,  //Row of grid
 		int border_cols,  // border offset
 		int border_rows,  // border offset
-		float Cap,      //Capacitance
-		float Rx, float Ry, float Rz, float step, float time_elapsed) {
+		float_type Cap,      //Capacitance
+		float_type Rx, float_type Ry, float_type Rz, float_type step, float_type time_elapsed) {
 
 	//----------------------------------------------------
 	__shared__ float_type temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
@@ -405,7 +405,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		IN_RANGE(tx, validXmin, validXmax) &&
 		IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
-			register float_type calculated = temp_on_cuda[ty][tx]
+			float_type calculated = temp_on_cuda[ty][tx]
 					+ step_div_Cap
 							* (power_on_cuda[ty][tx]
 									+ (temp_on_cuda[S][tx] + temp_on_cuda[N][tx]
