@@ -10,7 +10,7 @@ VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-RADDIR=/home/fernando/radiation-benchmarks
+RADDIR=/home/carol/radiation-benchmarks
 
 NVCCFLAGS= -std=c++11 -Xptxas -v
 # NVCC optmizations flags
