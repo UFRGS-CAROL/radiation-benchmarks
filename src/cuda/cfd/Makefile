@@ -17,9 +17,13 @@ NVCC=$(CUDAPATH)/bin/nvcc
 
 NVCCFLAGS= -std=c++11 -O3 -Xptxas -v  -Wno-deprecated-gpu-targets
 
+# NVCC optmizations flags
+NVCCOPTFLAGS=
 
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+# This is what I use, uncomment if you know your arch and want to specify
+# Kepler, Volta
+SMS= 35 53 70 86
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 

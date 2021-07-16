@@ -28,7 +28,7 @@ void initialize_variables(int nelr, float* variables, cudaStream_t& stream) {
 	dim3 Dg(nelr / BLOCK_SIZE_1), Db(BLOCK_SIZE_1);
 	cuda_initialize_variables<<<Dg, Db, 0, stream>>>(nelr, variables);
 	//getLastCudaError("initialize_variables failed");
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaGetLastError());
 //	;
 }
 
@@ -108,7 +108,7 @@ void compute_step_factor(int nelr, float* variables, float* areas,
 	cuda_compute_step_factor<<<Dg, Db, 0, stream>>>(nelr, variables, areas,
 			step_factors);
 //	getLastCudaError("compute_step_factor failed");
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaGetLastError());
 //	;
 }
 
@@ -319,7 +319,7 @@ void compute_flux(int nelr, int* elements_surrounding_elements, float* normals,
 	cuda_compute_flux<<<Dg, Db, 0, stream>>>(nelr,
 			elements_surrounding_elements, normals, variables, fluxes);
 //	getLastCudaError("compute_flux failed");
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaGetLastError());
 }
 
 __global__ void cuda_time_step(int j, int nelr, float* old_variables,
@@ -350,8 +350,8 @@ void time_step(int j, int nelr, float* old_variables, float* variables,
 	cuda_time_step<<<Dg, Db, 0, stream>>>(j, nelr, old_variables, variables,
 			step_factors, fluxes);
 //	getLastCudaError("update failed");
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
-//	;
+	rad::checkFrameworkErrors(cudaGetLastError());
+	;
 }
 
 void copy_to_symbol_variables(float h_ff_variable[NVAR],
@@ -389,6 +389,6 @@ void euler3D(int* elements_surrounding_elements, float* normals,
 		compute_flux(nelr, elements_surrounding_elements, normals, variables, fluxes, stream);
 		time_step(j, nelr, old_variables, variables, step_factors, fluxes, stream);
 	}
-//	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaGetLastError());
 
 }
