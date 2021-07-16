@@ -4,7 +4,7 @@ EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-RADDIR=/home/fernando/radiation-benchmarks
+RADDIR=/home/carol/radiation-benchmarks
 GOLD=$(RADDIR)/data/bfs/gold.data
 INPUT=$(RADDIR)/data/bfs/graph1MW_6.txt
 
