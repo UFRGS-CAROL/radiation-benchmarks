@@ -48,6 +48,15 @@ namespace rad {
         return opt_flags;
     }
 
+    std::string get_multi_compiler_header() {
+#ifndef __NVCC__
+#error "Calling get_multi_compiler_header() from a non cuda file, please call it from NVCC source files"
+#endif
+    	std::string test_info = " nvcc_version:" + get_cuda_cc_version();
+    	test_info += " nvcc_optimization_flags:" + extract_nvcc_opt_flags_str();
+    	return test_info;
+    }
+
 }
 
 

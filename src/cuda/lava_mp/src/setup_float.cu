@@ -42,9 +42,7 @@
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
 
 std::string get_multi_compiler_header() {
-	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
-	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
-	return test_info;
+	return rad::get_multi_compiler_header();
 }
 
 void setup_float(Parameters& parameters, rad::Log& log) {

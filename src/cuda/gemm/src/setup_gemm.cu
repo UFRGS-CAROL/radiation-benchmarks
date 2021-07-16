@@ -9,9 +9,7 @@ extern void show_iteration_status(int it, bool verbose, double copy_time, double
 		double computation_time, std::pair<int, int> errors);
 
 std::string get_multi_compiler_header() {
-	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
-	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
-	return test_info;
+	return rad::get_multi_compiler_header();
 }
 
 template<const uint32_t COUNT, typename half_t, typename real_t>

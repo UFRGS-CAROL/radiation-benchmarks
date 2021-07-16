@@ -794,12 +794,6 @@ void getParams(int argc, char *argv[], parameters_t *params) {
 	}
 }
 
-std::string get_multi_compiler_header() {
-	std::string test_info = " nvcc_version:" + rad::get_cuda_cc_version();
-	test_info += " nvcc_optimization_flags:" + rad::extract_nvcc_opt_flags_str();
-	return test_info;
-}
-
 // Host side entry
 int main(int argc, char *argv[]) {
 	parameters_t *params;
@@ -824,7 +818,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::string test_info = "size:" + std::to_string(params->size);
-	test_info += get_multi_compiler_header();
+	test_info += rad::get_multi_compiler_header();
 #ifdef LOGS
 	if (!(params->generate)) start_log_file(const_cast<char*>("cudaQuickSortCDP"),
 			const_cast<char*>(test_info.c_str()));
