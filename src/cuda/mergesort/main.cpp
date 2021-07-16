@@ -13,6 +13,7 @@
 
 #include "include/cuda_utils.h"
 
+extern std::string get_multi_compiler_header();
 #define INPUTSIZE 134217728
 
 int generate;
@@ -140,8 +141,8 @@ void getParams(int argc, char *argv[], parameters_t *params) {
 }
 
 void writeOutput(parameters_t *params) {
-	FILE *fgold;
-	if (fgold = fopen(params->goldName, "wb")) {
+	FILE *fgold = fopen(params->goldName, "wb");
+	if (fgold) {
 		fwrite(params->h_DstKey, params->size * sizeof(uint), 1, fgold);
 		fwrite(params->h_DstVal, params->size * sizeof(uint), 1, fgold);
 		fclose(fgold);
@@ -151,9 +152,9 @@ void writeOutput(parameters_t *params) {
 }
 
 void readData(parameters_t *params, const uint numValues) {
-	FILE *fgold, *finput;
+	FILE *fgold, *finput = fopen(params->inputName, "rb");
 
-	if (finput = fopen(params->inputName, "rb")) {
+	if (finput) {
 		auto ret = fread(params->h_SrcKey, sizeof(uint), params->size, finput);
 		if(ret != params->size){
 			fatal("Could not read the file");
@@ -440,11 +441,13 @@ int main(int argc, char **argv) {
 
 	getParams(argc, argv, params);
 
+	std::string test_info = "size:" + std::to_string(params->size);
+	test_info += get_multi_compiler_header();
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "size:%d", params->size);
-	if (!params->generate) start_log_file(const_cast<char*>("cudaMergeSort"), test_info);
-
+//	char test_info[90];
+//	snprintf(test_info, 90, "size:%d", params->size);
+	if (!params->generate) start_log_file(const_cast<char*>("cudaMergeSort"),
+			const_cast<char*>(test_info.c_str()));
 #ifdef BUILDPROFILER
 	auto str = std::string(get_log_file_name());
 	if(params->generate) {
