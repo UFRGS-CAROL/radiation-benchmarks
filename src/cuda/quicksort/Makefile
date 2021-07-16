@@ -72,7 +72,7 @@ generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=$(ITERATIONS) 
+	 		   -iterations=1
 	 		   #-noinputensurance
 	 		   	
 test:
