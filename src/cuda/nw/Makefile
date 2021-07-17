@@ -6,7 +6,7 @@ OMP=1
 BUILDPROFILER=0
 SIZE?=8192
 ITERATIONS=10
-RADDIR=/home/fernando/radiation-benchmarks
+RADDIR=/home/carol/radiation-benchmarks
 PENALTY=10
 
 INPUT=$(RADDIR)/data/nw/input_$(SIZE)_$(PENALTY)
