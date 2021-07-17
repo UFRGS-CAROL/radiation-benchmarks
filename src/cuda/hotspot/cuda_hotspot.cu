@@ -451,18 +451,18 @@ int compute_tran_temp(float_type *MatrixPower, float_type *MatrixTemp[2], int co
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
-	float grid_height = chip_height / row;
-	float grid_width = chip_width / col;
+	float_type grid_height = chip_height / row;
+	float_type grid_width = chip_width / col;
 
-	float Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
-	float Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
-	float Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
-	float Rz = t_chip / (K_SI * grid_height * grid_width);
+	float_type Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
+	float_type Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
+	float_type Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
+	float_type Rz = t_chip / (K_SI * grid_height * grid_width);
 
-	float max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
-	float step = PRECISION / max_slope;
-	float t;
-	float time_elapsed;
+	float_type max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
+	float_type step = PRECISION / max_slope;
+	float_type t;
+	float_type time_elapsed;
 	time_elapsed = 0.001;
 
 	int src = 1, dst = 0;
