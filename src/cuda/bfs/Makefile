@@ -3,9 +3,10 @@ EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-RADDIR=/home/carol/radiation-benchmarks
-GOLD=$(RADDIR)/data/bfs/gold.data
-INPUT=$(RADDIR)/data/bfs/graph1MW_6.txt
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/bfs
+GOLD=$(DATADIR)/gold.data
+INPUT=$(DATADIR)/graph1MW_6.txt
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -39,9 +40,8 @@ endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
@@ -66,6 +66,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
+	mkdir -p $(DATADIR)
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)

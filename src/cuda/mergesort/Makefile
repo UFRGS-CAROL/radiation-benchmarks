@@ -14,7 +14,9 @@ NVCC=$(CUDAPATH)/bin/nvcc
 NVCCFLAGS= -std=c++14 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
 CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
 
-INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/mergesort
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
 # Kepler, Volta
 SMS= 35 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
@@ -30,15 +32,14 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
 NVCCFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
@@ -63,21 +64,21 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
-
+	mkdir -p $(DATADIR)
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 	
 generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
+	 		   -input=$(DATADIR)/input_$(SIZE) \
+	 		   -gold=$(DATADIR)/gold_$(SIZE) \
 	 		   -iterations=1 
 	 		   #-noinputensurance
 	 		   	
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
+	 		   -input=$(DATADIR)/input_$(SIZE) \
+	 		   -gold=$(DATADIR)/gold_$(SIZE) \
 	 		   -iterations=$(ITERATIONS)
 	 		   #-noinputensurance

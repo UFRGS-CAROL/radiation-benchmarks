@@ -2,34 +2,31 @@ CUDAPATH=/usr/local/cuda
 CC=gcc
 CXX=g++
 NVCC=$(CUDAPATH)/bin/nvcc
-PRECISION?=float
-LOGS?=1
+PRECISION=float
+LOGS=1
 USE_OMP=1
 
 BUILDPROFILER=0
-
-UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+RADDIR=../../..
 
 ITERATIONS=10
 STREAMS=1
-SIZE?=1024
+SIZE=1024
 SIM_TIME=1000
-DATA_DIR=../../../data/hotspot
+DATA_DIR=$(RADDIR)/data/hotspot
 DEF_INPUT_POWER=$(DATA_DIR)/power_$(SIZE)
 DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(SIZE)
-DEF_GOLD=$(DATA_DIR)/gold_$(LOWERCASED_PRECISION)_$(SIZE)_$(SIM_TIME)
-
+DEF_GOLD=$(DATA_DIR)/gold_$(PRECISION)_$(SIZE)_$(SIM_TIME)
 
 # Kepler, Volta
 SMS= 35 53 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+LOGHELPER_INC=$(RADDIR)/src/include/
+LOGHELPER_LIB=$(RADDIR)/src/include/
 
 NVCCFLAGS= $(ARCH) -std=c++11 -Xptxas -v $(NVCCOPTFLAGS)
-INCLUDE= -I$(CUDAPATH)/include -I../common/include  -I$(LOGHELPER_INC)
+INCLUDE= -I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common/include  -I$(LOGHELPER_INC)
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
 
@@ -45,7 +42,7 @@ CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper
 endif
 
 ifeq ($(USE_OMP), 1)
-NVCCFLAGS+= -DUSE_OMP -Xcompiler " -fopenmp -O3"
+NVCCFLAGS+= -DUSE_OMP -Xcompiler " -fopenmp"
 endif
 
 ifeq ($(DEBUG), 1)
@@ -54,7 +51,7 @@ endif
 
 ifeq ($(BUILDPROFILER), 1)
 NVCCFLAGS+= -DBUILDPROFILER
-LIBRARY+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LIBRARY+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
 # It is necessary to multi compiler analysis
@@ -67,7 +64,7 @@ $(TARGET): $(RUN_SOURCES)
 	$(NVCC) -ccbin $(CXX) $(INCLUDE) $(LIBRARY) $(NVCCFLAGS) $(RUN_SOURCES) -o $(TARGET)
 
 clean:
-	rm -rf $(TARGET) $(DEF_GOLD)
+	rm -rf $(TARGET)
 
 generate: $(TARGET)
 	./$(TARGET) -generate -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) \

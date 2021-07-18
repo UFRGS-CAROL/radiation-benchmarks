@@ -3,10 +3,11 @@ EXEC=cudaLUD
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
-RADDIR=/home/carol/radiation-benchmarks
+RADDIR=../../..
 SIZE=8192
-GOLD=$(RADDIR)/data/lud/gold_$(SIZE).data
-INPUT=$(RADDIR)/data/lud/input_$(SIZE).data
+DATADIR=$(RADDIR)/data/lud
+GOLD=$(DATADIR)/gold_$(SIZE).data
+INPUT=$(DATADIR)/input_$(SIZE).data
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -40,15 +41,13 @@ endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
-
 
 # It is necessary to multi compiler analysis
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
@@ -67,6 +66,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
+	mkdir -p $(DATADIR)
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)

@@ -8,23 +8,19 @@
 #include "common.h"
 #include "Parameters.h"
 
-extern void euler3D(int* elements_surrounding_elements, float* normals,
-		float* variables, float* fluxes, float* step_factors, float* areas,
-		float* old_variables, int nelr, cudaStream_t& stream);
+extern void euler3D(int* elements_surrounding_elements, float* normals, float* variables,
+		float* fluxes, float* step_factors, float* areas, float* old_variables, int nelr,
+		cudaStream_t& stream);
 
-extern void compute_flux_contribution(float& density, float3& momentum,
-		float& density_energy, float& pressure, float3& velocity,
-		float3& fc_momentum_x, float3& fc_momentum_y, float3& fc_momentum_z,
-		float3& fc_density_energy);
+extern void compute_flux_contribution(float& density, float3& momentum, float& density_energy,
+		float& pressure, float3& velocity, float3& fc_momentum_x, float3& fc_momentum_y,
+		float3& fc_momentum_z, float3& fc_density_energy);
 
 extern void copy_to_symbol_variables(float h_ff_variable[NVAR],
-		float3 h_ff_flux_contribution_momentum_x,
-		float3 h_ff_flux_contribution_momentum_y,
-		float3 h_ff_flux_contribution_momentum_z,
-		float3 h_ff_flux_contribution_density_energy);
+		float3 h_ff_flux_contribution_momentum_x, float3 h_ff_flux_contribution_momentum_y,
+		float3 h_ff_flux_contribution_momentum_z, float3 h_ff_flux_contribution_density_energy);
 
-extern void initialize_variables(int nelr, float* variables,
-		cudaStream_t& stream);
+extern void initialize_variables(int nelr, float* variables, cudaStream_t& stream);
 
 void dump(rad::DeviceVector<float>& variables, int nel, int nelr) {
 	std::vector<float> h_variables(variables.to_vector()); //nelr * NVAR);
@@ -70,8 +66,7 @@ int main(int argc, char** argv) {
 
 	if (parameters.verbose) {
 		std::cout << "WG size of kernel:initialize = " << BLOCK_SIZE_1
-				<< ", WG size of kernel:compute_step_factor = " << BLOCK_SIZE_2
-				<< ", "
+				<< ", WG size of kernel:compute_step_factor = " << BLOCK_SIZE_2 << ", "
 						"WG size of kernel:compute_flux = " << BLOCK_SIZE_3
 				<< ", WG size of kernel:time_step = " << BLOCK_SIZE_4 << "\n";
 		std::cout << "Name:" << prop.name << std::endl;
@@ -81,8 +76,7 @@ int main(int argc, char** argv) {
 	// set far field conditions and load them into constant memory on the gpu
 
 	float h_ff_variable[NVAR];
-	const float angle_of_attack = float(3.1415926535897931 / 180.0f)
-			* float(deg_angle_of_attack);
+	const float angle_of_attack = float(3.1415926535897931 / 180.0f) * float(deg_angle_of_attack);
 
 	h_ff_variable[VAR_DENSITY] = float(1.4);
 
@@ -96,16 +90,12 @@ int main(int argc, char** argv) {
 	ff_velocity.y = ff_speed * float(sin((float) angle_of_attack));
 	ff_velocity.z = 0.0f;
 
-	h_ff_variable[VAR_MOMENTUM + 0] = h_ff_variable[VAR_DENSITY]
-			* ff_velocity.x;
-	h_ff_variable[VAR_MOMENTUM + 1] = h_ff_variable[VAR_DENSITY]
-			* ff_velocity.y;
-	h_ff_variable[VAR_MOMENTUM + 2] = h_ff_variable[VAR_DENSITY]
-			* ff_velocity.z;
+	h_ff_variable[VAR_MOMENTUM + 0] = h_ff_variable[VAR_DENSITY] * ff_velocity.x;
+	h_ff_variable[VAR_MOMENTUM + 1] = h_ff_variable[VAR_DENSITY] * ff_velocity.y;
+	h_ff_variable[VAR_MOMENTUM + 2] = h_ff_variable[VAR_DENSITY] * ff_velocity.z;
 
 	h_ff_variable[VAR_DENSITY_ENERGY] = h_ff_variable[VAR_DENSITY]
-			* (float(0.5f) * (ff_speed * ff_speed))
-			+ (ff_pressure / float(GAMMA - 1.0f));
+			* (float(0.5f) * (ff_speed * ff_speed)) + (ff_pressure / float(GAMMA - 1.0f));
 
 	float3 h_ff_momentum;
 	h_ff_momentum.x = *(h_ff_variable + VAR_MOMENTUM + 0);
@@ -117,15 +107,12 @@ int main(int argc, char** argv) {
 	float3 h_ff_flux_contribution_density_energy;
 	compute_flux_contribution(h_ff_variable[VAR_DENSITY], h_ff_momentum,
 			h_ff_variable[VAR_DENSITY_ENERGY], ff_pressure, ff_velocity,
-			h_ff_flux_contribution_momentum_x,
-			h_ff_flux_contribution_momentum_y,
-			h_ff_flux_contribution_momentum_z,
-			h_ff_flux_contribution_density_energy);
+			h_ff_flux_contribution_momentum_x, h_ff_flux_contribution_momentum_y,
+			h_ff_flux_contribution_momentum_z, h_ff_flux_contribution_density_energy);
 
 	// copy far field conditions to the gpu
 	copy_to_symbol_variables(h_ff_variable, h_ff_flux_contribution_momentum_x,
-			h_ff_flux_contribution_momentum_y,
-			h_ff_flux_contribution_momentum_z,
+			h_ff_flux_contribution_momentum_y, h_ff_flux_contribution_momentum_z,
 			h_ff_flux_contribution_density_energy);
 	int nel;
 	int nelr;
@@ -133,8 +120,7 @@ int main(int argc, char** argv) {
 	std::ifstream file(data_file_name);
 
 	file >> nel;
-	nelr = BLOCK_SIZE_0
-			* ((nel / BLOCK_SIZE_0) + std::min(1, nel % BLOCK_SIZE_0));
+	nelr = BLOCK_SIZE_0 * ((nel / BLOCK_SIZE_0) + std::min(1, nel % BLOCK_SIZE_0));
 
 	std::vector<float> h_areas(nelr);
 	std::vector<int> h_elements_surrounding_elements(nelr * NNB);
@@ -151,8 +137,7 @@ int main(int argc, char** argv) {
 
 			for (int k = 0; k < NDIM; k++) {
 				file >> h_normals[i + (j + k * NNB) * nelr];
-				h_normals[i + (j + k * NNB) * nelr] = -h_normals[i
-						+ (j + k * NNB) * nelr];
+				h_normals[i + (j + k * NNB) * nelr] = -h_normals[i + (j + k * NNB) * nelr];
 			}
 		}
 	}
@@ -163,31 +148,24 @@ int main(int argc, char** argv) {
 		h_areas[i] = h_areas[last];
 		for (int j = 0; j < NNB; j++) {
 			// duplicate the last element
-			h_elements_surrounding_elements[i + j * nelr] =
-					h_elements_surrounding_elements[last + j * nelr];
+			h_elements_surrounding_elements[i + j * nelr] = h_elements_surrounding_elements[last
+					+ j * nelr];
 			for (int k = 0; k < NDIM; k++)
-				h_normals[last + (j + k * NNB) * nelr] = h_normals[last
-						+ (j + k * NNB) * nelr];
+				h_normals[last + (j + k * NNB) * nelr] = h_normals[last + (j + k * NNB) * nelr];
 		}
 	}
 
 	// read in domain geometry
-	std::vector<rad::DeviceVector<float>> host_stream_areas(
-			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_areas(parameters.stream_number);
 	std::vector<rad::DeviceVector<int>> host_stream_elements_surrounding_elements(
 			parameters.stream_number);
-	std::vector<rad::DeviceVector<float>> host_stream_normals(
-			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_normals(parameters.stream_number);
 
 	// Create arrays and set initial conditions
-	std::vector<rad::DeviceVector<float>> host_stream_variables(
-			parameters.stream_number);
-	std::vector<rad::DeviceVector<float>> host_stream_old_variables(
-			parameters.stream_number);
-	std::vector<rad::DeviceVector<float>> host_stream_fluxes(
-			parameters.stream_number);
-	std::vector<rad::DeviceVector<float>> host_stream_step_factors(
-			parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_variables(parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_old_variables(parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_fluxes(parameters.stream_number);
+	std::vector<rad::DeviceVector<float>> host_stream_step_factors(parameters.stream_number);
 
 	std::vector < cudaStream_t > streams(parameters.stream_number);
 
@@ -201,8 +179,7 @@ int main(int argc, char** argv) {
 		//		elements_surrounding_elements = alloc<int>(nelr * NNB);
 		//		upload<int>(elements_surrounding_elements,
 		//				h_elements_surrounding_elements, nelr * NNB);
-		host_stream_elements_surrounding_elements[i] =
-				h_elements_surrounding_elements;
+		host_stream_elements_surrounding_elements[i] = h_elements_surrounding_elements;
 
 		//		normals = alloc<float>(nelr * NDIM * NNB);
 		//		upload<float>(normals, h_normals, nelr * NDIM * NNB);
@@ -267,10 +244,10 @@ int main(int argc, char** argv) {
 
 			acc_assigment_time += (rad::mysecond() - begin_assigment);
 
-			euler3D(elements_surrounding_elements, normals, variables, fluxes,
-					step_factors, areas, old_variables, nelr, streams[stream]);
+			euler3D(elements_surrounding_elements, normals, variables, fluxes, step_factors, areas,
+					old_variables, nelr, streams[stream]);
 		}
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaGetLastError());
 
 		auto begin_copy = rad::mysecond();
 		for (auto stream = 0; stream < parameters.stream_number; stream++) {
@@ -280,18 +257,19 @@ int main(int argc, char** argv) {
 		acc_copy_time += (rad::mysecond() - begin_copy);
 	}
 
-	rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	;
 	auto end = rad::mysecond();
 	std::cout << host_stream_variables[0].size() << std::endl;
 
-	std::cout << "TIME ASSIGMENT " << acc_assigment_time << std::endl;
-	std::cout << "TIME COPY " << acc_copy_time << std::endl;
+	std::cout << "TIME ASSIGMENT " << acc_assigment_time << " TIME COPY " << acc_copy_time
+			<< std::endl;
 
 	//	CUT_SAFE_CALL( cutStopTimer(timer) );
 //	sdkStopTimer(&timer);
 
-	std::cout << ((end - begin) / float(parameters.iterations))
-			<< " seconds per iteration" << std::endl;
+	std::cout << ((end - begin) / float(parameters.iterations)) << " seconds per iteration"
+			<< std::endl;
 
 	std::cout << "Saving solution..." << std::endl;
 	dump(host_stream_variables[0], nel, nelr);

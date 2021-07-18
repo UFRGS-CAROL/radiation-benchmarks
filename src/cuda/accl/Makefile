@@ -10,8 +10,10 @@ BUILDPROFILER=0
 ITERATIONS=10
 SIZE=7
 FRAMES=7
-GOLD=./gold_$(SIZE)_$(FRAMES).data
-INPUT=../../../data/accl/7Frames.pgm
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/accl
+GOLD=$(DATADIR)/gold_$(SIZE)_$(FRAMES).data
+INPUT=$(DATADIR)/7Frames.pgm
 
 VPATH=./src/
 
@@ -22,7 +24,7 @@ NVCCFLAGS= -std=c++11 -rdc=true
 SMS= 35 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common/include
 
 OBJDIR=./obj/
 GPUOBJ= accl.o_dlink.o
@@ -37,12 +39,12 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
 # It is necessary to multi compiler analysis
@@ -69,6 +71,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
+	mkdir -p $(DATADIR)
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)

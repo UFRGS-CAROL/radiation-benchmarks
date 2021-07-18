@@ -10,7 +10,8 @@ VPATH=./src/
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-RADDIR=/home/carol/radiation-benchmarks
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/gaussian
 
 NVCCFLAGS= -std=c++11 -Xptxas -v
 # NVCC optmizations flags
@@ -39,9 +40,8 @@ endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
@@ -67,11 +67,11 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
-
+	mkdir -p $(DATADIR)
+	
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-DATADIR=$(RADDIR)/data/gaussian
 
 generate:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \

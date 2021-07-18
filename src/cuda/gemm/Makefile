@@ -13,6 +13,9 @@ DMR=none
 BUILDRELATIVEERROR=0
 CHECKBLOCK=1
 
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/gemm
+
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
 
 # NVCC optmizations flags
@@ -29,14 +32,11 @@ OBJDIR=./obj/
 CXX=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
-OPTS=-O3
 LDFLAGS=  -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
 COMMON= --std=c++11
-CFLAGS= -Wall -Wfatal-errors
+CFLAGS= -O3 -Wall -Wfatal-errors
 
-RAD_DIR=/home/carol/radiation-benchmarks
-
-INCLUDE=-I$(CUDAPATH)/include -I../common  -I$(CUDAPATH)/include/
+INCLUDE=-I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common  -I$(CUDAPATH)/include/
 
 ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
@@ -47,7 +47,7 @@ USETENSORS= --tensor_cores
 endif
 
 ifeq ($(DEBUG), 1) 
-OPTS=-O0 -g -DDEBUG
+CFLAGS+=-O0 -g -DDEBUG
 NVCCFLAGS+= -g -G -DDEBUG
 endif
 
@@ -61,15 +61,13 @@ NVCCFLAGS+= -Xcompiler "-DOMP -fopenmp"
 endif
 
 ifeq ($(LOGS), 1)
-INCLUDE+=-I../../include/
+INCLUDE+=-I$(RADDIR)/src/include/
 NVCCFLAGS+= -DLOGS
 CFLAGS+= -DLOGS
-LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
+LDFLAGS+= -L$(RADDIR)/src/include/ -lLogHelper -DLOGS=1
 endif
 
-
 OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
-CFLAGS+=$(OPTS)
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -78,7 +76,7 @@ DEPS = $(wildcard src/*.h) Makefile
 PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
 NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
-all: obj $(TARGET)
+all: mkdir $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
@@ -89,10 +87,9 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) -ccbin $(CXX) $(ARCH) $(COMMON) $(NVCCFLAGS) $(INCLUDE) -c $< -o $@ 
 
-
-obj:
+mkdir:
 	mkdir -p obj
-
+	mkdir -p $(DATADIR)
 
 .PHONY: clean
 clean:
@@ -103,19 +100,19 @@ generate:
 	./$(TARGET) --size $(SIZE) --generate --verbose \
 			--precision $(PRECISION) --dmr none \
 			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX) $(USECUBLAS) $(USETENSORS)
+			--input_a $(DATADIR)/a_$(OUTPUTPREFIX) \
+			--input_b $(DATADIR)/b_$(OUTPUTPREFIX) \
+			--input_c $(DATADIR)/c_$(OUTPUTPREFIX) \
+			--gold  $(DATADIR)/g_$(OUTPUTPREFIX) $(USECUBLAS) $(USETENSORS)
 	
 test:
 	./$(TARGET) --size $(SIZE) --verbose \
 			--precision $(PRECISION) --dmr $(DMR) \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)	\
+			--input_a $(DATADIR)/a_$(OUTPUTPREFIX) \
+			--input_b $(DATADIR)/b_$(OUTPUTPREFIX) \
+			--input_c $(DATADIR)/c_$(OUTPUTPREFIX) \
+			--gold  $(DATADIR)/g_$(OUTPUTPREFIX)	\
 			--opnum $(CHECKBLOCK) $(USECUBLAS) $(USETENSORS)
 			
