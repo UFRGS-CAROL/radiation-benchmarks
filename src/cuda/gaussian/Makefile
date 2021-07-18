@@ -79,5 +79,5 @@ generate:
 
 test:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \
-							 --gold  $(DATADIR)/gold_$(SIZE).data --verbose --iterations 10
+							 --gold  $(DATADIR)/gold_$(SIZE).data --verbose --iterations $(ITERATIONS)
 	
