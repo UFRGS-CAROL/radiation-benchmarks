@@ -75,7 +75,7 @@ clean:
 
 generate:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \
-							 --gold  $(DATADIR)/gold_$(SIZE).data --verbose --generate
+							 --gold  $(DATADIR)/gold_$(SIZE).data --verbose --generate --iterations 1
 
 test:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \

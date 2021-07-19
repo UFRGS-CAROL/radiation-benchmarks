@@ -72,7 +72,7 @@ clean:
 	rm -f $(OBJDIR)* $(EXEC)
 
 generate:
-	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
+	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations 1 --verbose --generate
 	
 test:
 	./$(EXEC) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose

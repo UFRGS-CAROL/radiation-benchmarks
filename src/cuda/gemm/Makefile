@@ -99,6 +99,7 @@ clean:
 generate:
 	./$(TARGET) --size $(SIZE) --generate --verbose \
 			--precision $(PRECISION) --dmr none \
+			--iterations 1  \
 			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a $(DATADIR)/a_$(OUTPUTPREFIX) \
 			--input_b $(DATADIR)/b_$(OUTPUTPREFIX) \

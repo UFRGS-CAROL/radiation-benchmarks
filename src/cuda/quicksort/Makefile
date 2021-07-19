@@ -74,7 +74,7 @@ clean:
 	
 generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
-	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=$(ITERATIONS)
+	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=1
 	 		   #-noinputensurance
 	 		   	
 test:

@@ -73,7 +73,7 @@ clean:
 	
 
 generate:
-	./$(EXEC) --size $(SIZE) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
+	./$(EXEC) --size $(SIZE) --input $(INPUT) --gold $(GOLD) --iterations 1 --verbose --generate
 	
 test:
 	./$(EXEC) --size $(SIZE) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose
