@@ -9,8 +9,8 @@ ITERATIONS=10
 RADDIR=../../..
 PENALTY=10
 DATADIR=$(RADDIR)/data/nw
-INPUT=$(DATADIR)/nw/input_$(SIZE)_$(PENALTY)
-GOLD=$(DATADIR)/nw/gold_$(SIZE)_$(PENALTY)
+INPUT=$(DATADIR)/input_$(SIZE)_$(PENALTY)
+GOLD=$(DATADIR)/gold_$(SIZE)_$(PENALTY)
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
