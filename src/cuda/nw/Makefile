@@ -4,13 +4,13 @@ DEBUG=0
 LOGS=1
 OMP=1
 BUILDPROFILER=0
-SIZE?=8192
+SIZE=8192
 ITERATIONS=10
-RADDIR=/home/carol/radiation-benchmarks
+RADDIR=../../..
 PENALTY=10
-
-INPUT=$(RADDIR)/data/nw/input_$(SIZE)_$(PENALTY)
-GOLD=$(RADDIR)/data/nw/gold_$(SIZE)_$(PENALTY)
+DATADIR=$(RADDIR)
+INPUT=$(DATADIR)/nw/input_$(SIZE)_$(PENALTY)
+GOLD=$(DATADIR)/nw/gold_$(SIZE)_$(PENALTY)
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -52,7 +52,6 @@ CXXFLAGS+= -DBUILDPROFILER
 LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
-
 LDFLAGS+= -lm -pthread -lstdc++ -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
@@ -76,12 +75,13 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
+	mkdir -p $(DATADIR)
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 
 generate:
-	./$(EXEC) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 1
+	./$(EXEC) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) 1 1
 
 test:
 	./$(EXEC) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 0
