@@ -11,7 +11,7 @@ VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 RADDIR=../../..
-DATADIR=$(RADDIR)/data/quicksor
+DATADIR=$(RADDIR)/data/quicksort
 INPUT=$(DATADIR)/quicksort_input_134217728
 GOLD=$(DATADIR)/quicksort_gold_$(SIZE)
 
