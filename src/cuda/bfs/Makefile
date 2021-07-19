@@ -3,6 +3,7 @@ EXEC=cudaBFS
 LOGS=1
 BUILDPROFILER=0
 ITERATIONS=10
+
 RADDIR=../../..
 DATADIR=$(RADDIR)/data/bfs
 GOLD=$(DATADIR)/gold.data
@@ -62,7 +63,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
 	
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE)
 
 mkdir:
 	mkdir -p $(OBJDIR)

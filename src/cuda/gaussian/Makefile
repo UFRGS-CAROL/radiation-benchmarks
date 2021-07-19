@@ -71,7 +71,6 @@ mkdir:
 	
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
-	
 
 generate:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \
@@ -81,3 +80,4 @@ test:
 	./$(EXEC) --size $(SIZE) --input $(DATADIR)/input_$(SIZE).data \
 							 --gold  $(DATADIR)/gold_$(SIZE).data --verbose --iterations $(ITERATIONS)
 	
+
