@@ -25,7 +25,7 @@ $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 LOGHELPER_INC=$(RADDIR)/src/include/
 LOGHELPER_LIB=$(RADDIR)/src/include/
 
-NVCCFLAGS= $(ARCH) -std=c++11 -Xptxas -v $(NVCCOPTFLAGS)
+NVCCFLAGS= $(ARCH) -std=c++11
 INCLUDE= -I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common/include  -I$(LOGHELPER_INC)
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
