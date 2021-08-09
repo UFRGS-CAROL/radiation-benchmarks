@@ -1,4 +1,5 @@
 DEBUG=0
+BLOCK_SIZE=32
 #for radiation setup
 LOGS=1
 OMP=1
@@ -33,10 +34,14 @@ CXX=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
 LDFLAGS=  -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
-COMMON= --std=c++11
+COMMON= --std=c++11 
 CFLAGS= -O3 -Wall -Wfatal-errors
 
 INCLUDE=-I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common  -I$(CUDAPATH)/include/
+
+ifneq ($(BLOCK_SIZE), 32)
+COMMON+= -DBLOCK_SIZE=$(BLOCK_SIZE)
+endif
 
 ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
