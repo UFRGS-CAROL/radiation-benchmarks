@@ -1,35 +1,30 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -O3  -fPIC -fopenmp
 EXEC=cudaCFD
 LOGS=1
 BUILDPROFILER=0
+DEBUG=0
 ITERATIONS=10
 STREAMS=1
 
-GOLD=./gold_$(STREAMS).data
-#../gold_accl/gold_7_7 
-INPUT=../../../data/cfd/missile.domn.0.2M
-
-VPATH=./src/
+VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/cfd
+INPUT_BASE=missile.domn.0.2M
+INPUT=$(DATADIR)/$(INPUT_BASE)
+GOLD=$(DATADIR)/cfd_gold_$(INPUT_BASE)
 
+NVCCFLAGS= -std=c++14 -Xptxas -v -Xcompiler -fopenmp  -Xcompiler -fPIC
+CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v  -Wno-deprecated-gpu-targets
-
-# NVCC optmizations flags
-NVCCOPTFLAGS=
-
-# This is what I use, uncomment if you know your arch and want to specify
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
 # Kepler, Volta
 SMS= 35 70 86
-$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
-
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 OBJDIR=./obj/
 OBJ= euler3d.o main.o Parameters.o
-
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -39,23 +34,25 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+NVCCFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
-
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: mkdir $(EXEC)
-
 
 $(EXEC): $(OBJS)  
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
@@ -64,7 +61,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
 
 mkdir:
 	mkdir -p $(OBJDIR)
@@ -72,7 +69,6 @@ mkdir:
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-
 generate:
 	./$(EXEC) --streams $(STREAMS) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
 
