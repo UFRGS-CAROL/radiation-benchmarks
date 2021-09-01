@@ -90,7 +90,7 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
     size_t error_count = 0;
 
 #ifndef FULL_COMPARISSON
-    if (std::equal(gold_array.begin(), gold_array.end(), new_array.begin(), comparator)) {
+    if (std::equal(gold_array.begin(), gold_array.end(), new_array.begin(), comparator) == false) {
         for (size_t i = 0; i < gold_array.size(); i++) {
             auto &g = gold_array[i];
             auto &n = new_array[i];
