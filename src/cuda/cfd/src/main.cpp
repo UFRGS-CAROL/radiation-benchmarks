@@ -405,7 +405,8 @@ int main(int argc, char **argv) {
             std::cout << "Iteration:" << i << " Errors:" << errors << " Kernel time:" << kernel_time;
             std::cout << " Copy time:" << copy_time << " Recopy time:" << recopy_time << std::endl;
             auto wasted_time = copy_time + cmp_time + recopy_time;
-            std::cout << "Compare time:" << cmp_time << " Wasted time: " << kernel_time / wasted_time << std::endl;
+            std::cout << "Compare time:" << cmp_time << " Wasted time: "
+                      << int((1.0f - kernel_time / wasted_time) * 100.0f) << "%\n";
             std::cout << "==========================================================================================\n";
         }
     }
