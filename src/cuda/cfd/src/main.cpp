@@ -385,7 +385,7 @@ int main(int argc, char **argv) {
         auto cmp_time = rad::mysecond();
         if (!parameters.generate) {
             std::vector<size_t> error_vector(parameters.stream_number);
-#pragma omp parallell for shared(logger)
+#pragma omp parallel for shared(logger)
             for (int stream = 0; stream < parameters.stream_number; stream++) {
                 error_vector[stream] = compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
             }

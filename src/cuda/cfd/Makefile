@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
+CXXFLAGS= -std=c++11 -O3  -fPIC -fopenmp
 EXEC=cudaCFD
 LOGS=1
 BUILDPROFILER=0
@@ -22,7 +22,7 @@ NVCCOPTFLAGS=
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
-SMS= 35 53 70 86
+SMS= 35 70 86
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
