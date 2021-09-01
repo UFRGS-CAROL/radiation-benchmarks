@@ -414,21 +414,19 @@ int main(int argc, char **argv) {
             for (auto err_i : error_vector) {
                 errors += err_i;
             }
+            // recopying to set the arrays to default
+            device_stream_variables = device_reload_variables;
+            device_stream_old_variables = device_reload_old_variables;
+            device_stream_fluxes = device_reload_fluxes;
         }
         cmp_time = rad::mysecond() - cmp_time;
-        auto recopy_time = rad::mysecond();
-        device_stream_variables = device_reload_variables;
-        device_stream_old_variables = device_reload_old_variables;
-        device_stream_fluxes = device_reload_fluxes;
-        recopy_time = rad::mysecond() - recopy_time;
 
         if (parameters.verbose) {
-            std::cout << "Iteration:" << i << " Errors:" << errors << " Kernel time:" << kernel_time;
-            std::cout << " Copy time:" << copy_time << " Recopy time:" << recopy_time << std::endl;
-            auto wasted_time = copy_time + cmp_time + recopy_time;
+            auto wasted_time = copy_time + cmp_time;
             auto full_time = wasted_time + kernel_time;
-            std::cout << "Compare time:" << cmp_time << " Wasted time: "
-                      << int((wasted_time / full_time) * 100.0f) << "%)" << std::endl;
+            std::cout << "Iteration:" << i << " Errors:" << errors << " Kernel time:" << kernel_time;
+            std::cout << " Copy time:" << copy_time << "Compare time:" << cmp_time << " Wasted time: "
+                                                    << int((wasted_time / full_time) * 100.0f) << "%" << std::endl;
             std::cout << "==========================================================================================\n";
         }
     }
