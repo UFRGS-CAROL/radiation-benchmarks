@@ -83,25 +83,30 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
         std::memcpy(&n_data, number, sizeof(float));
         return n_data;
     };
+    auto comparator = [](const float &lhs, const float &rhs) {
+        return fabs(lhs - rhs) > ERROR_THRESHOLD;
+    };
     //    std::ofstream file("density");
     size_t error_count = 0;
 
 #ifndef FULL_COMPARISSON
-    for (size_t i = 0; i < gold_array.size(); i++) {
-        auto& g = gold_array[i];
-        auto& n = new_array[i];
-        auto diff = fabs(g - n);
-        if (diff > ERROR_THRESHOLD) {
-            std::string error_detail = "stream:" + std::to_string(stream) + " i:" + std::to_string(i);
-            // It is better to write the raw data
-            error_detail += " e:" + std::to_string(cast_to_uint(&g)) + " r:" + std::to_string(cast_to_uint(&n));
+    if (std::equal(gold_array.begin(), gold_array.end(), new_array.begin(), comparator)) {
+        for (size_t i = 0; i < gold_array.size(); i++) {
+            auto &g = gold_array[i];
+            auto &n = new_array[i];
+            auto diff = fabs(g - n);
+            if (diff > ERROR_THRESHOLD) {
+                std::string error_detail = "stream:" + std::to_string(stream) + " i:" + std::to_string(i);
+                // It is better to write the raw data
+                error_detail += " e:" + std::to_string(cast_to_uint(&g)) + " r:" + std::to_string(cast_to_uint(&n));
 #pragma omp critical
-            {
-                logger.log_error_detail(error_detail);
-            }
-            error_count++;
-            if (error_count < 10) {
-                std::cout << error_detail << std::endl;
+                {
+                    logger.log_error_detail(error_detail);
+                }
+                error_count++;
+                if (error_count < 10) {
+                    std::cout << error_detail << std::endl;
+                }
             }
         }
     }
@@ -428,7 +433,7 @@ int main(int argc, char **argv) {
             auto wasted_time = copy_time + cmp_time + recopy_time;
             auto full_time = wasted_time + kernel_time;
             std::cout << "Compare time:" << cmp_time << " Wasted time: "
-                    << int((wasted_time / full_time) * 100.0f) << "%)" << std::endl;
+                      << int((wasted_time / full_time) * 100.0f) << "%)" << std::endl;
             std::cout << "==========================================================================================\n";
         }
     }
