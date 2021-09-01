@@ -84,13 +84,14 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
         return n_data;
     };
     auto comparator = [](const float &lhs, const float &rhs) {
-        return fabs(lhs - rhs) > ERROR_THRESHOLD;
+        return fabs(lhs - rhs) <= ERROR_THRESHOLD;
     };
     //    std::ofstream file("density");
     size_t error_count = 0;
 
 #ifndef FULL_COMPARISSON
-    if (std::equal(gold_array.begin(), gold_array.end(), new_array.begin(), comparator) == false) {
+    auto is_equal = std::equal(gold_array.begin(), gold_array.end(), new_array.begin(), comparator);
+    if (is_equal == false) {
         for (size_t i = 0; i < gold_array.size(); i++) {
             auto &g = gold_array[i];
             auto &n = new_array[i];
