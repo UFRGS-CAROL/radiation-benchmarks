@@ -40,6 +40,7 @@ void dump(rad::DeviceVector<float> &variables, int nel, int nelr) {
         file_momentum << std::endl;
     }
 
+
     std::ofstream file_energy("density_energy");
     file_energy << nel << " " << nelr << std::endl;
     for (int i = 0; i < nel; i++)
