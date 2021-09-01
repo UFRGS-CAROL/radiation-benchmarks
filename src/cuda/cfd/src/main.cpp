@@ -12,6 +12,9 @@
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define ERROR_THRESHOLD 1e-6
 
+template<class T>
+using DevArray = std::vector<rad::DeviceVector<T>>;
+
 extern void euler3D(int *elements_surrounding_elements, float *normals, float *variables,
                     float *fluxes, float *step_factors, float *areas, float *old_variables, int nelr,
                     cudaStream_t &stream);
@@ -264,15 +267,15 @@ int main(int argc, char **argv) {
     }
 
     // read in domain geometry
-    std::vector<rad::DeviceVector<float>> device_stream_areas(parameters.stream_number);
-    std::vector<rad::DeviceVector<int>> device_stream_elements_surrounding_elements(parameters.stream_number);
-    std::vector<rad::DeviceVector<float>> device_stream_normals(parameters.stream_number);
+    DevArray<float> device_stream_areas(parameters.stream_number);
+    DevArray<int> device_stream_elements_surrounding_elements(parameters.stream_number);
+    DevArray<float> device_stream_normals(parameters.stream_number);
 
     // Create arrays and set initial conditions
-    std::vector<rad::DeviceVector<float>> device_stream_variables(parameters.stream_number);
-    std::vector<rad::DeviceVector<float>> device_stream_old_variables(parameters.stream_number);
-    std::vector<rad::DeviceVector<float>> device_stream_fluxes(parameters.stream_number);
-    std::vector<rad::DeviceVector<float>> device_stream_step_factors(parameters.stream_number);
+    DevArray<float> device_stream_variables(parameters.stream_number);
+    DevArray<float> device_stream_old_variables(parameters.stream_number);
+    DevArray<float> device_stream_fluxes(parameters.stream_number);
+    DevArray<float> device_stream_step_factors(parameters.stream_number);
 
     std::vector<cudaStream_t> streams(parameters.stream_number);
 
@@ -315,6 +318,11 @@ int main(int argc, char **argv) {
 
     // make sure CUDA isn't still doing something before we start timing
     rad::checkFrameworkErrors(cudaDeviceSynchronize())
+    // Setup reload variables
+    auto device_reload_variables = device_stream_variables;
+    auto device_reload_old_variables = device_stream_old_variables;
+    auto device_reload_fluxes = device_stream_fluxes;
+
 
     // these need to be computed the first time in order to compute time step
     std::cout << "Starting..." << std::endl;
@@ -370,10 +378,16 @@ int main(int argc, char **argv) {
             }
         }
         cmp_time = rad::mysecond() - cmp_time;
+        auto recopy_time = rad::mysecond();
+        device_stream_variables = device_reload_variables;
+        device_stream_old_variables = device_reload_old_variables;
+        device_stream_fluxes = device_reload_fluxes;
+        recopy_time = rad::mysecond() - recopy_time;
+
         if (parameters.verbose) {
             std::cout << "Iteration:" << i << " Errors:" << errors << " Kernel time:" << kernel_time;
-            std::cout << " Copy time:" << copy_time << std::endl;
-            auto wasted_time = copy_time + cmp_time;
+            std::cout << " Copy time:" << copy_time << std::endl << " Recopy time:" << recopy_time << std::endl;
+            auto wasted_time = copy_time + cmp_time + recopy_time;
             std::cout << "Compare time:" << cmp_time << " Wasted time: " << kernel_time / wasted_time << std::endl;
             std::cout << "====================================================================\n";
         }
