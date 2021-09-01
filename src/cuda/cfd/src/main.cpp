@@ -95,6 +95,9 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
             error_detail += " r:" + std::to_string(cast_to_uint(&n));
             logger.log_error_detail(error_detail);
             error_count++;
+            if (error_count < 10) {
+                std::cout << error_detail << std::endl;
+            }
         }
     }
 //    std::ofstream file_momentum("momentum");
@@ -111,6 +114,9 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
                 error_detail += " r:" + std::to_string(cast_to_uint(&n));
                 logger.log_error_detail(error_detail);
                 error_count++;
+                if (error_count < 10) {
+                    std::cout << error_detail << std::endl;
+                }
             }
         }
 
@@ -129,6 +135,9 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
             error_detail += " r:" + std::to_string(cast_to_uint(&n));
             logger.log_error_detail(error_detail);
             error_count++;
+            if (error_count < 10) {
+                std::cout << error_detail << std::endl;
+            }
         }
     }
 
