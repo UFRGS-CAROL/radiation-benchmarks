@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
     // CUT_SAFE_CALL( cutStartTimer( timer));
 //	sdkCreateTimer(&timer);
 //	sdkStartTimer(&timer);
-    std::vector<std::vector<float>> host_variables;
+    std::vector<std::vector<float>> host_variables(parameters.stream_number);
     // Begin iterations
     for (int i = 0; i < parameters.iterations; i++) {
         auto kernel_time = rad::mysecond();
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
         auto copy_time = rad::mysecond();
         for (auto stream = 0; stream < parameters.stream_number; stream++) {
 //            rad::checkFrameworkErrors (cudaStreamSynchronize(streams[stream]));;
-            device_stream_variables[stream].to_vector_async(host_variables[stream], streams[stream]);
+            device_stream_variables[stream].to_vector(host_variables[stream]);
         }
         copy_time = rad::mysecond() - copy_time;
 
