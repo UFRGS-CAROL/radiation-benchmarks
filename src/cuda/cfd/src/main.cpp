@@ -10,7 +10,7 @@
 #include "generic_log.h"
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-
+#define ERROR_THRESHOLD 1e-6
 
 extern void euler3D(int *elements_surrounding_elements, float *normals, float *variables,
                     float *fluxes, float *step_factors, float *areas, float *old_variables, int nelr,
@@ -73,9 +73,66 @@ void read_gold(std::vector<real_t> &gold_array, std::string &gold_path) {
 }
 
 template<typename real_t>
-size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_array, int stream) {
-    std::cout << "Stream " << stream << std::endl;
-    return 0;
+size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_array, rad::Log &logger, int nel,
+                    int nelr, int stream) {
+    auto cast_to_uint = [](float *number) {
+        uint32_t n_data;
+        std::memcpy(&n_data, number, sizeof(float));
+        return n_data;
+    };
+    //    std::ofstream file("density");
+    size_t error_count = 0;
+    for (int i = 0; i < nel; i++) {
+//        file << h_variables[i + VAR_DENSITY * nelr] << std::endl;
+        auto index = i + VAR_DENSITY * nelr;
+        auto g = gold_array[index];
+        auto n = new_array[index];
+        auto diff = fabs(g - n);
+        if (diff > ERROR_THRESHOLD) {
+            std::string error_detail = "stream:" + std::to_string(stream) + " density_i:" + std::to_string(index);
+            // It is better to write the raw data
+            error_detail += " e:" + std::to_string(cast_to_uint(&g));
+            error_detail += " r:" + std::to_string(cast_to_uint(&n));
+            logger.log_error_detail(error_detail);
+            error_count++;
+        }
+    }
+//    std::ofstream file_momentum("momentum");
+    for (int i = 0; i < nel; i++) {
+        for (int j = 0; j != NDIM; j++) {
+//      file_momentum << h_variables[i + (VAR_MOMENTUM + j) * nelr] << " ";
+            auto index = i + (VAR_MOMENTUM + j) * nelr;
+            auto g = gold_array[index], n = new_array[index];
+            auto diff = fabs(g - n);
+            if (diff > ERROR_THRESHOLD) {
+                std::string error_detail = "stream:" + std::to_string(stream) + " momentum_ij:" + std::to_string(index);
+                error_detail += "-" + std::to_string(i) + "-" + std::to_string(j);
+                error_detail += " e:" + std::to_string(cast_to_uint(&g));
+                error_detail += " r:" + std::to_string(cast_to_uint(&n));
+                logger.log_error_detail(error_detail);
+                error_count++;
+            }
+        }
+
+    }
+//    std::ofstream file_energy("density_energy");
+    for (int i = 0; i < nel; i++) {
+//                file_energy << h_variables[i + VAR_DENSITY_ENERGY * nelr] << std::endl;
+        auto index = i + VAR_DENSITY_ENERGY * nelr;
+        auto g = gold_array[index], n = new_array[index];
+        auto diff = fabs(g - n);
+        if (diff > ERROR_THRESHOLD) {
+            std::string error_detail =
+                    "stream:" + std::to_string(stream) + " density_energy_i:" + std::to_string(index);
+            // It is better to write the raw data
+            error_detail += " e:" + std::to_string(cast_to_uint(&g));
+            error_detail += " r:" + std::to_string(cast_to_uint(&n));
+            logger.log_error_detail(error_detail);
+            error_count++;
+        }
+    }
+
+    return error_count;
 }
 
 
@@ -300,7 +357,7 @@ int main(int argc, char **argv) {
         auto cmp_time = rad::mysecond();
         if (!parameters.generate) {
             for (int stream = 0; stream < parameters.stream_number; stream++) {
-                errors += compare_gold(gold_array, host_variables[stream], stream);
+                errors += compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
             }
         }
         cmp_time = rad::mysecond() - cmp_time;
