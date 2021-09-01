@@ -6,7 +6,6 @@
 //#include <helper_timer.h>
 
 #include "cuda_utils.h"
-
 #include "common.h"
 
 /*
@@ -28,14 +27,14 @@ void initialize_variables(int nelr, float *variables, cudaStream_t &stream) {
     dim3 Dg(nelr / BLOCK_SIZE_1), Db(BLOCK_SIZE_1);
     cuda_initialize_variables<<<Dg, Db, 0, stream>>>(nelr, variables);
     //getLastCudaError("initialize_variables failed");
-    rad::checkFrameworkErrors(cudaGetLastError());
+    rad::checkFrameworkErrors(cudaGetLastError())
 //	;
 }
 
-__device__ __host__ void compute_flux_contribution(float &density,
-                                                   float3 &momentum, float &density_energy, float &pressure,
-                                                   float3 &velocity, float3 &fc_momentum_x, float3 &fc_momentum_y,
-                                                   float3 &fc_momentum_z, float3 &fc_density_energy) {
+__device__ __host__ void
+compute_flux_contribution(float &density, float3 &momentum, float &density_energy, float &pressure, float3 &velocity,
+                          float3 &fc_momentum_x, float3 &fc_momentum_y, float3 &fc_momentum_z,
+                          float3 &fc_density_energy) {
     fc_momentum_x.x = velocity.x * momentum.x + pressure;
     fc_momentum_x.y = velocity.x * momentum.y;
     fc_momentum_x.z = velocity.x * momentum.z;
@@ -77,8 +76,7 @@ __device__ inline float compute_speed_of_sound(float &density,
     return sqrtf(float(GAMMA) * pressure / density);
 }
 
-__global__ void cuda_compute_step_factor(int nelr, float *variables,
-                                         float *areas, float *step_factors) {
+__global__ void cuda_compute_step_factor(int nelr, const float *variables, float *areas, float *step_factors) {
     const unsigned i = blockDim.x * blockIdx.x + threadIdx.x;
 
     float density = variables[i + VAR_DENSITY * nelr];
@@ -98,8 +96,7 @@ __global__ void cuda_compute_step_factor(int nelr, float *variables,
     // dt = float(0.5f) * sqrtf(areas[i]) /  (||v|| + c)....
     // but when we do time stepping, this later would need to
     // be divided by the area, so we just do it all at once
-    step_factors[i] = float(0.5f)
-                      / (sqrtf(areas[i]) * (sqrtf(speed_sqd) + speed_of_sound));
+    step_factors[i] = float(0.5f) / (sqrtf(areas[i]) * (sqrtf(speed_sqd) + speed_of_sound));
 }
 
 void compute_step_factor(int nelr, float *variables, float *areas,
@@ -108,17 +105,16 @@ void compute_step_factor(int nelr, float *variables, float *areas,
     cuda_compute_step_factor<<<Dg, Db, 0, stream>>>(nelr, variables, areas,
                                                     step_factors);
 //	getLastCudaError("compute_step_factor failed");
-    rad::checkFrameworkErrors(cudaGetLastError());
+    rad::checkFrameworkErrors(cudaGetLastError())
 //	;
 }
 
 /*
- *
- *
  */
-__global__ void cuda_compute_flux(int nelr, int *elements_surrounding_elements,
-                                  float *normals, float *variables, float *fluxes) {
-    const float smoothing_coefficient = float(0.2f);
+__global__ void
+cuda_compute_flux(int nelr, const int *elements_surrounding_elements, const float *normals, const float *variables,
+                  float *fluxes) {
+    const float smoothing_coefficient(0.2f);
     const unsigned i = blockDim.x * blockIdx.x + threadIdx.x;
 
     int j, nb;
@@ -149,12 +145,12 @@ __global__ void cuda_compute_flux(int nelr, int *elements_surrounding_elements,
                               flux_contribution_i_momentum_y, flux_contribution_i_momentum_z,
                               flux_contribution_i_density_energy);
 
-    float flux_i_density = float(0.0f);
+    float flux_i_density(0.0f);
     float3 flux_i_momentum;
     flux_i_momentum.x = float(0.0f);
     flux_i_momentum.y = float(0.0f);
     flux_i_momentum.z = float(0.0f);
-    float flux_i_density_energy = float(0.0f);
+    float flux_i_density_energy(0.0f);
 
     float3 velocity_nb;
     float density_nb, density_energy_nb;
@@ -314,17 +310,16 @@ __global__ void cuda_compute_flux(int nelr, int *elements_surrounding_elements,
     fluxes[i + VAR_DENSITY_ENERGY * nelr] = flux_i_density_energy;
 }
 
-void compute_flux(int nelr, int *elements_surrounding_elements, float *normals,
-                  float *variables, float *fluxes, cudaStream_t &stream) {
+void compute_flux(int nelr, int *elements_surrounding_elements, float *normals, float *variables, float *fluxes,
+                  cudaStream_t &stream) {
     dim3 Dg(nelr / BLOCK_SIZE_3), Db(BLOCK_SIZE_3);
-    cuda_compute_flux<<<Dg, Db, 0, stream>>>(nelr,
-                                             elements_surrounding_elements, normals, variables, fluxes);
+    cuda_compute_flux<<<Dg, Db, 0, stream>>>(nelr, elements_surrounding_elements, normals, variables, fluxes);
 //	getLastCudaError("compute_flux failed");
-    rad::checkFrameworkErrors(cudaGetLastError());
+    rad::checkFrameworkErrors(cudaGetLastError())
 }
 
-__global__ void cuda_time_step(int j, int nelr, float *old_variables,
-                               float *variables, float *step_factors, float *fluxes) {
+__global__ void cuda_time_step(int j, int nelr, const float *old_variables, float *variables, const float *step_factors,
+                               const float *fluxes) {
     const unsigned i = blockDim.x * blockIdx.x + threadIdx.x;
 
     float factor = step_factors[i] / float(RK + 1 - j);
@@ -345,13 +340,13 @@ __global__ void cuda_time_step(int j, int nelr, float *old_variables,
                                                + factor * fluxes[i + (VAR_MOMENTUM + 2) * nelr];
 }
 
-void time_step(int j, int nelr, float *old_variables, float *variables,
-               float *step_factors, float *fluxes, cudaStream_t &stream) {
+void time_step(int j, int nelr, float *old_variables, float *variables, float *step_factors, float *fluxes,
+               cudaStream_t &stream) {
     dim3 Dg(nelr / BLOCK_SIZE_4), Db(BLOCK_SIZE_4);
     cuda_time_step<<<Dg, Db, 0, stream>>>(j, nelr, old_variables, variables,
                                           step_factors, fluxes);
 //	getLastCudaError("update failed");
-    rad::checkFrameworkErrors(cudaGetLastError());;
+    rad::checkFrameworkErrors(cudaGetLastError())
 }
 
 void copy_to_symbol_variables(float h_ff_variable[NVAR],
@@ -360,28 +355,22 @@ void copy_to_symbol_variables(float h_ff_variable[NVAR],
                               float3 h_ff_flux_contribution_momentum_z,
                               float3 h_ff_flux_contribution_density_energy) {
     // copy far field conditions to the gpu
-    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_variable, h_ff_variable,
-                                                 NVAR * sizeof(float)));
-    rad::checkFrameworkErrors(
-            cudaMemcpyToSymbol(ff_flux_contribution_momentum_x,
-                               &h_ff_flux_contribution_momentum_x, sizeof(float3)));
-    rad::checkFrameworkErrors(
-            cudaMemcpyToSymbol(ff_flux_contribution_momentum_y,
-                               &h_ff_flux_contribution_momentum_y, sizeof(float3)));
-    rad::checkFrameworkErrors(
-            cudaMemcpyToSymbol(ff_flux_contribution_momentum_z,
-                               &h_ff_flux_contribution_momentum_z, sizeof(float3)));
-    rad::checkFrameworkErrors(
-            cudaMemcpyToSymbol(ff_flux_contribution_density_energy,
-                               &h_ff_flux_contribution_density_energy, sizeof(float3)));
+    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_variable, h_ff_variable, NVAR * sizeof(float)))
+    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_flux_contribution_momentum_x,
+                                                 &h_ff_flux_contribution_momentum_x, sizeof(float3)))
+    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_flux_contribution_momentum_y,
+                                                 &h_ff_flux_contribution_momentum_y, sizeof(float3)))
+    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_flux_contribution_momentum_z,
+                                                 &h_ff_flux_contribution_momentum_z, sizeof(float3)))
+    rad::checkFrameworkErrors(cudaMemcpyToSymbol(ff_flux_contribution_density_energy,
+                                                 &h_ff_flux_contribution_density_energy, sizeof(float3)))
 }
 
 /*
  * Main function
  */
-void euler3D(int *elements_surrounding_elements, float *normals,
-             float *variables, float *fluxes, float *step_factors, float *areas,
-             float *old_variables, int nelr, cudaStream_t &stream) {
+void euler3D(int *elements_surrounding_elements, float *normals, float *variables, float *fluxes, float *step_factors,
+             float *areas, float *old_variables, int nelr, cudaStream_t &stream) {
 
     // for the first iteration we compute the time step
     compute_step_factor(nelr, variables, areas, step_factors, stream);
@@ -390,5 +379,4 @@ void euler3D(int *elements_surrounding_elements, float *normals,
         time_step(j, nelr, old_variables, variables, step_factors, fluxes, stream);
     }
     rad::checkFrameworkErrors(cudaGetLastError());
-
 }

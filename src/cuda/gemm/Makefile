@@ -25,6 +25,7 @@ NVCCOPTFLAGS=
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
 SMS= 35 53 70 86
+
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/
