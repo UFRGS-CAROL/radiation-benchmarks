@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
-		<cconfiguration id="com.nvidia.cuda.ide.toolchain.base.1032204709">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.nvidia.cuda.ide.toolchain.base.1032204709" moduleId="org.eclipse.cdt.core.settings" name="Default">
+		<cconfiguration id="com.nvidia.cuda.ide.toolchain.ten_one.1710048675">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.nvidia.cuda.ide.toolchain.ten_one.1710048675" moduleId="org.eclipse.cdt.core.settings" name="Default">
 				<externalSettings/>
 				<extensions>
 					<extension id="com.nvidia.cuda.ide.elf" point="org.eclipse.cdt.core.BinaryParser"/>
@@ -17,17 +17,17 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" id="com.nvidia.cuda.ide.toolchain.base.1032204709" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
-					<folderInfo id="com.nvidia.cuda.ide.toolchain.base.1032204709.1231918917" name="/" resourcePath="">
-						<toolChain id="com.nvidia.cuda.ide.toolchain.base.1620341147" name="com.nvidia.cuda.ide.toolchain.base" superClass="com.nvidia.cuda.ide.toolchain.base">
-							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform.840884980" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
-							<builder id="com.nvidia.cuda.ide.builder.644169042" managedBuildOn="false" name="CUDA Toolkit 5.5 Builder.Default" superClass="com.nvidia.cuda.ide.builder"/>
-							<tool id="nvcc.compiler.base.1518315659" name="NVCC Compiler" superClass="nvcc.compiler.base">
-								<option id="nvcc.compiler.pic.956291869" superClass="nvcc.compiler.pic"/>
+				<configuration buildProperties="" id="com.nvidia.cuda.ide.toolchain.ten_one.1710048675" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+					<folderInfo id="com.nvidia.cuda.ide.toolchain.ten_one.1710048675.2134101149" name="/" resourcePath="">
+						<toolChain id="com.nvidia.cuda.ide.toolchain.ten_one.1630069871" name="CUDA Toolkit 10.1" superClass="com.nvidia.cuda.ide.toolchain.ten_one">
+							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform.669585216" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
+							<builder id="com.nvidia.cuda.ide.builder.52672723" managedBuildOn="false" name="CUDA Toolkit 10.1 Builder.Default" superClass="com.nvidia.cuda.ide.builder"/>
+							<tool id="nvcc.compiler.base.450343565" name="NVCC Compiler" superClass="nvcc.compiler.base">
+								<option id="nvcc.compiler.pic.1255481252" superClass="nvcc.compiler.pic"/>
 							</tool>
-							<tool id="nvcc.linker.base.1424084708" name="NVCC Linker" superClass="nvcc.linker.base"/>
-							<tool id="nvcc.archiver.base.1458409433" name="NVCC Archiver" superClass="nvcc.archiver.base"/>
-							<tool id="com.nvidia.host.assembler.30179485" name="Host Assembler" superClass="com.nvidia.host.assembler"/>
+							<tool id="nvcc.linker.base.1501631041" name="NVCC Linker" superClass="nvcc.linker.base"/>
+							<tool id="nvcc.archiver.base.177009998" name="NVCC Archiver" superClass="nvcc.archiver.base"/>
+							<tool id="com.nvidia.host.assembler.928134644" name="Host Assembler" superClass="com.nvidia.host.assembler"/>
 						</toolChain>
 					</folderInfo>
 				</configuration>
@@ -36,11 +36,11 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
-	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="nw.null.550833383" name="nw"/>
-	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="nw.null.56587355" name="nw"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>
