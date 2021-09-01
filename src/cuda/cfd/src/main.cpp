@@ -103,7 +103,6 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
             }
         }
     }
-    logger.update_errors();
 #else
     //    std::ofstream file("density");
    for (int i = 0; i < nel; i++) {
@@ -410,6 +409,7 @@ int main(int argc, char **argv) {
             for (int stream = 0; stream < parameters.stream_number; stream++) {
                 error_vector[stream] = compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
             }
+            logger.update_errors();
 
             for (auto err_i : error_vector) {
                 errors += err_i;
