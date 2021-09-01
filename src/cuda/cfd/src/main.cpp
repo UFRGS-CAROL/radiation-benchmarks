@@ -71,13 +71,13 @@ void read_gold(std::vector<real_t> &gold_array, std::string &gold_path) {
         gold_file.read(CHAR_CAST(&nelr), sizeof(int));
         gold_file.read(CHAR_CAST(gold_array.data()), sizeof(real_t) * gold_array.size());
     } else {
-        throw_line("Impossible to write the file " + gold_path)
+        throw_line("Impossible to read the file " + gold_path)
     }
 }
 
 template<typename real_t>
-size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_array, rad::Log &logger, int nel,
-                    int nelr, int stream) {
+size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<real_t> &new_array, rad::Log &logger,
+                    const int nel, const int nelr, const int stream) {
     auto cast_to_uint = [](float *number) {
         uint32_t n_data;
         std::memcpy(&n_data, number, sizeof(float));
@@ -92,17 +92,22 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
         auto n = new_array[index];
         auto diff = fabs(g - n);
         if (diff > ERROR_THRESHOLD) {
+
             std::string error_detail = "stream:" + std::to_string(stream) + " density_i:" + std::to_string(index);
             // It is better to write the raw data
             error_detail += " e:" + std::to_string(cast_to_uint(&g));
             error_detail += " r:" + std::to_string(cast_to_uint(&n));
-            logger.log_error_detail(error_detail);
+#pragma omp critical
+            {
+                logger.log_error_detail(error_detail);
+            }
             error_count++;
             if (error_count < 10) {
                 std::cout << error_detail << std::endl;
             }
         }
     }
+
 //    std::ofstream file_momentum("momentum");
     for (int i = 0; i < nel; i++) {
         for (int j = 0; j != NDIM; j++) {
@@ -115,7 +120,10 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
                 error_detail += "-" + std::to_string(i) + "-" + std::to_string(j);
                 error_detail += " e:" + std::to_string(cast_to_uint(&g));
                 error_detail += " r:" + std::to_string(cast_to_uint(&n));
-                logger.log_error_detail(error_detail);
+#pragma omp critical
+                {
+                    logger.log_error_detail(error_detail);
+                }
                 error_count++;
                 if (error_count < 10) {
                     std::cout << error_detail << std::endl;
@@ -136,7 +144,10 @@ size_t compare_gold(std::vector<real_t> &gold_array, std::vector<real_t> &new_ar
             // It is better to write the raw data
             error_detail += " e:" + std::to_string(cast_to_uint(&g));
             error_detail += " r:" + std::to_string(cast_to_uint(&n));
-            logger.log_error_detail(error_detail);
+#pragma omp critical
+            {
+                logger.log_error_detail(error_detail);
+            }
             error_count++;
             if (error_count < 10) {
                 std::cout << error_detail << std::endl;
@@ -373,8 +384,14 @@ int main(int argc, char **argv) {
         size_t errors = 0;
         auto cmp_time = rad::mysecond();
         if (!parameters.generate) {
+            std::vector<size_t> error_vector(parameters.stream_number);
+#pragma omp parallell for shared(logger)
             for (int stream = 0; stream < parameters.stream_number; stream++) {
-                errors += compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
+                error_vector[stream] = compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
+            }
+            logger.update_errors();
+            for (auto err_i : error_vector) {
+                errors += err_i;
             }
         }
         cmp_time = rad::mysecond() - cmp_time;
