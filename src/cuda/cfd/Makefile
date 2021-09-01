@@ -6,7 +6,7 @@ DEBUG=0
 ITERATIONS=10
 STREAMS=1
 
-VPATH=./
+VPATH=./src
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 RADDIR=../../..
@@ -18,13 +18,11 @@ GOLD=$(DATADIR)/cfd_gold_$(INPUT_BASE)
 NVCCFLAGS= -std=c++14 -Xptxas -v -Xcompiler -fopenmp  -Xcompiler -fPIC
 CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
 
-INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include
+INCLUDE+= -I$(RADDIR)/src/cuda/common/include
 # Kepler, Volta
 SMS= 35 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
-
-OBJDIR=./obj/
-OBJ= euler3d.o main.o Parameters.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -45,6 +43,9 @@ endif
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
+OBJDIR=./obj/
+OBJ= euler3d.o main.o Parameters.o
+
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
@@ -54,7 +55,7 @@ NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: mkdir $(EXEC)
 
-$(EXEC): $(OBJS)  
+$(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
@@ -68,7 +69,7 @@ mkdir:
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
-	
+
 generate:
 	./$(EXEC) --streams $(STREAMS) --input $(INPUT) --gold $(GOLD) --iterations $(ITERATIONS) --verbose --generate
 

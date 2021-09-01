@@ -60,7 +60,7 @@ $(EXEC): $(OBJS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
-	
+
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
 
@@ -70,14 +70,14 @@ mkdir:
 	
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
-	
-	
+
+#-noinputensurance 		  		
 generate:
-	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
+	./$(EXEC) -size=$(SIZE) -generate -verbose \
 	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=1
-	 		   #-noinputensurance
-	 		   	
+
+
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
 	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=$(ITERATIONS)
-	 		   #-noinputensurance
+
