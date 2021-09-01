@@ -84,7 +84,29 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
         return n_data;
     };
     size_t error_count = 0;
-    for (int i = 0; i < nel; i++) {
+#ifndef FULL_COMPARISSON
+    for (size_t i = 0; i < gold_array.size(); i++) {
+        auto &g = gold_array[i];
+        auto &n = new_array[i];
+        auto diff = fabs(g - n);
+        if (diff > ERROR_THRESHOLD) {
+            std::string error_detail = "stream:" + std::to_string(stream) + " i:" + std::to_string(i);
+            // It is better to write the raw data
+            error_detail += " e:" + std::to_string(cast_to_uint(&g)) + " r:" + std::to_string(cast_to_uint(&n));
+#pragma omp critical
+            {
+                logger.log_error_detail(error_detail);
+            }
+            error_count++;
+            if (error_count < 10) {
+                std::cout << error_detail << std::endl;
+            }
+        }
+    }
+    logger.update_errors();
+#else
+    //    std::ofstream file("density");
+   for (int i = 0; i < nel; i++) {
 //        file << h_variables[i + VAR_DENSITY * nelr] << std::endl;
         auto index = i + VAR_DENSITY * nelr;
         auto g = gold_array[index];
@@ -153,6 +175,7 @@ size_t compare_gold(const std::vector<real_t> &gold_array, const std::vector<rea
             }
         }
     }
+#endif
     return error_count;
 }
 
@@ -384,10 +407,12 @@ int main(int argc, char **argv) {
         if (!parameters.generate) {
             std::vector<size_t> error_vector(parameters.stream_number);
 #pragma omp parallel for shared(logger)
-            for (int stream = 0; stream < parameters.stream_number; stream++) {
-                error_vector[stream] = compare_gold(gold_array, host_variables[stream], logger, nel, nelr, stream);
+            {
+                for (int stream = 0; stream < parameters.stream_number; stream++) {
+                    error_vector[stream] = compare_gold(gold_array, host_variables[stream],
+                                                        logger, nel, nelr, stream);
+                }
             }
-            logger.update_errors();
             for (auto err_i : error_vector) {
                 errors += err_i;
             }
