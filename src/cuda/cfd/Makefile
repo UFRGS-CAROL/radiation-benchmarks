@@ -15,8 +15,8 @@ INPUT_BASE=missile.domn.0.2M
 INPUT=$(DATADIR)/$(INPUT_BASE)
 GOLD=$(DATADIR)/cfd_gold_$(INPUT_BASE)
 
-NVCCFLAGS= -std=c++14 -Xptxas -v -Xcompiler -fopenmp  -Xcompiler -fPIC
-CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
+NVCCFLAGS= -std=c++11 -Xptxas -v -Xcompiler -fopenmp  -Xcompiler -fPIC
+CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
 INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include
 INCLUDE+= -I$(RADDIR)/src/cuda/common/include

@@ -11,8 +11,8 @@ VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-NVCCFLAGS= -std=c++14 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
-CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
+NVCCFLAGS= -std=c++11 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
+CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
 RADDIR=../../..
 DATADIR=$(RADDIR)/data/mergesort

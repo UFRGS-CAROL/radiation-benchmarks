@@ -15,8 +15,8 @@ DATADIR=$(RADDIR)/data/quicksort
 INPUT=$(DATADIR)/quicksort_input_134217728
 GOLD=$(DATADIR)/quicksort_gold_$(SIZE)
 
-NVCCFLAGS= -std=c++14 -Xptxas -v -rdc=true -Xcompiler -fopenmp  -Xcompiler -fPIC
-CXXFLAGS= -std=c++14 -O3 -fPIC -pthread -fopenmp
+NVCCFLAGS= -std=c++11 -Xptxas -v -rdc=true -Xcompiler -fopenmp  -Xcompiler -fPIC
+CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
 INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
 # Kepler, Volta
