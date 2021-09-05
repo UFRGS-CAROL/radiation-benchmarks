@@ -7,6 +7,12 @@
 
 #include "cuda_utils.h"
 #include "common.h"
+#include "multi_compiler_analysis.h"
+
+//Radiation experiments setup
+std::string get_multi_compiler_header(){
+    return rad::get_multi_compiler_header();
+}
 
 /*
  * Element-based Cell-centered FVM solver functions

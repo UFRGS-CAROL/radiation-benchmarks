@@ -12,6 +12,9 @@
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define ERROR_THRESHOLD 1e-6
 
+//Radiation experiment
+extern std::string get_multi_compiler_header();
+
 template<class T>
 using DevArray = std::vector<rad::DeviceVector<T>>;
 
@@ -192,6 +195,7 @@ int main(int argc, char **argv) {
     auto test_info = "input:" + parameters.input + " gold:" + parameters.gold;
     test_info += " streams:" + std::to_string(parameters.stream_number);
     test_info += " iterations:" + std::to_string(parameters.iterations);
+    test_info += get_multi_compiler_header();
     // print after each 10 iterations
     rad::Log logger(test_name, test_info, 10);
     std::string &data_file_name = parameters.input;
@@ -411,7 +415,7 @@ int main(int argc, char **argv) {
             }
             logger.update_errors();
 
-            for (auto err_i : error_vector) {
+            for (auto err_i: error_vector) {
                 errors += err_i;
             }
             // recopying to set the arrays to default
@@ -426,7 +430,7 @@ int main(int argc, char **argv) {
             auto full_time = wasted_time + kernel_time;
             std::cout << "Iteration:" << i << " Errors:" << errors << " Kernel time:" << kernel_time;
             std::cout << " Copy time:" << copy_time << "Compare time:" << cmp_time << " Wasted time: "
-                                                    << int((wasted_time / full_time) * 100.0f) << "%" << std::endl;
+                      << int((wasted_time / full_time) * 100.0f) << "%" << std::endl;
             std::cout << "==========================================================================================\n";
         }
     }
@@ -443,7 +447,7 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "Done..." << std::endl;
-    for (auto &stream : streams) {
+    for (auto &stream: streams) {
         rad::checkFrameworkErrors(cudaStreamDestroy(stream))
     }
     return 0;
