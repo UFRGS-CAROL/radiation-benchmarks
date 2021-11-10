@@ -6,9 +6,9 @@ DEBUG?=0
 REAL_TYPE?=float
 LOGS?=1
 OPENGEMM?=0
-EXTRACT_GEMM_DATA=1
+EXTRACT_GEMM_DATA=0
 BUILDPROFILER=0
-FLEX_GRIP_ANALYSIS=1
+FLEX_GRIP_ANALYSIS=0
 
 OPENBLAS=0
 
@@ -19,7 +19,7 @@ RADIATIONDIR=$(HOME)/radiation-benchmarks/
 CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
-ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
+#ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
 #ARCH+=-gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] 
 
@@ -38,7 +38,7 @@ ARFLAGS=rcs
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
 LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
-COMMON= -Iinclude/ -Isrc/
+COMMON= -Iinclude/ -Isrc/ -I../../include
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC
 CFLAGS+= -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 CXXFLAGS=  -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
@@ -129,8 +129,8 @@ EXECOBJA= yolo.o detector.o  darknet.o detection_gold.o detection_gold_w.o
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o \
-blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o \
-gemm_kernels.o
+blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o 
+#gemm_kernels.o
 endif
 
 ifeq ($(EXTRACT_GEMM_DATA), 1)
@@ -154,7 +154,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) -ccbin $(CC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
+	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 obj:
 	mkdir -p obj
