@@ -17,7 +17,8 @@
 
 #define DEBUG_LINE(msg) printf("FILE: %s LINE: %d -- MSG: %s\n", __FILE__, __LINE__, msg);
 
-extern std::vector<std::string> split(const std::string&, char);
+//extern std::vector<std::string> split(const std::string&, char);
+#include "helpful.h"
 
 /**
  * Detection Gold class
@@ -79,9 +80,9 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	std::cout << "Radiation test mode: " << this->generate << std::endl;
 	std::cout << "Gold path: " << this->gold_inout << std::endl;
 
-	LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
+	//LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
 	if (!this->generate) {
-		current_op = SIMULATE_SCHEDULER_FAULT;
+	//	current_op = SIMULATE_SCHEDULER_FAULT;
 
 		Log::start_log(this->gold_inout, 0, 0, this->iterations,
 				this->network_name, this->tensor_core_mode, this->stream_mr);
@@ -141,7 +142,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->write_gold_header();
 		this->iterations = 1;
 	}
-	set_layer_processing_parameters(current_op);
+	//set_layer_processing_parameters(current_op);
 }
 
 bool operator!=(const box& a, const box& b) {
@@ -311,7 +312,7 @@ int DetectionGold::run(detection **dets, int* nboxes, int img_index,
 					img_w, img_h, inet);
 		}
 
-		reset_counters();
+		//reset_counters();
 	}
 	return ret;
 }

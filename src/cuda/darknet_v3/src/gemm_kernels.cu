@@ -125,16 +125,16 @@ void hgemm(int b_operation, int a_operation, int N, int M, int K,
 void sgemm(int b_operation, int a_operation, int N, int M, int K, float *alpha,
 		float* b_gpu, int ldb, float* a_gpu, int lda, float* beta, float* c_gpu,
 		int ldc) {
-//	int gridsize_n = ceil(N / BLOCK_SIZE);
-//	int gridsize_m = ceil(M / BLOCK_SIZE);
-//
-//	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-//	dim3 grid(gridsize_n, gridsize_m);
-//
-//	MatrixMulKernel<<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb,
-//			ldc);
-	cudaError_t error = CutlassSgemmNN(M, N, K, *alpha, b_gpu, lda, a_gpu, ldb,
-			*beta, c_gpu, ldc);
+	int gridsize_n = ceil(N / BLOCK_SIZE);
+	int gridsize_m = ceil(M / BLOCK_SIZE);
+
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid(gridsize_n, gridsize_m);
+
+	MatrixMulKernel<<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb,
+			ldc);
+//	cudaError_t error = CutlassSgemmNN(M, N, K, *alpha, b_gpu, lda, a_gpu, ldb,
+//			*beta, c_gpu, ldc);
 	check_error(error);
 }
 
