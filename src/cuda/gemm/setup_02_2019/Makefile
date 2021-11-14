@@ -4,7 +4,7 @@ DEBUG?=0
 LOGS?=0
 DEBUG_ON_TITAN?=0
 OMP?=0
-
+TENSOR_CORES=1
 SIZE?=4096 #16384 #8192 #4096 
 
 #
@@ -29,7 +29,7 @@ COMMON=
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../../hotspot
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../../trip_mxm
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -98,8 +98,8 @@ clean:
 	rm -rf $(OBJS) $(TARGET) ./*.matrix
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float	
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float	
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores 1 --triplicated 1 --precision float
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float
 	
