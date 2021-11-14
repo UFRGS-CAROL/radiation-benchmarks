@@ -1,4 +1,4 @@
-CC=g++
+CXX=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
@@ -26,7 +26,7 @@ ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
 
-NVCC_FLAGS= $(ARCH) -O3 -std=c++11
+NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -ccbin $(CXX)
 INCLUDE= -I$(CUDAPATH)/include
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
@@ -58,7 +58,7 @@ ifeq ($(BUILDPROFILER), 1)
 	ifeq ($(FORJETSON), 1)
 	NVCC_FLAGS += -DBUILDPROFILER -DFORJETSON=1 -lJTX2Inst -li2c
 	else
-	NVCC_FLAGS += -DBUILDPROFILER -L$(CUDAPATH)/lib64/stubs 
+	NVCC_FLAGS += -DBUILDPROFILER -L$(CUDAPATH)/lib64/stubs -lNVMLWrapper -lnvidia-ml
 	endif
 endif 
 
@@ -74,7 +74,7 @@ DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(DEF_SIZE)
 all: $(TARGET)
 
 $(TARGET): $(RUN_SOURCES)
-	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(RUN_SOURCES) -o $(TARGET) -lNVMLWrapper -lnvidia-ml
+	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(RUN_SOURCES) -o $(TARGET) 
 
 clean:
 	rm -rf ./$(TARGET) $(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD)
