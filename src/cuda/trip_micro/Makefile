@@ -1,12 +1,12 @@
-CUDA_DIR=/usr/local/cuda
+CUDAPATH=/usr/local/cuda
 #OPS?=1000000000
 OPS=100000000
 CC=g++
-NVCC=$(CUDA_DIR)/bin/nvcc
+NVCC=$(CUDAPATH)/bin/nvcc
 FORJETSON=0
 TYPE=fma
 PRECISION=single
-TMRMEM=0
+TMRMEM=1
 BUILDPROFILER=0
 
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
@@ -29,8 +29,8 @@ endif
 
 NVCC_FLAGS= $(ARCH)
 
-NVIDIA_INC=$(CUDA_DIR)/include/,./,$(CUDA_DIR)/samples/common/inc
-NVIDIA_LIB=$(CUDA_DIR)/lib64/
+NVIDIA_INC=$(CUDAPATH)/include/,./,$(CUDAPATH)/samples/common/inc
+NVIDIA_LIB=$(CUDAPATH)/lib64/
 LOGHELPER_INC=../../include/,../common
 LOGHELPER_LIB=../../include/,../common/lib
 
@@ -48,7 +48,7 @@ ifeq ($(BUILDPROFILER), 1)
 ifeq ($(FORJETSON), 1)
 NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
 else
-NVCC_FLAGS += -L$(CUDA_DIR)/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+NVCC_FLAGS += -L$(CUDAPATH)/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
 endif
 
 endif
@@ -70,5 +70,5 @@ $(EXEC): check-benchtype $(RUN_SOURCES)
 clean:
 	rm -rf $(EXEC_RADIX)*
 
-test: $(EXEC)
+test:
 	$(EXEC) -verbose -iterations=10

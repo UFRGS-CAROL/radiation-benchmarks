@@ -22,14 +22,15 @@ OBJDIR=./obj/
 
 CC=gcc
 CXX=g++
-NVCC=/usr/local/cuda/bin/nvcc 
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../../trip_mxm
+INCLUDE=-I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../trip_mxm
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -42,9 +43,9 @@ STDVERSION=--std=c++11
 COMMON+= $(STDVERSION)
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 endif
 
 ifeq ($(OMP), 1) 
