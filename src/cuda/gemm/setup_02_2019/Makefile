@@ -103,5 +103,5 @@ generate:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float	
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores $(TENSOR_CORES) --triplicated $(ITERATIONS) --precision float
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations $(ITERATIONS) --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float
 	
