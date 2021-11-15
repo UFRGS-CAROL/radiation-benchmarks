@@ -8,6 +8,7 @@ TYPE=fma
 PRECISION=single
 TMRMEM=1
 BUILDPROFILER=0
+ITERATIONS=5
 
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -71,4 +72,4 @@ clean:
 	rm -rf $(EXEC_RADIX)*
 
 test:
-	$(EXEC) -verbose -iterations=10
+	$(EXEC) -verbose -iterations=$(ITERATIONS)

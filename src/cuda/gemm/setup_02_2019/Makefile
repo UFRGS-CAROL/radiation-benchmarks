@@ -6,6 +6,7 @@ DEBUG_ON_TITAN?=0
 OMP?=0
 TENSOR_CORES=1
 SIZE?=4096 #16384 #8192 #4096 
+ITERATIONS=5
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -102,5 +103,5 @@ generate:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float	
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores $(TENSOR_CORES) --triplicated $(ITERATIONS) --precision float
 	
