@@ -6,7 +6,7 @@ LOGS?=1
 USE_OMP?=0
 BUILDPROFILER=0
 FORJETSON=0
-
+ITERATIONS=5
 
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -66,7 +66,7 @@ NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 DATA_DIR=.
 SIZE=23
-STREAMS=8
+STREAMS=1
 DEF_CHARGES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_charges_$(SIZE)
 DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_distances_$(SIZE)
 DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(SIZE)
@@ -83,4 +83,4 @@ generate:
 	./$(TARGET) -boxes=$(SIZE) -generate -streams=$(STREAMS) -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
 test: 
-	./$(TARGET) -boxes=$(SIZE) -streams=$(STREAMS) -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(SIZE) -streams=$(STREAMS) -iterations=$(ITERATIONS) -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
