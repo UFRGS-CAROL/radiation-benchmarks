@@ -1,11 +1,12 @@
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 PRECISION?=single
-DEF_SIZE?=1024
+SIZE?=1024
 LOGS?=1
 USE_OMP?=1
 SAFE_MALLOC?=0
-
+ITERATIONS=5
+STREAMS=1
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -56,11 +57,11 @@ endif
 
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
-TEST_SIM_TIME=10000
+SIM_TIME=10000
 DATA_DIR=../../../data/hotspot
-DEF_INPUT_POWER=$(DATA_DIR)/power_$(DEF_SIZE)
-DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(DEF_SIZE)
-DEF_GOLD=$(DATA_DIR)/hotspot_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(TEST_SIM_TIME)
+DEF_INPUT_POWER=$(DATA_DIR)/power_$(SIZE)
+DEF_INPUT_TEMP=$(DATA_DIR)/temp_$(SIZE)
+DEF_GOLD=$(DATA_DIR)/hotspot_$(LOWERCASED_PRECISION)_$(SIZE)_$(SIM_TIME)
 
 all: $(TARGET)
 
@@ -71,7 +72,7 @@ clean:
 	rm -rf $(TARGET) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -generate -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold=$(DEF_GOLD) -sim_time=$(TEST_SIM_TIME) -verbose -iterations=1
+	./$(TARGET) -generate -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold=$(DEF_GOLD) -sim_time=$(SIM_TIME) -verbose -iterations=1 -streams=$(STREAMS)
 
 test: $(TARGET) generate
-	./$(TARGET) -size=$(DEF_SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold=$(DEF_GOLD) -sim_time=$(TEST_SIM_TIME) -iterations=10 -verbose
+	./$(TARGET) -size=$(SIZE) -input_power=$(DEF_INPUT_POWER) -input_temp=$(DEF_INPUT_TEMP) -gold=$(DEF_GOLD) -sim_time=$(SIM_TIME) -iterations=$(ITERATIONS) -verbose -streams=$(STREAMS)
