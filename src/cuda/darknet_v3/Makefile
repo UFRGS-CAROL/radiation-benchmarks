@@ -11,7 +11,7 @@ BUILDPROFILER=0
 FLEX_GRIP_ANALYSIS=0
 
 OPENBLAS=0
-
+ITERATIONS=5
 HOMEDIR=/home/carol
 RADIATIONDIR=$(HOME)/radiation-benchmarks/
 #RADIATIONDIR=$(HOME)/git_pesquisa/radiation-benchmarks/
@@ -182,4 +182,4 @@ generate:
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/fault_injection.txt \
-			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations 1 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
+			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
