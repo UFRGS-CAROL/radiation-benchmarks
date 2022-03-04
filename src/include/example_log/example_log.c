@@ -18,12 +18,12 @@ int main() {
 
     // set the interval of iteration to print details of current test,
     // default is 1
-    set_iter_interval_print(5);
+    set_iter_interval_print(1);
 
     printf("log file is %s\n", get_log_file_name());
 
     int i;
-    for (i = 0; i < 40; i++) {
+    for (i = 0; i < 100; i++) {
 
         start_iteration();
         // Execute the test (ONLY THE KERNEL), log functions will measure kernel time

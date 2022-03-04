@@ -72,23 +72,6 @@ double kernel_time = 0;
 long long it_time_start;
 
 // ~ ===========================================================================
-// Functions to check ECC
-/**
- * String contains
- * check if word contains in sent string
- * return 1 if contains
- * return 0 otherwise
- */
-int contains(const char *sent, char *word) {
-    //call popen on terminal---------------
-    const char *temp = strstr(sent, word);
-    if (temp) {
-        return 1;
-    }
-    return 0;
-}
-
-// ~ ===========================================================================
 /**
  * popen_call
  * call popen and check if check_line is in output string
@@ -96,7 +79,7 @@ int contains(const char *sent, char *word) {
  * return 1 if the procedure executed
  * return 0 otherwise
  */
-int popen_call(char *cmd, char *check_line, char *output_line) {
+int popen_call(char *cmd, char *check_line) {
     FILE *fp;
     char buf[BUFF_SIZE];
     int ret = 0;
@@ -104,9 +87,10 @@ int popen_call(char *cmd, char *check_line, char *output_line) {
         //printf("Error opening pipe!\n");
         return 0;
     }
-
+    char output_line[BUFF_SIZE];
     while (fgets(buf, BUFF_SIZE, fp) != NULL) {
-        if (contains(buf, check_line)) {
+        // Check if string contains
+        if (strstr(buf, check_line)) {
             strcpy(output_line, buf);
             ret = 1;
         }
@@ -127,11 +111,8 @@ int popen_call(char *cmd, char *check_line, char *output_line) {
  * 1 if ECC is enabled
  */
 int check_ecc_status() {
-    char output_line[BUFF_SIZE];
-    memset(output_line, 0, BUFF_SIZE);
-
     //check for enabled ECC
-    return (popen_call(QUERY_GPU, ENABLED_CONFIRMATION, output_line));
+    return popen_call(QUERY_GPU, ENABLED_CONFIRMATION);
 }
 
 // ~ ===========================================================================
@@ -320,7 +301,6 @@ int start_log_file(char *benchmark_name, char *test_info) {
     strcat(log_file_name, host);
     strcat(log_file_name, ".log");
 
-//#ifndef MIC_NATIVE
     char absolute_path[MAX_VALUE_CONFIG_LEN] = "";
 
     int abs_path_value_config = get_value_config(LOG_DIR_KEY, absolute_path);
@@ -329,11 +309,7 @@ int start_log_file(char *benchmark_name, char *test_info) {
                 CONFIG_FILE_PATH, __FILE__, __LINE__);
         return 1; //exit(1);
     }
-//	if (!abs_path_value_config) {
-//		absolute_path = (char *) malloc(sizeof(char));
-//		absolute_path[0] = '\0';
-//	}
-//#endif
+
     strcpy(full_log_file_name, absolute_path);
     if (strlen(absolute_path) > 0
         && absolute_path[strlen(absolute_path) - 1] != '/') {
@@ -341,16 +317,6 @@ int start_log_file(char *benchmark_name, char *test_info) {
     }
     strcat(full_log_file_name, log_file_name);
 // ~ printf("%s\n", full_log_file_name);
-
-#ifndef USE_DUPLICATE_LOG_FILENAME
-    struct stat buf;
-    if (stat(full_log_file_name, &buf) == 0) {
-        fprintf(stderr,
-                "[ERROR in create_log_file(char *)] File already exists %s at %s:%d\n",
-                full_log_file_name,  __FILE__, __LINE__);
-        return 1;
-    }
-#endif
 
     FILE *file = fopen(full_log_file_name, "a");
     if (file == NULL) {
