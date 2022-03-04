@@ -11,19 +11,11 @@ ITERATIONS=5
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
-ifeq ($(UPPERCASED_PRECISION),HALF)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-else
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Tesla K40
-#ARCH+= 	-gencode arch=compute_53,code=[sm_53,compute_53]	# Tegra X1
-#ARCH+= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-endif
+# This is what I use, uncomment if you know your arch and want to specify
+# Kepler, Volta
+SMS= 35 53 70 86
+
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 
 NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -ccbin $(CXX)
