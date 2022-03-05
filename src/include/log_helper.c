@@ -30,10 +30,6 @@
 #define VAR_DIR_KEY "vardir"
 #define CONFIG_FILE_PATH "/etc/radiation-benchmarks.conf"
 
-//Terminal query which will tells if ECC is enabled or not, it could vary depend on the platform
-#define QUERY_GPU "/usr/bin/nvidia-smi --query-gpu=gpu_name,ecc.mode.current --format=csv,noheader 2>/tmp/trash"
-#define ENABLED_CONFIRMATION "Enabled"
-
 // Location of timestamp file for software watchdog
 #define TIMESTAMP_FILE "timestamp.txt"
 

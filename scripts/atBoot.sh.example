@@ -7,6 +7,15 @@ RADDIR=${HOMEDIR}/radiation-benchmarks
 
 sudo nvidia-smi -i 0 -pm ENABLED
 
+# Edit the following command to be compatible with your device
+ECC_RETURN=$(/usr/bin/nvidia-smi --query-gpu=gpu_name,ecc.mode.current --format=csv,noheader 2>/tmp/trash)
+SUB='Enabled'
+if [[ "$ECC_RETURN" == *"$SUB"* ]]; then
+  echo "1" > /tmp/ecc-info-file.txt
+else
+  echo "0" > /tmp/ecc-info-file.txt
+fi
+
 # set mce check interval to short
 for i in $(seq 0 ${NUMBEROFPROCESSORS})
 do

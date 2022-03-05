@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import configparser
-import sys
 import os
 import re
+import sys
 from pathlib import Path
 
 yes = {'yes', 'y', 'ye', ''}
@@ -80,43 +80,56 @@ def place_rc_local(install_path__):
         os.chmod(etc_path, 0o777)
 
 
-var_dir = "/var/radiation-benchmarks"
-conf_file = "/etc/radiation-benchmarks.conf"
+def set_ecc_info_file_config():
+    ecc_info_file = "/tmp/ecc-info-file.txt"
+    choice = input("[CAUTION] Inform where your atBoot.sh script will place the file"
+                   f" that contains the ECC information (default {ecc_info_file}):")
+    if choice != "":
+        ecc_info_file = choice
+    print(f"File {ecc_info_file} will be used to recovery data from ECC. "
+          "Your script must write at the first line of the file 0 if ECC IS OFF and 1 if ECC IS ON")
+    return ecc_info_file
 
-log_dir = var_dir + "/log"
-mic_log = "/micNfs/carol/logs"
 
-# Each update demands addition here
-kill_test_version = "-2.0"
-signal_cmd = f"killall -q -USR1 killtestSignal{kill_test_version}.py;"
-signal_cmd += f" killall -q -USR1 test_killtest_commands_json{kill_test_version}.py; killall -q -USR1 python3"
+def main():
+    var_dir = "/var/radiation-benchmarks"
+    conf_file = "/etc/radiation-benchmarks.conf"
+    log_dir = var_dir + "/log"
+    mic_log = "/micNfs/carol/logs"
+    # Each update demands addition here
+    kill_test_version = "-2.0"
+    signal_cmd = f"killall -q -USR1 killtestSignal{kill_test_version}.py;"
+    signal_cmd += f" killall -q -USR1 test_killtest_commands_json{kill_test_version}.py; killall -q -USR1 python3"
+    config = configparser.ConfigParser()
+    install_path_ = install_path()
+    ecc_info_file = set_ecc_info_file_config()
 
-config = configparser.ConfigParser()
+    config.set("DEFAULT", "installdir", install_path_)
+    config.set("DEFAULT", "vardir", var_dir)
+    config.set("DEFAULT", "logdir", log_dir)
+    config.set("DEFAULT", "tmpdir", "/tmp")
+    config.set("DEFAULT", "miclogdir", mic_log)
+    config.set("DEFAULT", "signalcmd", signal_cmd)
+    config.set("DEFAULT", "eccinfofile", ecc_info_file)
+    try:
+        if not os.path.isdir(var_dir):
+            os.mkdir(var_dir, 0o777)
+        os.chmod(var_dir, 0o777)
+        if not os.path.isdir(log_dir):
+            os.mkdir(log_dir, 0o777)
+        os.chmod(log_dir, 0o777)
+        with open(conf_file, 'w') as configfile:
+            config.write(configfile)
 
-install_path_ = install_path()
-config.set("DEFAULT", "installdir", install_path_)
-config.set("DEFAULT", "vardir", var_dir)
-config.set("DEFAULT", "logdir", log_dir)
-config.set("DEFAULT", "tmpdir", "/tmp")
-config.set("DEFAULT", "miclogdir", mic_log)
-config.set("DEFAULT", "signalcmd", signal_cmd)
-try:
-    if not os.path.isdir(var_dir):
-        os.mkdir(var_dir, 0o777)
-    os.chmod(var_dir, 0o777)
-    if not os.path.isdir(log_dir):
-        os.mkdir(log_dir, 0o777)
-    os.chmod(log_dir, 0o777)
-    with open(conf_file, 'w') as configfile:
-        config.write(configfile)
+        remove_sudo()
+        place_rc_local(install_path_)
+    except IOError:
+        print("I/O Error, please make sure to run as root (sudo)")
+        sys.exit(1)
+    print("var directory created (" + var_dir + ")")
+    print("log directory created (" + log_dir + ")")
+    print("Config file written (" + conf_file + ")")
 
-    remove_sudo()
-    place_rc_local(install_path_)
 
-except IOError:
-    print("I/O Error, please make sure to run as root (sudo)")
-    sys.exit(1)
-
-print("var directory created (" + var_dir + ")")
-print("log directory created (" + log_dir + ")")
-print("Config file written (" + conf_file + ")")
+if __name__ == '__main__':
+    main()
