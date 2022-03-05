@@ -8,13 +8,6 @@
 
 #include "log_helper.h"
 
-// This flag is necessary when we want to re-write the
-// log filename if the time is incorrect
-#define USE_DUPLICATE_LOG_FILENAME 1
-
-//Buff for ECC check
-#define BUFF_SIZE 128
-
 // Path and command configuration
 #define MAX_FULL_PATH_LEN 512
 #define LOG_FILE_NAME_LEN 256
@@ -28,6 +21,8 @@
 #define LOG_DIR_KEY "logdir"
 #define SIGNAL_CMD_KEY "signalcmd"
 #define VAR_DIR_KEY "vardir"
+// key to load ecc verification data
+#define ECC_INFO_KEY "eccinfofile"
 #define CONFIG_FILE_PATH "/etc/radiation-benchmarks.conf"
 
 // Location of timestamp file for software watchdog
@@ -40,20 +35,23 @@ char timestamp_watchdog[MAX_FULL_PATH_LEN];
 unsigned long int max_errors_per_iter = 500;
 unsigned long int max_infos_per_iter = 500;
 
-//Double error kill flag
+// Double error kill flag
 unsigned char kill_after_double_error = 1;
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
 
 // Used to log max_error_per_iter details each iteration
-int log_error_detail_count = 0;
-int log_info_detail_count = 0;
+unsigned long int log_error_detail_count = 0;
+unsigned long int log_info_detail_count = 0;
 
 // Absolute path for log file, if needed
 //char *absolute_path;
 char log_file_name[LOG_FILE_NAME_LEN] = "";
 char full_log_file_name[FULL_LOG_FILE_NAME_LEN] = "";
+
+// Signal command used to send a signal to the software watchdog
+char signal_cmd[MAX_VALUE_CONFIG_LEN] = "";
 
 // Saves the last amount of error found for a specific iteration
 unsigned long int last_iter_errors = 0;
@@ -67,71 +65,41 @@ double kernel_time_acc = 0;
 double kernel_time = 0;
 long long it_time_start;
 
-// ~ ===========================================================================
 /**
- * popen_call
- * call popen and check if check_line is in output string
- * if check_line is in popen output an output is writen in output_line
- * return 1 if the procedure executed
- * return 0 otherwise
+ * Get time from system
+ * @return timestamp
  */
-int popen_call(char *cmd, char *check_line) {
-    FILE *fp;
-    char buf[BUFF_SIZE];
-    int ret = 0;
-    if ((fp = popen(cmd, "r")) == NULL) {
-        //printf("Error opening pipe!\n");
-        return 0;
-    }
-    char output_line[BUFF_SIZE];
-    while (fgets(buf, BUFF_SIZE, fp) != NULL) {
-        // Check if string contains
-        if (strstr(buf, check_line)) {
-            strcpy(output_line, buf);
-            ret = 1;
-        }
-    }
-
-    fflush(fp);
-    if (pclose(fp)) {
-        //printf("Command not found or exited with error status\n");
-        return 0;
-    }
-    return ret;
-}
-
-// ~ ===========================================================================
-/**
- * This functions checks if ECC is enable or disabled for NVIDIA GPUs
- * 0 if ECC is disabled
- * 1 if ECC is enabled
- */
-int check_ecc_status() {
-    //check for enabled ECC
-    return popen_call(QUERY_GPU, ENABLED_CONFIRMATION);
-}
-
-// ~ ===========================================================================
 long long get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
-// ~ ===========================================================================
+/**
+ *  Set the max_errors per iteration
+ * @param max_errors
+ * @return
+ */
 unsigned long int set_max_errors_iter(unsigned long int max_errors) {
     max_errors_per_iter = max_errors;
     return max_errors_per_iter;
 }
 
-// ~ ===========================================================================
+/**
+ *  Set the max_infos per iteration
+ * @param max_infos
+ * @return
+ */
 unsigned long int set_max_infos_iter(unsigned long int max_infos) {
     max_infos_per_iter = max_infos;
     return max_infos_per_iter;
 }
 
-// ~ ===========================================================================
-// Set the interval the program must print log details, default is 1 (each iteration)
+/**
+ *  Set the interval the program must print log details, default is 1 (each iteration)
+ * @param interval
+ * @return
+ */
 int set_iter_interval_print(int interval) {
     if (interval < 1) {
         iter_interval_print = 1;
@@ -141,15 +109,18 @@ int set_iter_interval_print(int interval) {
     return iter_interval_print;
 }
 
-// ~ ===========================================================================
-// Read config file to get the value of a 'key = value' pair
-// returns 0 if problem 1 otherwise
-int get_value_config(const char *key, char *v) {
+/**
+ * Read config file to get the value of a 'key = value' pair
+ * @param key
+ * @param output_config
+ * @return 0 if problem 1 otherwise
+ */
+int get_value_config(const char *key, char *output_config) {
     FILE *fp = fopen(CONFIG_FILE_PATH, "r");
     if (fp != NULL) {
         char *line = NULL;
         size_t len = 0;
-        char value[MAX_VALUE_CONFIG_LEN];
+//        char value[MAX_VALUE_CONFIG_LEN];
         int i, j;
         int key_not_match;
 
@@ -184,12 +155,11 @@ int get_value_config(const char *key, char *v) {
             j = 0;
             // copy value to buffer until end of line or '#' is found
             for (; line[i] != '\0' && line[i] != '#' && line[i] != '\n'; i++) {
-                value[j] = line[i];
+                output_config[j] = line[i];
                 j++;
             }
-            value[j] = '\0';
-//		char *v = (char *) malloc(sizeof(char) * strlen(value) + 2);
-            strcpy(v, value);
+            output_config[j] = '\0';
+//            strcpy(output_config, value);
             fclose(fp);
             if (line)
                 free(line);
@@ -203,11 +173,28 @@ int get_value_config(const char *key, char *v) {
     return 0;
 }
 
-// ~ ===========================================================================
-// Update with current timestamp the file where the software watchdog watches
+
+/**
+ * This functions checks if ECC is enable or disabled for NVIDIA GPUs
+ * @return 0 if ECC is disabled, 1 if ECC is enabled
+ */
+int check_ecc_status() {
+    //check for enabled ECC
+    char ecc_info_path[MAX_VALUE_CONFIG_LEN] = "";
+    get_value_config(ECC_INFO_KEY, ecc_info_path);
+    FILE *ecc_info_file = fopen(ecc_info_path, "r");
+    int ecc_status = 0;
+    if (ecc_info_file) {
+        fscanf(ecc_info_file, "%d", &ecc_status);
+        fclose(ecc_info_file);
+    }
+    return ecc_status;
+}
+
+/**
+ *  Update with current timestamp the file where the software watchdog watches
+ */
 void update_timestamp() {
-    char signal_cmd[MAX_VALUE_CONFIG_LEN] = "";
-    get_value_config(SIGNAL_CMD_KEY, signal_cmd);
     system(signal_cmd);
     time_t timestamp = time(NULL);
     FILE *fp = fopen(timestamp_watchdog, "w");
@@ -217,14 +204,20 @@ void update_timestamp() {
     }
 }
 
-// ~ ===========================================================================
-// Return the name of the log file generated
+/**
+ * Return the name of the log file generated
+ * @return
+ */
 char *get_log_file_name() {
     return full_log_file_name;
 }
 
-// ~ ===========================================================================
-// Generate the log file name, log info from user about the test to be executed and reset log variables
+/**
+ * Generate the log file name, log info from user about the test to be executed and reset log variables
+ * @param benchmark_name
+ * @param test_info
+ * @return
+ */
 int start_log_file(char *benchmark_name, char *test_info) {
     char var_dir[MAX_VALUE_CONFIG_LEN] = "";
 
@@ -238,8 +231,9 @@ int start_log_file(char *benchmark_name, char *test_info) {
 //            sizeof(char) * (strlen(var_dir) + strlen(TIMESTAMP_FILE) + 4));
     strcpy(timestamp_watchdog, var_dir);
     if (strlen(timestamp_watchdog) > 0
-        && timestamp_watchdog[strlen(timestamp_watchdog) - 1] != '/')
+        && timestamp_watchdog[strlen(timestamp_watchdog) - 1] != '/') {
         strcat(timestamp_watchdog, "/");
+    }
     strcat(timestamp_watchdog, TIMESTAMP_FILE);
     update_timestamp();
 
@@ -335,15 +329,20 @@ int start_log_file(char *benchmark_name, char *test_info) {
     iteration_number = 0;
     kernel_time_acc = 0;
 
+    // Load the signal command when the log starts
+    // only one time
+    get_value_config(SIGNAL_CMD_KEY, signal_cmd);
+
+
     return 0;
 }
 
-// ~ ===========================================================================
-// Log the string "#END" and reset global variables
+/**
+ * Log the string "#END" and reset global variables
+ * @return
+ */
 int end_log_file() {
-    FILE *file = NULL;
-
-    file = fopen(full_log_file_name, "a");
+    FILE *file = fopen(full_log_file_name, "a");
     if (file == NULL) {
         fprintf(stderr,
                 "[ERROR in log_string(char *)] Unable to open file %s at %s:%d\n",
@@ -357,17 +356,15 @@ int end_log_file() {
     kernels_total_errors = 0;
     iteration_number = 0;
     kernel_time_acc = 0;
-//	strcpy(log_file_name, "");
     memset(log_file_name, 0, LOG_FILE_NAME_LEN);
-//	strcpy(absolute_path, "");
-//	strcpy(full_log_file_name, "");
     memset(full_log_file_name, 0, LOG_FILE_NAME_LEN);
-
     return 0;
 }
 
-// ~ ===========================================================================
-// Start time to measure kernel time, also update iteration number and log to file
+/**
+ * Start time to measure kernel time, also update iteration number and log to file
+ * @return
+ */
 int start_iteration() {
     update_timestamp();
     log_error_detail_count = 0;
@@ -376,8 +373,10 @@ int start_iteration() {
     return 0;
 }
 
-// ~ ===========================================================================
-// Finish the measured kernel time log both time (total time and kernel time)
+/**
+ * Finish the measured kernel time log both time (total time and kernel time)
+ * @return
+ */
 int end_iteration() {
     update_timestamp();
 
@@ -408,8 +407,11 @@ int end_iteration() {
     return 0;
 }
 
-// ~ ===========================================================================
-// Update total errors variable and log both errors(total errors and kernel errors)
+/**
+ * Update total errors variable and log both errors(total errors and kernel errors)
+ * @param kernel_errors
+ * @return
+ */
 int log_error_count(unsigned long int kernel_errors) {
     update_timestamp();
 
@@ -419,8 +421,7 @@ int log_error_count(unsigned long int kernel_errors) {
 
     kernels_total_errors += kernel_errors;
 
-    FILE *file = NULL;
-    file = fopen(full_log_file_name, "a");
+    FILE *file = fopen(full_log_file_name, "a");
 
     if (file == NULL) {
         fprintf(stderr,
@@ -461,16 +462,18 @@ int log_error_count(unsigned long int kernel_errors) {
     return 0;
 }
 
-// ~ ===========================================================================
-// Update total infos variable and log both infos(total infos and iteration infos)
+/**
+ * Update total infos variable and log both infos(total infos and iteration infos)
+ * @param info_count
+ * @return
+ */
 int log_info_count(unsigned long int info_count) {
     update_timestamp();
     if (info_count < 1) {
         return 0;
     }
     kernels_total_infos += info_count;
-    FILE *file = NULL;
-    file = fopen(full_log_file_name, "a");
+    FILE *file = fopen(full_log_file_name, "a");
 
     if (file == NULL) {
         fprintf(stderr,
@@ -489,11 +492,12 @@ int log_info_count(unsigned long int info_count) {
     return 0;
 }
 
-// ~ ===========================================================================
-// Print some string with the detail of an error to log file
+/**
+ *  Print some string with the detail of an error to log file
+ * @param string
+ * @return
+ */
 int log_error_detail(char *string) {
-    FILE *file = NULL;
-
 #pragma omp parallel shared(log_error_detail_count)
     {
 #pragma omp critical
@@ -504,7 +508,7 @@ int log_error_detail(char *string) {
     if ((unsigned long) log_error_detail_count > max_errors_per_iter)
         return 0;
 
-    file = fopen(full_log_file_name, "a");
+    FILE *file = fopen(full_log_file_name, "a");
     if (file == NULL) {
         fprintf(stderr,
                 "[ERROR in log_string(char *)] Unable to open file %s at %s:%d\n",
@@ -520,8 +524,11 @@ int log_error_detail(char *string) {
     return 0;
 }
 
-// ~ ===========================================================================
-// Print some string with the detail of an error/information to log file
+/**
+ * Print some string with the detail of an error/information to log file
+ * @param string
+ * @return
+ */
 int log_info_detail(char *string) {
     FILE *file = NULL;
 
@@ -551,16 +558,19 @@ int log_info_detail(char *string) {
     return 0;
 }
 
-// ~ ===========================================================================
-// Get current iteration number
+/**
+ *  Get current iteration number
+ * @return
+ */
 unsigned long int get_iteration_number() {
     return iteration_number;
 }
 
-// ~ ===========================================================================
-//Disable double error kill
-//this will disable double error kill if
-//two errors happened sequentially
+/**
+ * Disable double error kill
+ * this will disable double error kill if
+ * two errors happened sequentially
+ */
 void disable_double_error_kill() {
     kill_after_double_error = 0;
 }

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.20)
 project(example_log DESCRIPTION "examples how to use LogHelper lib")
 
 set(CMAKE_BUILD_TYPE Release)
