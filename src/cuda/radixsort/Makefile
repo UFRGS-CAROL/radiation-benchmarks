@@ -1,8 +1,11 @@
-CC=g++
-NVCC=nvcc
+CXX=g++
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 
-NVIDIA_INC=/usr/local/cuda/include/
-NVIDIA_LIB=/usr/local/cuda/lib64/
+NVCC_FLAGS= -ccbin $(CXX)
+
+NVIDIA_INC=$(CUDAPATH)/include/
+NVIDIA_LIB=$(CUDAPATH)/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
