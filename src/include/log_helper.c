@@ -505,7 +505,7 @@ int log_error_detail(char *string) {
     }
     // Limits the number of lines written to logfile so that
     // HD space will not explode
-    if ((unsigned long) log_error_detail_count > max_errors_per_iter)
+    if (log_error_detail_count > max_errors_per_iter)
         return 0;
 
     FILE *file = fopen(full_log_file_name, "a");
@@ -539,7 +539,7 @@ int log_info_detail(char *string) {
     }
     // Limits the number of lines written to logfile so that
     // HD space will not explode
-    if ((unsigned long) log_info_detail_count > max_infos_per_iter)
+    if (log_info_detail_count > max_infos_per_iter)
         return 0;
 
     file = fopen(full_log_file_name, "a");
