@@ -26,8 +26,8 @@ CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/ -lcudart  -std=c++11
 TARGET=cuda_lava_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_lava.cu
 
-LOGHELPER_INC=../../include/,../common
-LOGHELPER_LIB=../../include/,../common/lib
+LOGHELPER_INC=../../../libLogHelper/include/,../common,../common/include
+LOGHELPER_LIB=../../../libLogHelper/,../common/lib
 
 
 

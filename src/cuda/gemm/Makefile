@@ -67,10 +67,10 @@ NVCCFLAGS+= -Xcompiler "-DOMP -fopenmp"
 endif
 
 ifeq ($(LOGS), 1)
-INCLUDE+=-I$(RADDIR)/src/include/
+INCLUDE+=-I$(RADDIR)/libLogHelper/include/
 NVCCFLAGS+= -DLOGS
 CFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include/ -lLogHelper -DLOGS=1
+LDFLAGS+= -L$(RADDIR)/libLogHelper/ -lLogHelper -DLOGS=1
 endif
 
 OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o

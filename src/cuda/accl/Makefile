@@ -24,7 +24,7 @@ NVCCFLAGS= -std=c++11 -rdc=true
 SMS= 35 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common/include
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common/include
 
 OBJDIR=./obj/
 GPUOBJ= accl.o_dlink.o
@@ -39,7 +39,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper/  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)

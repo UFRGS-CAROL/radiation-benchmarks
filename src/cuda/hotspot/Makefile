@@ -22,8 +22,8 @@ DEF_GOLD=$(DATA_DIR)/gold_$(PRECISION)_$(SIZE)_$(SIM_TIME)
 SMS= 35 53 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-LOGHELPER_INC=$(RADDIR)/src/include/
-LOGHELPER_LIB=$(RADDIR)/src/include/
+LOGHELPER_INC=$(RADDIR)/libLogHelper/include/
+LOGHELPER_LIB=$(RADDIR)/libLogHelper/
 
 NVCCFLAGS= $(ARCH) -std=c++11
 INCLUDE= -I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common/include  -I$(LOGHELPER_INC)

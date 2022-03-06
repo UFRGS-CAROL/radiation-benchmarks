@@ -26,7 +26,7 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp -Wall -Wfatal-errors  -Wunknown-pragmas
 SMS= 35 53 70 86
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common
 
 OBJDIR=./obj/
 OBJ= needle.o needle_kernel.o
@@ -39,7 +39,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper/  -lLogHelper
 endif
 
 ifeq ($(OMP), 1) 

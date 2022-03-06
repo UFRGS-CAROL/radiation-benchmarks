@@ -23,7 +23,7 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp
 SMS= 35 53 70 86
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common/include
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common/include
 
 OBJDIR=./obj/
 OBJ=  lud_kernel.o  main.o Parameters.o
@@ -36,7 +36,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper/  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)

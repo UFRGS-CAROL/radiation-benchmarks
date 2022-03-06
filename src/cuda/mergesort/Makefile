@@ -16,7 +16,7 @@ CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
 RADDIR=../../..
 DATADIR=$(RADDIR)/data/mergesort
-INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include -I$(RADDIR)/src/cuda/common
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common
 # Kepler, Volta
 SMS= 35 70 86
 $(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
@@ -32,7 +32,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)

@@ -18,7 +18,7 @@ GOLD=$(DATADIR)/cfd_gold_$(INPUT_BASE)
 NVCCFLAGS= -std=c++11 -Xptxas -v -Xcompiler -fopenmp  -Xcompiler -fPIC
 CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
-INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/src/include
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include
 INCLUDE+= -I$(RADDIR)/src/cuda/common/include
 # Kepler, Volta
 SMS= 35 70 86
@@ -32,7 +32,7 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L$(RADDIR)/src/include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
