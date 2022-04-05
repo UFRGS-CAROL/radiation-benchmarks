@@ -143,10 +143,13 @@ struct Log {
 	}
 
 	std::string get_log_file_name() {
+	    char tmp[1024];
 #ifndef LOGS
 		return "";
 #else
-		return std::string(::get_log_file_name());
+        ::get_log_file_name(tmp);
+        std::string return_string(tmp);
+		return return_string;
 #endif
 	}
 

@@ -105,7 +105,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {
 	os << "Use cuBLAS: " << parameter.use_cublas << std::endl;
 	os << "Will it use the already created matrices (check_input_existence): " <<
 			(parameter.check_input_existence ? "yes" : "no") << std::endl;
-	os << "LOGFILENAME: " << ::get_log_file_name();
+	os << "LOGFILENAME: " << parameter.log->get_log_file_name();
 	return os;
 }
 
