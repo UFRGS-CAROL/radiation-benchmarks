@@ -143,7 +143,7 @@ struct Log {
 	}
 
 	std::string get_log_file_name() {
-	    char tmp[1024];
+	    char tmp[1024] = {'\0'};
 #ifndef LOGS
 		return "";
 #else
