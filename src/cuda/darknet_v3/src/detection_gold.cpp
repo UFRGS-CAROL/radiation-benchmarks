@@ -193,8 +193,7 @@ int DetectionGold::compare_detection(const Detection &g_det, const detection &f_
         std::stringstream error_info("");
         error_info << std::setprecision(STORE_PRECISION);
 
-        error_info << " img: " << img << " detection: "
-                   << nb << " x_e: " << g_box.x << " x_r: " << f_box.x << " y_e: "
+        error_info << " img: " << img << " detection: " << nb << " x_e: " << g_box.x << " x_r: " << f_box.x << " y_e: "
                    << g_box.y << " y_r: " << f_box.y << " h_e: " << g_box.h
                    << " h_r: " << f_box.h << " w_e: " << g_box.w << " w_r: "
                    << f_box.w << " objectness_e: " << g_objectness
@@ -250,7 +249,7 @@ int DetectionGold::cmp(detection *found_dets, int nboxes, int img_index, int cla
             for (int i = 0; i < boxes_diff; i++) {
                 gold_dets.push_back(gold_dets.back());
             }
-        } else { //when there are less boxes than expected
+        } else if (boxes_diff < 0) { //when there are less boxes than expected
             std::string err_str = "Smaller number of boxes detected:"
                                   + std::to_string(nboxes) + " while gold is:"
                                   + std::to_string(gold_boxes);
@@ -264,14 +263,11 @@ int DetectionGold::cmp(detection *found_dets, int nboxes, int img_index, int cla
             const detection &f_det = found_dets[nb];
 
             //Only basic types are passed to this functions
-            error_count += this->compare_detection(g_det, f_det, img, nb,
-                                                   classes, img_w, img_h);
+            error_count += this->compare_detection(g_det, f_det, img, nb, classes, img_w, img_h);
         }
 
     } else {
-
-        std::string err_str = "Number of boxes detected:"
-                              + std::to_string(nboxes) + " while gold is:"
+        std::string err_str = "Number of boxes detected:" + std::to_string(nboxes) + " while gold is:"
                               + std::to_string(gold_boxes);
 
         Log::log_error_info(err_str);
