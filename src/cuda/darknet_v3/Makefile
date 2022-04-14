@@ -22,7 +22,7 @@ CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
-SMS= 35 62
+SMS= 35 62 70
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/:./examples
