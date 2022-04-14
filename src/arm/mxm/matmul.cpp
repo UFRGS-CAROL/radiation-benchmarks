@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
 
 		log_helper::end_iteration();
 				auto start = std::chrono::system_clock::now();
-		std::time_t now_time = std::chrono::system_clock::to_time_t(start);
+		now_time = std::chrono::system_clock::to_time_t(start);
 		std::cout<<now_time<<" -- ended iteration: "<< iter << std::endl;
 		status_app = compare(iter++, matrix_dim);
 	}
