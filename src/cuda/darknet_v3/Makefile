@@ -10,6 +10,8 @@ EXTRACT_GEMM_DATA=0
 BUILDPROFILER=0
 FLEX_GRIP_ANALYSIS=0
 
+IMG_LIST_FILE = /home/carol/dnnradsetup/data/coco2017_img_list.txt
+
 OPENBLAS=0
 ITERATIONS=5
 HOMEDIR=/home/carol
@@ -20,7 +22,7 @@ CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
-SMS= 35 62
+SMS= 35 62 70
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/:./examples
@@ -176,10 +178,10 @@ demo:
 
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			../../../data/networks_img_list/fault_injection.txt \
+			$(IMG_LIST_FILE) \
 			-generate 1 -gold ./test_$(REAL_TYPE).csv -tensor_cores 0
 
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			../../../data/networks_img_list/fault_injection.txt \
+			$(IMG_LIST_FILE) \
 			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
