@@ -2,12 +2,10 @@
 
 import configparser
 import copy
+import json
 import os
 import re
-import sys
-
-sys.path.append("../../include")
-from common_config import discover_board, execute_and_write_json_to_file
+import socket
 
 ALPHA = 1.0
 BETA = 0.0
@@ -35,7 +33,7 @@ COMPILER_FLAGS = (
 )
 
 
-def config(device, compiler, debug, flag):
+def config(device, compiler, flag):
     benchmark_bin = "gemm"
     cuda_version = compiler[0]
     cxx_version = compiler[1]
@@ -61,12 +59,7 @@ def config(device, compiler, debug, flag):
         os.mkdir(data_path, 0o777)
         os.chmod(data_path, 0o777)
 
-    generate = [f"sudo mkdir -p {bin_path}",
-                f"cd {src_benchmark}",
-                "make -C ../../include ",
-                "mkdir -p " + data_path,
-                f"sudo rm -f {data_path}/*{cuda_version}*{flags_parsed}*",
-                ]
+    generate = [f"mkdir -p {bin_path}", f"cd {src_benchmark}", "mkdir -p " + data_path]
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
@@ -79,9 +72,8 @@ def config(device, compiler, debug, flag):
                     default_path = f'size_{size}_tensor_{use_tensor_cores}_cublas_{cublas}_'
                     default_path += f'precision_{precision}_{cuda_version}_{flags_parsed}.matrix '
                     gen = [
-                        [f'sudo env LD_LIBRARY_PATH={cuda_path}/'
-                         'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                         f"{new_binary}"],
+                        [f'env LD_LIBRARY_PATH={cuda_path}/' + 'lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}'],
+                        [f"{new_binary}"],
                         [f'--size {size}'],
                         [f'--alpha {ALPHA} --beta {BETA}'],
                         [f'--input_a {data_path}/A_{default_path}'],
@@ -102,30 +94,29 @@ def config(device, compiler, debug, flag):
                     gen.append(['--verbose'])
                     variable_gen = ["make clean",
                                     f"make -j 4 LOGS=1 NVCCOPTFLAGS={flag} CXX={cxx_version} CUDAPATH={cuda_path}",
-                                    f"sudo rm -f {new_binary}",
-                                    f"sudo mv ./{benchmark_bin} {new_binary}"
-                                    ]
+                                    f"rm -f {new_binary}", f"mv ./{benchmark_bin} {new_binary}"]
 
                     generate.extend(variable_gen)
                     generate.append(' '.join(str(r) for v in gen for r in v))
-                    execute.append(' '.join(str(r) for v in exe for r in v))
+                    execute.append({
+                        "killcmd": f"killall -9 {new_bench_bin}",
+                        "exec": ' '.join(str(r) for v in exe for r in v),
+                        "codename": new_bench_bin,
+                        "header": ' '.join(str(r) for v in exe[1:] for r in v)
+                    })
 
-    execute_and_write_json_to_file(execute, generate, install_dir, new_bench_bin, debug=debug)
+        with open("./cudaGEMMNewSetupConfig.json", "w") as fp:
+            json.dump(execute, indent=4, fp=fp)
+
+        for g in generate:
+            if os.system(g) != 0:
+                raise SystemExit(f"Could not generate gold using command:\n{g}")
 
 
 def main():
-    debug_mode = False
-    try:
-        parameter = str(sys.argv[-1]).upper()
-
-        if parameter == 'DEBUG':
-            debug_mode = True
-    except IndexError:
-        debug_mode = False
-    board, _ = discover_board()
     for compiler in COMPILER_VERSION:
         for flag in COMPILER_FLAGS:
-            config(device=board, compiler=compiler, debug=debug_mode, flag=flag)
+            config(device=socket.gethostname(), compiler=compiler, flag=flag)
 
 
 if __name__ == "__main__":

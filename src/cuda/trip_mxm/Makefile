@@ -1,7 +1,10 @@
-CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+CXX=g++
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+
+ITERATIONS=5
 
 ifeq ($(LOWERCASED_PRECISION),half)
 ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -17,10 +20,10 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
-NVCC_FLAGS= $(ARCH)
+NVCC_FLAGS= $(ARCH) -ccbin $(CXX)
 
-NVIDIA_INC=/usr/local/cuda/include/,./
-NVIDIA_LIB=/usr/local/cuda/lib64/
+NVIDIA_INC=$(CUDAPATH)/include/,./
+NVIDIA_LIB=$(CUDAPATH)/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
@@ -28,7 +31,7 @@ SOURCES=./cuda_trip_mxm.cu
 EXEC_RADIX=./cuda_trip_mxm_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
-DEF_SIZE=1024
+SIZE=1024
 
 DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_8192.matrix
 DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_8192.matrix
@@ -49,7 +52,7 @@ clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
 
 generate: $(EXEC)
-	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
+	$(EXEC) -generate -size=$(SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
-test: $(EXEC) generate
-	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+test: $(EXEC)
+	$(EXEC) -size=$(SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=$(ITERATIONS) -verbose

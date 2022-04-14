@@ -38,10 +38,11 @@ void setup_double(Parameters& parameters, rad::Log& log) {
 		setup_execution(parameters, log, kc);
 	} else if (parameters.redundancy == DMR) {
 		//CASE FOR 1 Iteration-------------------
-		DMRKernelCaller<double> kc;
-		setup_execution(parameters, log, kc);
+//		DMRKernelCaller<double> kc;
+//		setup_execution(parameters, log, kc);
+		error("DMR for double ready yet");
 	} else if (parameters.redundancy == DMRMIXED) {
-		switch (parameters.block_check) {
+//		switch (parameters.block_check) {
 //		case ONE_BLOCK: {
 //			//CASE FOR 1 Iteration-------------------
 //			DMRMixedKernelCaller<ONE_BLOCK, float, double> kc(THRESHOLD_1);
@@ -50,13 +51,13 @@ void setup_double(Parameters& parameters, rad::Log& log) {
 //			break;
 //		}
 //			//---------------------------------------
-
-		default:
-			//CASE AT THE END Iterations----------------
-			DMRMixedKernelCaller<AT_THE_END_BLOCK, float, double> kc(
-			THRESHOLD_MAX);
-			setup_execution(parameters, log, kc);
-
-		}
+//
+//		default:
+//			//CASE AT THE END Iterations----------------
+//			DMRMixedKernelCaller<AT_THE_END_BLOCK, float, double> kc(
+//			THRESHOLD_MAX);
+//			setup_execution(parameters, log, kc);
+//		}
+		error("DMRMIXED for double ready yet");
 	}
 }

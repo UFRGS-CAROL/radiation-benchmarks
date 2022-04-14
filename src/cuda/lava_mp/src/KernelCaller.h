@@ -87,14 +87,24 @@ struct KernelCaller {
 			}
 		}
 
-		auto dmr_errors = get_dmr_error();
+
+		if (host_errors != 0) {
+			std::cout << "#";
+			std::string error_detail;
+			error_detail = "errors: " + std::to_string(host_errors);
+			//log as info to not count as error detail
+			log.log_info_detail(error_detail);
+		}
+
+		//TODO: Check how to get dmr errors properly
+		auto dmr_errors = 0;//get_dmr_error();
 		if (dmr_errors != 0) {
 			std::string error_detail = "detected_dmr_errors: " + std::to_string(dmr_errors);
 			if (verbose) {
 				std::cout << error_detail << std::endl;
 			}
 			log.log_info_detail(error_detail);
-			log.update_infos();
+//			log.update_infos();
 		}
 
 		if(memory_errors != 0) {
@@ -105,13 +115,8 @@ struct KernelCaller {
 			log.log_info_detail(error_detail);
 			log.update_infos();
 		}
-
+// 		the error update is done inside the class <-- IS NOT EFFICIENT
 		log.update_errors();
-
-		if (host_errors != 0) {
-			std::cout << "#";
-		}
-
 		return (host_errors == 0);
 	}
 
@@ -150,13 +155,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 						cudaMemcpyHostToDevice));
 
 #else
-		this->thresholds_host = std::vector<uint32_t>(THRESHOLD_SIZE, 0);
+		this->thresholds_host = std::vector < uint32_t > (THRESHOLD_SIZE, 0);
 		std::string path(THRESHOLD_PATH);
 		File<uint32_t>::read_from_file(path, thresholds_host);
 		rad::checkFrameworkErrors(
 				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
-						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
-						cudaMemcpyHostToDevice));
+						sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyHostToDevice));
 #endif
 	}
 
@@ -238,28 +242,28 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
 		bool result = false;
 		if (val_gold != val_output) {
-				std::stringstream error_detail;
-				error_detail << std::scientific << std::setprecision(20);
-				error_detail << "stream: " << streamIdx;
-				error_detail << ", p: [" << i << "]";
-				error_detail << ", v_r: " << val_output.v << ", v_e: "
-				<< val_gold.v;
-				error_detail << ", x_r: " << val_output.x << ", x_e: "
-				<< val_gold.x;
-				error_detail << ", y_r: " << val_output.y << ", y_e: "
-				<< val_gold.y;
-				error_detail << ", z_r: " << val_output.z << ", z_e: "
-				<< val_gold.z;
+			std::stringstream error_detail;
+			error_detail << std::scientific << std::setprecision(20);
+			error_detail << "stream: " << streamIdx;
+			error_detail << ", p: [" << i << "]";
+			error_detail << ", v_r: " << val_output.v << ", v_e: "
+			<< val_gold.v;
+			error_detail << ", x_r: " << val_output.x << ", x_e: "
+			<< val_gold.x;
+			error_detail << ", y_r: " << val_output.y << ", y_e: "
+			<< val_gold.y;
+			error_detail << ", z_r: " << val_output.z << ", z_e: "
+			<< val_gold.z;
 
-				error_detail << ", s_v_r: " << val_output_ht.v;
-				error_detail << ", s_x_r: " << val_output_ht.x;
-				error_detail << ", s_y_r: " << val_output_ht.y;
-				error_detail << ", s_z_r: " << val_output_ht.z;
+			error_detail << ", s_v_r: " << val_output_ht.v;
+			error_detail << ", s_x_r: " << val_output_ht.x;
+			error_detail << ", s_y_r: " << val_output_ht.y;
+			error_detail << ", s_z_r: " << val_output_ht.z;
 
-				if (verbose && (host_errors < 10)) {
-					std::cout << error_detail.str() << std::endl;
-				}
-				auto result_i = check_bit_error(val_output_ht, val_output, val_gold, i);
+			if (verbose && (host_errors < 10)) {
+				std::cout << error_detail.str() << std::endl;
+			}
+			auto result_i = check_bit_error(val_output_ht, val_output, val_gold, i);
 #pragma omp critical
 			{
 				host_errors++;
@@ -369,30 +373,26 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 template<typename real_t>
 struct UnhardenedKernelCaller: public KernelCaller<0, real_t, real_t> {
 
-	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
-			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
-			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
+	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream, par_str<real_t>& par_cpu,
+			dim_str& dim_cpu, box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 
-		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
-				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu, d_box_gpu,
+				d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}
 };
 
 template<typename real_t>
-struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
-		real_t, real_t> {
+struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2, real_t, real_t> {
 
-	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
-			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
-			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
+	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream, par_str<real_t>& par_cpu,
+			dim_str& dim_cpu, box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 
-		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
-				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
-		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
-				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
-				this->d_fv_gpu_ht[stream_idx].data());
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu, d_box_gpu,
+				d_rv_gpu, d_qv_gpu, d_fv_gpu);
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu, d_box_gpu,
+				d_rv_gpu, d_qv_gpu, this->d_fv_gpu_ht[stream_idx].data());
 		stream.sync();
 		/*
 		 * 	blocks.x = dim_cpu.number_boxes;
@@ -401,11 +401,10 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 		 */
 		static uint32_t elements = blocks.x * threads.x;
 		static uint32_t thread_block = 1024;
-		static uint32_t thread_grid = ceil(
-				float(elements) / float(thread_block));
+		static uint32_t thread_grid = ceil(float(elements) / float(thread_block));
 
-		compare_two_outputs<<<thread_grid, thread_block, 0, stream.stream>>>(
-				d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data());
+		compare_two_outputs<<<thread_grid, thread_block, 0, stream.stream>>>(d_fv_gpu,
+				this->d_fv_gpu_ht[stream_idx].data());
 	}
 
 	DMRKernelCaller() :

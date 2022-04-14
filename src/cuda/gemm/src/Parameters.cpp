@@ -5,6 +5,9 @@
 
 extern std::string get_multi_compiler_header();
 
+#define LOGGING_ITERATION_INTERVAL 10
+
+
 Parameters::Parameters(int argc, char** argv) :
 		alpha(1), beta(0) {
 
@@ -80,17 +83,11 @@ Parameters::Parameters(int argc, char** argv) :
 
 	// Info for compiler test
 	test_info += get_multi_compiler_header();
-//	std::string opt_flags = "";
-//#ifdef NVCCOPTFLAGS
-//	opt_flags += STRING(NVCCOPTFLAGS);
-//#endif
-//	test_info += " nvcc_optimization_flags: " + opt_flags;
-	std::string app = "gemm_tensor_cores_" + this->precision;
-	this->log = std::make_shared<rad::Log>(app, test_info);
+	std::string app = "gemm_" + this->precision;
+	this->log = std::make_shared<rad::Log>(app, test_info, LOGGING_ITERATION_INTERVAL);
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {
-	os << std::boolalpha;
 	os << "Generate: " << parameter.generate << std::endl;
 	os << "A input path: " << parameter.a_input_path << std::endl;
 	os << "B input path: " << parameter.b_input_path << std::endl;
@@ -108,7 +105,7 @@ std::ostream& operator<<(std::ostream& os, const Parameters& parameter) {
 	os << "Use cuBLAS: " << parameter.use_cublas << std::endl;
 	os << "Will it use the already created matrices (check_input_existence): " <<
 			(parameter.check_input_existence ? "yes" : "no") << std::endl;
-	os << "LOGFILENAME: " << ::get_log_file_name();
+	os << "LOGFILENAME: " << parameter.log->get_log_file_name();
 	return os;
 }
 

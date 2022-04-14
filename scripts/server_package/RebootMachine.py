@@ -5,24 +5,26 @@ import requests
 import json
 import logging
 
+from server_package.ErrorCodes import ErrorCodes
+
 
 class RebootMachine(threading.Thread):
+    # Switches status, only used in this class
     __ON = "ON"
     __OFF = "OFF"
-    __SUCCESS, __GENERAL_ERROR, __HTTP_ERROR, __CONNECTION_ERROR, __TIMEOUT_ERROR = range(5)
 
     def __init__(self, machine_address, switch_model, switch_port, switch_ip, rebooting_sleep, logger_name):
         super(RebootMachine, self).__init__()
         self.__address = machine_address
         self.__switch_port = switch_port
         self.__switch_ip = switch_ip
-        self.__reboot_status = self.__SUCCESS
+        self.__reboot_status = ErrorCodes.SUCCESS
         self.__switch_model = switch_model
-        self.__logger = logging.getLogger(logger_name)
+        self.__logger = logging.getLogger(__name__)
         self.__rebooting_sleep = rebooting_sleep
 
     def run(self):
-        self.__logger.info(f"\tRebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
+        self.__logger.info(f"Rebooting machine: {self.__address}, switch IP: {self.__switch_ip},"
                            f" switch switch_port: {self.__switch_port}")
         self.off()
         time.sleep(self.__rebooting_sleep)
@@ -78,18 +80,18 @@ class RebootMachine(threading.Thread):
         try:
             requests_status = requests.post(url, data=json.dumps(payload), headers=headers)
             requests_status.raise_for_status()
-            self.__reboot_status = self.__SUCCESS
+            self.__reboot_status = ErrorCodes.SUCCESS
         except requests.exceptions.HTTPError as http_error:
-            self.__reboot_status = self.__HTTP_ERROR
+            self.__reboot_status = ErrorCodes.HTTP_ERROR
             self.__log_exception(http_error)
         except requests.exceptions.ConnectionError as connection_error:
-            self.__reboot_status = self.__CONNECTION_ERROR
+            self.__reboot_status = ErrorCodes.CONNECTION_ERROR
             self.__log_exception(connection_error)
         except requests.exceptions.Timeout as timeout_error:
-            self.__reboot_status = self.__TIMEOUT_ERROR
+            self.__reboot_status = ErrorCodes.TIMEOUT_ERROR
             self.__log_exception(timeout_error)
         except requests.exceptions.RequestException as general_error:
-            self.__reboot_status = self.__GENERAL_ERROR
+            self.__reboot_status = ErrorCodes.GENERAL_ERROR
             self.__log_exception(general_error)
 
     def __log_exception(self, err):
@@ -98,47 +100,40 @@ class RebootMachine(threading.Thread):
         :param err:
         :return:
         """
-        self.__logger.error(f"\tCould not change Lindy IP switch status, portNumber: {self.__switch_port} "
+        self.__logger.error(f"Could not change Lindy IP switch status, portNumber: {self.__switch_port} "
                             f" status:{self.__reboot_status} switchIP: {self.__switch_ip} error:{err}")
 
     def __common_switch_command(self, status):
-        port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
-            self.__switch_port, self.__switch_port - 1, self.__switch_port - 1, self.__switch_port - 1)
-
+        # port_default_cmd = 'pw%1dName=&P6%1d=%%s&P6%1d_TS=&P6%1d_TC=&' % (
+        #     self.__switch_port, self.__switch_port - 1, self.__switch_port - 1, self.__switch_port - 1)
+        to_switch_port = self.__switch_port - 1
         cmd = 'curl --data \"'
-        cmd += port_default_cmd % ("On" if status == self.__ON else "Off")
+        # TODO: parametrize it
+        for port in range(0, 4):
+            on_off = "%s"
+            if port == to_switch_port:
+                on_off = "On" if status == self.__ON else "Off"
+            cmd += f"pw{port + 1}Name=&P6{port}={on_off}&P6{port}_TS=&P6{port}_TC=&"
+
         cmd += '&Apply=Apply\" '
-        cmd += f'http://%s/tgi/iocontrol.tgi {self.__switch_ip}'
+        cmd += f'http://{self.__switch_ip}/tgi/iocontrol.tgi '
         cmd += '-o /dev/null '
         self.__reboot_status = self.__execute_command(cmd)
+        print(cmd)
 
-    def get_reboot_status(self):
+    @property
+    def reboot_status(self):
+        """
+        Get the reboot status
+        :return:
+        """
         return self.__reboot_status
 
     def __execute_command(self, cmd):
-        tmp_file = "/tmp/server_error_execute_command"
+        # Write only one error file for each thread
+        tmp_file = f"/tmp/server_error_execute_command_{self.__address}"
         result = os.system(f"{cmd} 2>{tmp_file}")
         with open(tmp_file) as err:
-            if len(err.readlines()) != 0 or result != 0:
-                return self.__GENERAL_ERROR
-        return self.__SUCCESS
-
-
-if __name__ == '__main__':
-    # FOR DEBUG ONLY
-    print("CREATING THE RebootMachine")
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%m-%d %H:%M',
-        filename="unit_test_log_RebootMachine.log",
-        filemode='w'
-    )
-    reboot = RebootMachine(machine_address="192.168.1.11", switch_model="lindy", switch_port=1,
-                           switch_ip="192.168.1.102", rebooting_sleep=10, logger_name="REBOOT-MACHINE_LOG")
-    print("Rebooting")
-    reboot.start()
-    reboot.join()
-    # reboot.off()
-
-    print(f"Reboot status {reboot.get_reboot_status()}")
+            if not any(["Received" in e for e in err.readlines()]) or result != 0:
+                return ErrorCodes.GENERAL_ERROR
+        return ErrorCodes.SUCCESS

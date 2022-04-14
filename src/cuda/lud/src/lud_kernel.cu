@@ -3,6 +3,13 @@
 
 #include "utils.h"
 
+#include "multi_compiler_analysis.h"
+
+std::string get_multi_compiler_header(){
+	return rad::get_multi_compiler_header();
+}
+
+
 __global__ void lud_diagonal(float *m, int matrix_dim, int offset) {
 	int i, j;
 	__shared__ float shadow[BLOCK_SIZE][BLOCK_SIZE];

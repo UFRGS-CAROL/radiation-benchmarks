@@ -41,6 +41,8 @@
 //#define GET_RAND_FP (float(rand())/(float(RAND_MAX)+1.0f))
 
 extern void lud_cuda(float *m, int matrix_dim);
+extern std::string get_multi_compiler_header();
+
 
 template<typename T>
 void generateInputMatrix(std::vector<T>& array, size_t size) {
@@ -111,6 +113,8 @@ int main(int argc, char* argv[]) {
 
 	std::string test_info = "size:" + std::to_string(parameters.size)
 			+ " type:single-precision";
+	test_info += " " + get_multi_compiler_header();
+
 	std::string test_name = "cudaSLUD";
 	//Log creation
 	rad::Log log(test_name, test_info);

@@ -4,8 +4,9 @@ DEBUG?=0
 LOGS?=0
 DEBUG_ON_TITAN?=0
 OMP?=0
-
+TENSOR_CORES=1
 SIZE?=4096 #16384 #8192 #4096 
+ITERATIONS=5
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -22,14 +23,15 @@ OBJDIR=./obj/
 
 CC=gcc
 CXX=g++
-NVCC=/usr/local/cuda/bin/nvcc 
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../../hotspot
+INCLUDE=-I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../trip_mxm
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -42,9 +44,9 @@ STDVERSION=--std=c++11
 COMMON+= $(STDVERSION)
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 endif
 
 ifeq ($(OMP), 1) 
@@ -98,8 +100,8 @@ clean:
 	rm -rf $(OBJS) $(TARGET) ./*.matrix
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float	
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float	
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 260000 --tensor_cores 1 --triplicated 1 --precision float
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations $(ITERATIONS) --tensor_cores $(TENSOR_CORES) --triplicated 1 --precision float
 	

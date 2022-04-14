@@ -10,6 +10,9 @@
 
 #include <unordered_map>
 
+//define the logging iteration interval
+#define LOGGING_ITERATION_INTERVAL 10
+
 #define __DEVICE_INLINE__ __device__ __forceinline__
 #define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
@@ -34,7 +37,7 @@
 
 // STABLE
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
-#define MAX_LOGGED_ERRORS_PER_STREAM 100
+#define MAX_LOGGED_ERRORS_PER_STREAM 500
 
 //Subtraction considering the signal
 #define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))

@@ -47,8 +47,7 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	bool operator==(const FOUR_VECTOR& rhs) const {
-		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z)
-				&& (this->v == rhs.v);
+		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z) && (this->v == rhs.v);
 	}
 
 	__DEVICE_HOST_INLINE__
@@ -138,9 +137,7 @@ struct CudaStream {
 	cudaStream_t stream;
 
 	CudaStream() {
-		rad::checkFrameworkErrors(
-				cudaStreamCreateWithFlags(&this->stream,
-						cudaStreamNonBlocking));
+		rad::checkFrameworkErrors(cudaStreamCreateWithFlags(&this->stream, cudaStreamNonBlocking));
 	}
 
 	~CudaStream() {

@@ -1,59 +1,48 @@
-GPU=1
 DEBUG=0
+BLOCK_SIZE=32
 #for radiation setup
 LOGS=1
 OMP=1
-
 ALPHA=1.0
 BETA=0.0
 SIZE?=4096
-ITERATIONS=10
-PRECISION=half
+ITERATIONS=1
+PRECISION=float
 CUBLAS=0
-TENSOR_CORES=1
+TENSOR_CORES=0
 DMR=none
 BUILDRELATIVEERROR=0
 CHECKBLOCK=1
 
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/gemm
+
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
 
 # NVCC optmizations flags
-NVCCOPTFLAGS?=
+NVCCOPTFLAGS=
 
 # This is what I use, uncomment if you know your arch and want to specify
-# Kepler
-ARCH=-gencode arch=compute_35,code=[sm_35,compute_35]
+# Kepler, Volta
+SMS= 35 53 70 86
 
-# check for cuda 7.0 or lower
-ifneq (, $(findstring cuda-7.0, $(CUDAPATH)))
-else
-# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]
-# Tegra X2
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]
-# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]
-# Xavier
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
-endif
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/
 TARGET=gemm
 OBJDIR=./obj/
-
 CXX=g++
-
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
-OPTS=-O3
-LDFLAGS= 
-COMMON= 
-CFLAGS= -Wall -Wfatal-errors
+LDFLAGS=  -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
+COMMON= --std=c++11 
+CFLAGS= -O3 -Wall -Wfatal-errors
 
-RAD_DIR=/home/carol/radiation-benchmarks
+INCLUDE=-I$(CUDAPATH)/include -I$(RADDIR)/src/cuda/common  -I$(CUDAPATH)/include/
 
-INCLUDE=-I$(CUDAPATH)/include -I../common
-
+ifneq ($(BLOCK_SIZE), 32)
+COMMON+= -DBLOCK_SIZE=$(BLOCK_SIZE)
+endif
 
 ifeq ($(CUBLAS), 1)
 USECUBLAS= --use_cublas
@@ -64,7 +53,7 @@ USETENSORS= --tensor_cores
 endif
 
 ifeq ($(DEBUG), 1) 
-OPTS=-O0 -g -DDEBUG
+CFLAGS+=-O0 -g -DDEBUG
 NVCCFLAGS+= -g -G -DDEBUG
 endif
 
@@ -72,40 +61,28 @@ ifeq ($(BUILDRELATIVEERROR), 1)
 NVCCFLAGS+= -DBUILDRELATIVEERROR=1
 endif
 
-CFLAGS+=$(OPTS)
-STDVERSION=--std=c++11
-
-COMMON+= $(STDVERSION)
-
-ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I$(CUDAPATH)/include/
-CFLAGS+= -DGPU
-LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
-endif
-
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
+NVCCFLAGS+= -Xcompiler "-DOMP -fopenmp"
 endif
-
-
-OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)
-INCLUDE+=-I../../include/
+INCLUDE+=-I$(RADDIR)/libLogHelper/include/
 NVCCFLAGS+= -DLOGS
 CFLAGS+= -DLOGS
-LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
+LDFLAGS+= -L$(RADDIR)/libLogHelper/ -lLogHelper -DLOGS=1
 endif
+
+OBJ= main.o setup_gemm.o Parameters.o common.o setup_tensor_cores.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
 # It is necessary to multi compiler analysis
-PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(patsubst %-Xptxas,%,$(NVCCOPTFLAGS)))"
-CFLAGS+= $(PASSHOSTCC)
-NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --compiler-options="$(PASSHOSTCC)" 
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
-all: obj $(TARGET)
+all: mkdir $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
@@ -116,10 +93,9 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) -ccbin $(CXX) $(ARCH) $(COMMON) $(NVCCFLAGS) $(INCLUDE) -c $< -o $@ 
 
-
-obj:
+mkdir:
 	mkdir -p obj
-
+	mkdir -p $(DATADIR)
 
 .PHONY: clean
 clean:
@@ -129,20 +105,21 @@ clean:
 generate:
 	./$(TARGET) --size $(SIZE) --generate --verbose \
 			--precision $(PRECISION) --dmr none \
+			--iterations 1  \
 			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX) $(USECUBLAS) $(USETENSORS)
+			--input_a $(DATADIR)/a_$(OUTPUTPREFIX) \
+			--input_b $(DATADIR)/b_$(OUTPUTPREFIX) \
+			--input_c $(DATADIR)/c_$(OUTPUTPREFIX) \
+			--gold  $(DATADIR)/g_$(OUTPUTPREFIX) $(USECUBLAS) $(USETENSORS)
 	
 test:
 	./$(TARGET) --size $(SIZE) --verbose \
 			--precision $(PRECISION) --dmr $(DMR) \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)	\
+			--input_a $(DATADIR)/a_$(OUTPUTPREFIX) \
+			--input_b $(DATADIR)/b_$(OUTPUTPREFIX) \
+			--input_c $(DATADIR)/c_$(OUTPUTPREFIX) \
+			--gold  $(DATADIR)/g_$(OUTPUTPREFIX)	\
 			--opnum $(CHECKBLOCK) $(USECUBLAS) $(USETENSORS)
 			

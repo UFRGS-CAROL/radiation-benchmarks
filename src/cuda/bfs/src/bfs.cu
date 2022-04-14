@@ -22,6 +22,11 @@
 #include "kernel.h"
 #include "cuda_utils.h"
 #include "device_vector.h"
+#include "multi_compiler_analysis.h"
+
+std::string get_multi_compiler_header(){
+	return rad::get_multi_compiler_header();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //Apply BFS on a Graph using CUDA

@@ -6,12 +6,12 @@ DEBUG?=0
 REAL_TYPE?=float
 LOGS?=1
 OPENGEMM?=0
-EXTRACT_GEMM_DATA=1
+EXTRACT_GEMM_DATA=0
 BUILDPROFILER=0
-FLEX_GRIP_ANALYSIS=1
+FLEX_GRIP_ANALYSIS=0
 
 OPENBLAS=0
-
+ITERATIONS=5
 HOMEDIR=/home/carol
 RADIATIONDIR=$(HOME)/radiation-benchmarks/
 #RADIATIONDIR=$(HOME)/git_pesquisa/radiation-benchmarks/
@@ -19,9 +19,9 @@ RADIATIONDIR=$(HOME)/radiation-benchmarks/
 CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
-ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
-#ARCH+=-gencode arch=compute_60,code=[sm_60,compute_60] 
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] 
+# Kepler, Volta
+SMS= 35 62
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/:./examples
 SLIB=libdarknet.so
@@ -38,12 +38,12 @@ ARFLAGS=rcs
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
 LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
-COMMON= -Iinclude/ -Isrc/
+COMMON= -Iinclude/ -Isrc/ -I../common/include
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC
 CFLAGS+= -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 CXXFLAGS=  -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 
-NVCCFLAGS= -std=c++11
+NVCCFLAGS= -std=c++11 -ccbin=$(CC)
 #-disable-warnings 
 
 ifeq ($(OPENMP), 1) 
@@ -129,8 +129,8 @@ EXECOBJA= yolo.o detector.o  darknet.o detection_gold.o detection_gold_w.o
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o \
-blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o \
-gemm_kernels.o
+blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o 
+#gemm_kernels.o
 endif
 
 ifeq ($(EXTRACT_GEMM_DATA), 1)
@@ -154,7 +154,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) -ccbin $(CC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
+	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 obj:
 	mkdir -p obj
@@ -182,4 +182,4 @@ generate:
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/fault_injection.txt \
-			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations 1 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
+			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) -norm_coord 0 -tensor_cores 0 -smx_redundancy 1

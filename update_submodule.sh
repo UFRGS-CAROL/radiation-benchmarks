@@ -6,10 +6,10 @@
 #radiation-benchmarks repository will be with wrong link
 
 git pull
-cd radiation-benchmarks-parsers/
-git checkout master && git pull
+cd libLogHelper/
+git checkout main && git pull
 cd ..
 #git submodule update --init --recursive
-git add radiation-benchmarks-parsers
+git add libLogHelper
 git commit -m "updating submodule to latest"
 git push -u origin master

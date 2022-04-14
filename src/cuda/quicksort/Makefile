@@ -1,24 +1,27 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 EXEC=quicksort
 LOGS=1
 BUILDPROFILER=0
 DEBUG=0
-SIZE=134217728
+#SIZE=134217728
+ITERATIONS=10
+SIZE=1048576
 
 VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/quicksort
+INPUT=$(DATADIR)/quicksort_input_134217728
+GOLD=$(DATADIR)/quicksort_gold_$(SIZE)
 
+NVCCFLAGS= -std=c++11 -Xptxas -v -rdc=true -Xcompiler -fopenmp  -Xcompiler -fPIC
+CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp
-
-
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV 
-#-I$(CUDAPATH)/samples/common/inc
-INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common
+# Kepler, Volta
+SMS= 35 70 86
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 OBJDIR=./obj/
 OBJ= cdpBitonicSort.o cdpAdvancedQuicksort.o
@@ -31,49 +34,50 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper/  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
 NVCCFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: mkdir $(EXEC)
 
 
 $(EXEC): $(OBJS)  
-	$(NVCC) $(ARCH) $^ -o $@ $(LDFLAGS) $(INCLUDE) $(CXXFLAGS)
+	$(NVCC) $(ARCH) $^ -o $@ $(LDFLAGS) $(INCLUDE) $(NVCCFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
-	
+
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+	$(NVCC) -ccbin $(CXX) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
 
 mkdir:
 	mkdir -p $(OBJDIR)
-
+	mkdir -p $(DATADIR)
+	
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
-	
-	
+
+#-noinputensurance 		  		
 generate:
-	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
-	 		   	
+	./$(EXEC) -size=$(SIZE) -generate -verbose \
+	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=1
+
+
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
+	 		   -input=$(INPUT)  -gold=$(GOLD) -iterations=$(ITERATIONS)
+

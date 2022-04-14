@@ -1,58 +1,45 @@
-GPU?=1
-DEBUG?=0
-#for radiation setup
-LOGS?=1
-OMP?=1
+CXX=g++
+EXEC=nw
+DEBUG=0
+LOGS=1
+OMP=1
 BUILDPROFILER=0
-
-
-SIZE?=8192
-#6384 #8192 #4096 
+SIZE=16384
 ITERATIONS=10
-INPUT=./input_$(SIZE)
-GOLD=./gold_$(SIZE)
+RADDIR=../../..
 PENALTY=10
-
-
-
-# This is what I use, uncomment if you know your arch and want to specify
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_72,code=[sm_72,compute_72]	# Xavier
-
+DATADIR=$(RADDIR)/data/nw
+INPUT=$(DATADIR)/input_$(SIZE)_$(PENALTY)
+GOLD=$(DATADIR)/gold_$(SIZE)_$(PENALTY)
 
 VPATH=./src/
-TARGET=nw
-OBJDIR=./obj/
-
-CXX=g++
-#g++
 CUDAPATH=/usr/local/cuda
-NVCC=$(CUDAPATH)/bin/nvcc 
-OPTS=-O3
-LDFLAGS= -lm -pthread -lstdc++ 
-COMMON= 
-CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
-RAD_DIR=/home/carol/radiation-benchmarks
+NVCC=$(CUDAPATH)/bin/nvcc
 
-INCLUDE=-I$(CUDAPATH)/include -I../common
+NVCCFLAGS= -std=c++11 -Xptxas -v  -Wno-deprecated-gpu-targets
+# NVCC optmizations flags
+NVCCOPTFLAGS=
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp -Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
+
+# This is what I use, uncomment if you know your arch and want to specify
+# Kepler, Volta
+SMS= 35 53 70 86
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
+
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common
+
+OBJDIR=./obj/
+OBJ= needle.o needle_kernel.o
 
 ifeq ($(DEBUG), 1) 
-OPTS=-O0 -g -DDEBUG
-NVCCFLAGS+= -g -G -DDEBUG
+CXXFLAGS+=-O0 -g
+NVCCFLAGS+= -g -G
 endif
 
-CFLAGS+=$(OPTS)
-STDVERSION=--std=c++11
-
-COMMON+= $(STDVERSION)
-
-ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I$(CUDAPATH)/include/
-CFLAGS+= -DGPU
-LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS
+NVCCFLAGS+= -DLOGS
+LDFLAGS+= -L$(RADDIR)/libLogHelper/  -lLogHelper
 endif
 
 ifeq ($(OMP), 1) 
@@ -61,48 +48,40 @@ endif
 
 
 ifeq ($(BUILDPROFILER), 1)
-CFLAGS+= -DBUILDPROFILER
+CXXFLAGS+= -DBUILDPROFILER
 LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
-
-OBJ= needle.o needle_kernel.o
-#setup_tensor_cores.o
-
-ifeq ($(LOGS), 1)
-INCLUDE+=-I../../include/
-NVCCFLAGS+= -DLOGS
-CFLAGS+= -DLOGS
-LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
-endif
+LDFLAGS+= -lm -pthread -lstdc++ -L$(CUDAPATH)/lib64  -lcudart  -lcurand -lcudadevrt  -Wno-deprecated-gpu-targets
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-NVCCFLAGS+= -Xptxas -v
 
-all: obj $(TARGET)
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
-$(TARGET): $(OBJS)
-	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
+all: mkdir $(EXEC)
+
+$(EXEC): $(OBJS)  
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
-
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+	
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) -ccbin $(CXX) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
+	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
 
+mkdir:
+	mkdir -p $(OBJDIR)
+	mkdir -p $(DATADIR)
 
-obj:
-	mkdir -p obj
-
-
-.PHONY: clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	rm -f $(OBJDIR)* $(EXEC)
 
 generate:
-	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 1
+	./$(EXEC) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) 1 1
 
 test:
-	./$(TARGET) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 0
+	./$(EXEC) $(SIZE) $(PENALTY) $(INPUT) $(GOLD) $(ITERATIONS) 0

@@ -4,33 +4,33 @@
 import configparser
 import copy
 import os
+import re
 import sys
 
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [1024]
-ITERATIONS = 10000
-SIMTIME = [1000]
-STREAMS = 10
+ITERATIONS = 1000000
+SIMTIME = [100]
+STREAMS = 4
 PRECISIONS = ["single"]
-BUILDPROFILER = 1
+BUILDPROFILER = 0
 
 COMPILER_VERSION = [
-    ("10.1", "g++"),
-    ("7.0", "g++-4.8")
+    ("10.2", "g++"),
+    # ("11.3", "g++")
 ]
 
 COMPILER_FLAGS = (
     # append to parameter list the number of the registers
-    '--maxrregcount=16',
-
-    # Enable (disable) to allow compiler to perform expensive optimizations
-    # using maximum available resources (memory and compile-time).
-    # '"-Xptxas --allow-expensive-optimizations=false"',
-
+    # '--maxrregcount=16',
+    # '"-Xptxas -O0 -Xcompiler -O0"',
+    # '"-Xptxas -O1 -Xcompiler -O1"',
+    # # Baseline
+    '"-Xptxas -O3 -Xcompiler -O3"',
     # # Fast math implies --ftz=true --prec-div=false --prec-sqrt=false --fmad=true.
-    "--use_fast_math",
+    # "--use_fast_math",
 )
 
 
@@ -69,7 +69,7 @@ def config(board, arith_type, debug, compiler_version, flag):
                 # "mv ./" + benchmark_bin + " " + bin_path + "/"
                 ]
     execute = []
-    flag_parsed = flag.replace("=", "").replace("--", "")
+    flag_parsed = re.sub("-*=*[ ]*\"*", "", flag)
     benchmark_bin_new = f"{benchmark_bin}_{cuda_version}_{flag_parsed}"
     for i in SIZES:
         for s in SIMTIME:

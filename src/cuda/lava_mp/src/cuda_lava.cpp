@@ -20,6 +20,7 @@
 #include "setup.h"
 #include "common.h"
 
+std::string get_multi_compiler_header();
 //=============================================================================
 //	MAIN FUNCTION
 //=============================================================================
@@ -42,14 +43,13 @@ int main(int argc, char *argv[]) {
 	test_info += " block_size:" + std::to_string(NUMBER_THREADS);
 	test_info += " redundancy:" + parameters.test_redundancy_description;
 	test_info += " check_block:" + std::to_string(parameters.block_check);
+	test_info += get_multi_compiler_header();
 
 	std::string test_name = std::string("cuda_") + parameters.test_precision_description
 			+ "_lava";
 	std::cout << "=================================" << std::endl;
 
-	rad::Log log(test_name, test_info);
-
-	log.set_max_errors_iter(MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
+	rad::Log log(test_name, test_info, LOGGING_ITERATION_INTERVAL, MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
 	std::cout << log << std::endl;
 
 	/**

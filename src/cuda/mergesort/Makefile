@@ -1,24 +1,25 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -O3  -fPIC  -pthread  -fopenmp
 EXEC=mergesort
 LOGS=1
 BUILDPROFILER=0
 DEBUG=0
-SIZE=134217728
+#SIZE=134217728
+SIZE=1048576
+ITERATIONS=10
 
 VPATH=./
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
+NVCCFLAGS= -std=c++11 -Xptxas -v -rdc=true -Xcompiler -fopenmp -Xcompiler -fPIC  -Xcompiler  -pthread 
+CXXFLAGS= -std=c++11 -O3 -fPIC -pthread -fopenmp
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -Xcompiler -fopenmp
-
-
-ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
-#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV 
-
-INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common
+RADDIR=../../..
+DATADIR=$(RADDIR)/data/mergesort
+INCLUDE= -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I$(RADDIR)/libLogHelper/include -I$(RADDIR)/src/cuda/common
+# Kepler, Volta
+SMS= 35 70 86
+$(foreach sm,$(SMS),$(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 OBJDIR=./obj/
 OBJ= bitonic.o  main.o  mergeSort.o  mergeSort_host.o  mergeSort_validate.o
@@ -31,27 +32,29 @@ endif
 ifeq ($(LOGS), 1)
 CXXFLAGS+= -DLOGS
 NVCCFLAGS+= -DLOGS
-LDFLAGS+= -L../../include  -lLogHelper
+LDFLAGS+= -L$(RADDIR)/libLogHelper  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
 CXXFLAGS+= -DBUILDPROFILER
 NVCCFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(RADDIR)/src/cuda/common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
-
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+# It is necessary to multi compiler analysis
+PASSHOSTCC= -DNVCCOPTFLAGS="$(strip $(NVCCOPTFLAGS))"
+NVCCFLAGS+= -Xptxas -v $(NVCCOPTFLAGS) --optimize 3 $(PASSHOSTCC)
 
 all: mkdir $(EXEC)
 
 
 $(EXEC): $(OBJS)  
-	$(CXX) $^ -o $@ $(LDFLAGS) $(INCLUDE) $(CXXFLAGS)
+	$(NVCC) $(ARCH) $^ -o $@ $(LDFLAGS) $(INCLUDE) $(NVCCFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
@@ -61,19 +64,21 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 mkdir:
 	mkdir -p $(OBJDIR)
-
+	mkdir -p $(DATADIR)
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 	
 generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
+	 		   -input=$(DATADIR)/input_$(SIZE) \
+	 		   -gold=$(DATADIR)/gold_$(SIZE) \
+	 		   -iterations=1 
+	 		   #-noinputensurance
 	 		   	
 test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
-	 		   -input=./input_$(SIZE) \
-	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=10 -noinputensurance
+	 		   -input=$(DATADIR)/input_$(SIZE) \
+	 		   -gold=$(DATADIR)/gold_$(SIZE) \
+	 		   -iterations=$(ITERATIONS)
+	 		   #-noinputensurance

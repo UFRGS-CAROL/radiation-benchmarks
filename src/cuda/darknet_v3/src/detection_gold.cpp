@@ -17,7 +17,8 @@
 
 #define DEBUG_LINE(msg) printf("FILE: %s LINE: %d -- MSG: %s\n", __FILE__, __LINE__, msg);
 
-extern std::vector<std::string> split(const std::string&, char);
+//extern std::vector<std::string> split(const std::string&, char);
+#include "helpful.h"
 
 /**
  * Detection Gold class
@@ -65,8 +66,10 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 	this->iterations = find_int_arg(argc, argv, "-iterations", 1);
 	this->tensor_core_mode = find_int_arg(argc, argv, "-tensor_cores", 0);
-	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 1);
-	this->compare_layers = find_arg(argc, argv, "-cmp_layer");
+//	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 1);
+//  this->compare_layers = find_arg(argc, argv, "-cmp_layer");
+    this->compare_layers = false;
+    this->stream_mr = 1;
 
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
@@ -79,9 +82,9 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	std::cout << "Radiation test mode: " << this->generate << std::endl;
 	std::cout << "Gold path: " << this->gold_inout << std::endl;
 
-	LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
+	//LayerOperationType current_op = GENERATE_GOLDEN_LAYERS;
 	if (!this->generate) {
-		current_op = SIMULATE_SCHEDULER_FAULT;
+	//	current_op = SIMULATE_SCHEDULER_FAULT;
 
 		Log::start_log(this->gold_inout, 0, 0, this->iterations,
 				this->network_name, this->tensor_core_mode, this->stream_mr);
@@ -141,7 +144,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->write_gold_header();
 		this->iterations = 1;
 	}
-	set_layer_processing_parameters(current_op);
+	//set_layer_processing_parameters(current_op);
 }
 
 bool operator!=(const box& a, const box& b) {
@@ -305,13 +308,13 @@ int DetectionGold::run(detection **dets, int* nboxes, int img_index,
 		gold_file.close();
 	} else {
 		// To compare function
-		//detection is allways nboxes size
+		//detection is always nboxes size
 		for (int inet = 0; inet < this->stream_mr; inet++) {
 			ret += this->cmp(dets[inet], nboxes[inet], img_index, classes,
 					img_w, img_h, inet);
 		}
 
-		reset_counters();
+		//reset_counters();
 	}
 	return ret;
 }
@@ -392,7 +395,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
 
-		// Probarray creation
+		// Prob array creation
 
 		int nboxes = std::stoi(splited_line[1]);
 

@@ -64,22 +64,6 @@
 #include "misc.h"
 #include "accl.h"
 
-//class errorHandler {
-//};
-//using namespace std;
-/*
- * ---------------------------------------------------------------------
- * Prototypes
- * ---------------------------------------------------------------------
- */
-//double getWallTime();
-//double getCpuTime();
-//void pgmRead(std::ifstream &file, char *buf);
-//image<uchar> *loadPGM(const char *name);
-//image<int> *imageUcharToInt(image<uchar> *input);
-//void savePGM(image<rgb> *im, const char *name);
-//void acclSerial(image<int> *imInt, int *spans, int *components, const int rows,
-//		const int cols, image<rgb> *output);
 /*
  * RGB generation colors randomly
  */
@@ -91,25 +75,6 @@ rgb randomRgb() {
 	c.b = (uchar) rand();
 	return c;
 }
-
-///*
-// * getWallTime: Compute timing of execution including I/O
-// */
-//double getWallTime() {
-//	struct timeval time;
-//	if (gettimeofday(&time, NULL)) {
-//		printf("Error getting time\n");
-//		return 0;
-//	}
-//	return (double) time.tv_sec + (double) time.tv_usec * .000001;
-//}
-//
-///*
-// * getCpuTime: Compute timing of execution using Clocks function from C++
-// */
-//double getCpuTime() {
-//	return (double) clock() / CLOCKS_PER_SEC;
-//}
 
 /*
  * pgmRead: read a pgm image file
@@ -210,13 +175,6 @@ std::shared_ptr<image<int>> imageUcharToInt(
 	return output;
 }
 
-//double mysecond() {
-//	struct timeval tp;
-//	struct timezone tzp;
-//	int i = gettimeofday(&tp, &tzp);
-//	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-//}
-
 template<typename int_t>
 void writeGold(std::vector<int_t>& gold_spans,
 		std::vector<int_t>& gold_components, const std::string& fpath) {
@@ -253,18 +211,8 @@ void readGold(std::vector<int_t>& gold_spans,
 	}
 }
 
-//void usage() {
-//	std::cout
-//			<< "Usage: ./accl <N frames in the image> <(HyperQ) Frames per Stream> <Input image path> <GOLD path> <#iteractions>"
-//			<< std::endl;
-//}
 
 int main(int argc, char** argv) {
-//	if (argc < 6) {
-//		usage();
-//		exit(0);
-//	}
-
 	Parameters parameters(argc, argv);
 
 	//	"frames:%d, framesPerStream:%d"
@@ -389,11 +337,7 @@ int main(int argc, char** argv) {
 						error_detail = "t: [spans], p: [" + istr + "][" + jstr
 								+ "], ";
 						error_detail += "r: " + fc + ", e: " + gc;
-//					char error_detail[150];
-//					snprintf(error_detail, 150,
-//							, i, j,
-//							spans[index], gold_spans[index]);
-//					printf("%s\n", error_detail);
+
 #pragma omp critical
 						{
 							if (parameters.verbose && kernel_errors <= 10) {
@@ -423,11 +367,6 @@ int main(int argc, char** argv) {
 								+ jstr + "], ";
 						error_detail += "r: " + fc + ", e: " + gc;
 
-//					char error_detail[150];
-//					snprintf(error_detail, 150,
-//							"t: [components], p: [%d][%d], r: %d, e: %d", i, j,
-//							components[index], gold_components[index]);
-//					printf("%s\n", error_detail);
 #pragma omp critical
 						{
 							//					log_error_detail(error_detail);

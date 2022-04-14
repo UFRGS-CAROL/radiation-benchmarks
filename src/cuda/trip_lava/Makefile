@@ -4,7 +4,7 @@ PRECISION?=single
 LOGS?=1
 USE_OMP?=1
 SAFE_MALLOC?=0
-
+ITERATIONS=5
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -58,10 +58,10 @@ NVCC_FLAGS+= -I$(SAFEMEMORYDIR)/
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION) -DDEFAULT_INPUT_SIZE=$(DEFAULT_INPUT_SIZE)
 
 DATA_DIR=../../../data/lava
-DEF_SIZE=12
-DEF_CHARGES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_charges_$(DEF_SIZE)
-DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_distances_$(DEF_SIZE)
-DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(DEF_SIZE)
+SIZE=12
+DEF_CHARGES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_charges_$(SIZE)
+DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_distances_$(SIZE)
+DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(SIZE)
 
 all: $(TARGET)
 
@@ -72,7 +72,7 @@ clean:
 	rm -rf ./$(TARGET) $(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=1 -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(SIZE) -generate -streams=1 -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
-test: $(RUN_EXEC) generate
-	./$(TARGET) -boxes=$(DEF_SIZE) -streams=1 -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+test: $(RUN_EXEC)
+	./$(TARGET) -boxes=$(SIZE) -streams=1 -iterations=$(ITERATIONS) -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)

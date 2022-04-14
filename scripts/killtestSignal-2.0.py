@@ -60,15 +60,15 @@ def logMsg(msg):
     print(date_str)
 
 
-def updateTimestamp():
-    """
-    Update the timestamp file with machine current timestamp
-    :return:
-    """
-    command = "echo " + str(int(time.time())) + " > " + timestampFile
-    retcode = os.system(command)
-    global timestampSignal
-    timestampSignal = int(time.time())
+# def updateTimestamp():
+#     """
+#     Update the timestamp file with machine current timestamp
+#     :return:
+#     """
+#     command = "echo " + str(int(time.time())) + " > " + timestampFile
+#     retcode = os.system(command)
+#     global timestampSignal
+#     timestampSignal = int(time.time())
 
 
 def cleanCommandExecLogs():
@@ -125,6 +125,7 @@ def selectCommand():
     # and return it
 
     # Read the timestamp file
+    timestamp = 0
     try:
         fp = open(varDir + "command_execstart_" + str(i), 'r')
         timestamp = int(float(fp.readline().strip()))
@@ -135,9 +136,6 @@ def selectCommand():
         os.system("rm -f " + varDir + "command_execstart_" + str(i))
         os.system("shutdown -r now")
         time.sleep(20)
-    # fp = open(varDir+"command_execstart_"+str(i),'r')
-    # timestamp = int(float(fp.readline().strip()))
-    # fp.close()
 
     now = int(time.time())
     if (now - timestamp) < timeWindowCommands:
@@ -162,7 +160,7 @@ def execCommand(command):
     :return:
     """
     try:
-        updateTimestamp()
+        # updateTimestamp()
         if re.match(r".*&\s*$", command):
             # print "command should be ok"
             return os.system(command)

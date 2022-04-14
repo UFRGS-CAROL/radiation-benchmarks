@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import os
 import socket
 import time
 import logging
@@ -7,33 +6,8 @@ import queue
 
 from server_parameters import *
 from server_package.Machine import Machine
-# from server_package.RebootMachine import RebootMachine
 from server_package.LoggerFormatter import ColoredLogger
 from server_package.CopyLogs import CopyLogs
-
-
-def start_copying():
-    server_logs_path = "logs/"
-    if os.path.exists(server_logs_path) is False:
-        os.mkdir(server_logs_path)
-
-    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                  datefmt='%d-%m-%y %H:%M:%S')
-    # create logger with 'spam_application'
-    fh = logging.FileHandler(f"{server_logs_path}/copy.log", mode='a')
-    fh.setFormatter(formatter)
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(fh)
-
-    copy_obj = CopyLogs(machines=MACHINES,
-                        sleep_copy_interval=COPY_LOG_INTERVAL,
-                        destination_folder=server_logs_path,
-                        logger_name=None,
-                        to_copy_folder="/var/radiation-benchmarks/log/")
-    copy_obj.start()
-
-    return copy_obj
 
 
 def generate_machine_hash(messages_queue):
@@ -56,12 +30,34 @@ def generate_machine_hash(messages_queue):
                 logger_name=LOGGER_NAME,
                 boot_problem_max_delta=BOOT_PROBLEM_MAX_DELTA,
                 reboot_sleep_time=REBOOTING_SLEEP
-                # RebootMachine=RebootMachine
             )
 
             machines_hash[mac["ip"]] = mac_obj
             mac_obj.start()
     return machines_hash
+
+
+def generate_copy_threads():
+    """
+    Start the copy threads
+    :return:
+    """
+    copy_thread_list = list()
+    for mac in MACHINES:
+        if mac["enabled"]:
+            copy_obj = CopyLogs(
+                ip=mac["ip"],
+                password=mac["password"],
+                username=mac["username"],
+                hostname=mac["hostname"],
+                sleep_copy_interval=COPY_LOG_INTERVAL,
+                to_copy_folder=DEFAULT_RADIATION_LOGS_PATH,
+                destination_folder=SERVER_LOG_PATH
+            )
+
+            copy_obj.start()
+            copy_thread_list.append(copy_obj)
+    return copy_thread_list
 
 
 def logging_setup():
@@ -76,15 +72,15 @@ def logging_setup():
     fh = logging.FileHandler(LOG_FILE, mode='a')
     fh.setLevel(logging.INFO)
     # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(filename)s:%(lineno)d',
                                   datefmt='%d-%m-%y %H:%M:%S')
+
+    # add the handlers to the logger
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
     # create console handler with a higher log level for console
     console = ColoredLogger(LOGGER_NAME)
-
-    # add the handlers to the logger
     # noinspection PyTypeChecker
     logger.addHandler(console)
     return logger
@@ -99,7 +95,7 @@ def main():
     logger = logging_setup()
 
     # copy obj and logging
-    copy_obj = start_copying()
+    copy_thread_list = generate_copy_threads()
 
     # Queue to print the messages in a good way
     messages_queue = queue.Queue()
@@ -114,11 +110,11 @@ def main():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             # Bind the socket to a public host, and a well-known port
             server_socket.bind((SERVER_IP, SOCKET_PORT))
+            logger.info(f"Server bind to: {SERVER_IP}")
 
             # Initialize a list that contains all Machines
             machines_hash = generate_machine_hash(messages_queue)
 
-            logger.info(f"\tServer bind to: {SERVER_IP}")
             # Become a server socket
             # TODO: find the correct value for backlog parameter
             server_socket.listen(15)
@@ -128,13 +124,14 @@ def main():
                 client_socket, address_list = server_socket.accept()
                 address = address_list[0]
 
-                # Set new timestamp
-                timestamp = time.time()
-                machines_hash[address].set_timestamp(timestamp=timestamp)
+                # Set new timestamp, only if machine is in the list
+                if address in machines_hash:
+                    timestamp = time.time()
+                    machines_hash[address].update_machine_timestamp(timestamp=timestamp)
+                    logger.debug(f"Connection from {address} machine {machines_hash[address].hostname}")
 
                 # Close the connection
                 client_socket.close()
-                logger.debug(f"\tConnection from {address} machine {machines_hash[address].get_hostname()}")
     except KeyboardInterrupt:
         # Stop mac objects
         for mac_obj in machines_hash.values():
@@ -144,8 +141,9 @@ def main():
         if client_socket:
             client_socket.close()
 
-        # Stop copy thread
-        copy_obj.join()
+        # Stop copy threads
+        for copy_thread in copy_thread_list:
+            copy_thread.join()
 
         logger.error("KeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         exit(130)

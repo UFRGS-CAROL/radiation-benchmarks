@@ -18,6 +18,11 @@
 
 #include "cuda_utils.h"
 #include "utils.h"
+#include "multi_compiler_analysis.h"
+
+std::string get_multi_compiler_header() {
+	return rad::get_multi_compiler_header();
+}
 
 /*-------------------------------------------------------
  ** Fan1() -- Calculate multiplier matrix
@@ -33,9 +38,9 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t) {
 
 	if (threadIdx.x + blockIdx.x * blockDim.x >= Size - 1 - t)
 		return;
-	*(m_cuda + Size * (blockDim.x * blockIdx.x + threadIdx.x + t + 1) + t) =
-			*(a_cuda + Size * (blockDim.x * blockIdx.x + threadIdx.x + t + 1)
-					+ t) / *(a_cuda + Size * t + t);
+	*(m_cuda + Size * (blockDim.x * blockIdx.x + threadIdx.x + t + 1) + t) = *(a_cuda
+			+ Size * (blockDim.x * blockIdx.x + threadIdx.x + t + 1) + t)
+			/ *(a_cuda + Size * t + t);
 }
 
 /*-------------------------------------------------------
@@ -43,8 +48,7 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t) {
  **-------------------------------------------------------
  */
 
-__global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
-		int j1, int t) {
+__global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size, int j1, int t) {
 	if (threadIdx.x + blockIdx.x * blockDim.x >= Size - 1 - t)
 		return;
 	if (threadIdx.y + blockIdx.y * blockDim.y >= Size - t)
@@ -54,14 +58,13 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
 	int yidx = blockIdx.y * blockDim.y + threadIdx.y;
 	//printf("blockIdx.x:%d,threadIdx.x:%d,blockIdx.y:%d,threadIdx.y:%d,blockDim.x:%d,blockDim.y:%d\n",blockIdx.x,threadIdx.x,blockIdx.y,threadIdx.y,blockDim.x,blockDim.y);
 
-	a_cuda[Size * (xidx + 1 + t) + (yidx + t)] -= m_cuda[Size * (xidx + 1 + t)
-			+ t] * a_cuda[Size * t + (yidx + t)];
+	a_cuda[Size * (xidx + 1 + t) + (yidx + t)] -= m_cuda[Size * (xidx + 1 + t) + t]
+			* a_cuda[Size * t + (yidx + t)];
 	//a_cuda[xidx+1+t][yidx+t] -= m_cuda[xidx+1+t][t] * a_cuda[t][yidx+t];
 	if (yidx == 0) {
 		//printf("blockIdx.x:%d,threadIdx.x:%d,blockIdx.y:%d,threadIdx.y:%d,blockDim.x:%d,blockDim.y:%d\n",blockIdx.x,threadIdx.x,blockIdx.y,threadIdx.y,blockDim.x,blockDim.y);
 		//printf("xidx:%d,yidx:%d\n",xidx,yidx);
-		b_cuda[xidx + 1 + t] -= m_cuda[Size * (xidx + 1 + t) + (yidx + t)]
-				* b_cuda[t];
+		b_cuda[xidx + 1 + t] -= m_cuda[Size * (xidx + 1 + t) + (yidx + t)] * b_cuda[t];
 	}
 }
 
@@ -71,9 +74,8 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda, int Size,
  **------------------------------------------------------
  */
 template<typename real_t>
-void ForwardSubTemplate(rad::DeviceVector<real_t>& m_cuda,
-		rad::DeviceVector<real_t>& a_cuda, rad::DeviceVector<real_t>& b_cuda,
-		size_t size) {
+void ForwardSubTemplate(rad::DeviceVector<real_t>& m_cuda, rad::DeviceVector<real_t>& a_cuda,
+		rad::DeviceVector<real_t>& b_cuda, size_t size) {
 	// allocate memory on GPU
 	// copy memory to GPU
 	size_t block_size = MAXBLOCKSIZE;
@@ -93,19 +95,16 @@ void ForwardSubTemplate(rad::DeviceVector<real_t>& m_cuda,
 
 	for (size_t t = 0; t < (size - 1); t++) {
 		Fan1<<<dimGrid, dimBlock>>>(m_cuda.data(), a_cuda.data(), size, t);
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(), b_cuda.data(), size, size - t,
+				t);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		Fan2<<<dimGridXY, dimBlockXY>>>(m_cuda.data(), a_cuda.data(),
-				b_cuda.data(), size, size - t, t);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		rad::checkFrameworkErrors(cudaGetLastError());
-		;
+		rad::checkFrameworkErrors (cudaGetLastError());;
 	}
 }
 
-void ForwardSub(rad::DeviceVector<float>& m_cuda,
-		rad::DeviceVector<float>& a_cuda, rad::DeviceVector<float>& b_cuda,
-		size_t size) {
+void ForwardSub(rad::DeviceVector<float>& m_cuda, rad::DeviceVector<float>& a_cuda,
+		rad::DeviceVector<float>& b_cuda, size_t size) {
 	ForwardSubTemplate(m_cuda, a_cuda, b_cuda, size);
 }
 
@@ -114,17 +113,16 @@ void ForwardSub(rad::DeviceVector<float>& m_cuda,
  **------------------------------------------------------
  */
 
-void BackSub(std::vector<float>& finalVec, std::vector<float>& a,
-		std::vector<float>& b, size_t size) {
+void BackSub(std::vector<float>& finalVec, std::vector<float>& a, std::vector<float>& b,
+		size_t size) {
 	// solve "bottom up"
 	for (size_t i = 0; i < size; i++) {
 		finalVec[size - i - 1] = b[size - i - 1];
 		for (size_t j = 0; j < i; j++) {
-			finalVec[size - i - 1] -= a[size * (size - i - 1)
-					+ (size - j - 1)] * finalVec[size - j - 1];
+			finalVec[size - i - 1] -= a[size * (size - i - 1) + (size - j - 1)]
+					* finalVec[size - j - 1];
 		}
-		finalVec[size - i - 1] = finalVec[size - i - 1]
-				/ a[size * (size - i - 1) + (size - i - 1)];
+		finalVec[size - i - 1] = finalVec[size - i - 1] / a[size * (size - i - 1) + (size - i - 1)];
 	}
 }
 

@@ -16,3 +16,5 @@
 *CMakeLists.txt
 *.gitignore
 
+# log files
+*.log
