@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
-
+    log_helper::set_iter_interval_print(1);
     if ( (optind < argc) || (optind == 1)) {
         fprintf(stderr, "Usage: %s [-n no. of threads] [-s matrix_dim] [-i input_file] [-g gold_file] [-l #iterations]\n", argv[0]);
         exit(EXIT_FAILURE);
