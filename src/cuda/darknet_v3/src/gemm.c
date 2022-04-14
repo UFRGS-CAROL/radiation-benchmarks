@@ -13,9 +13,9 @@
 #include <cblas.h>
 #endif
 
-#ifdef OPENGEMM
-#include "gemm_kernels.h"
-#endif
+//#ifdef OPENGEMM
+//#include "gemm_kernels.h"
+//#endif
 
 void gemm_bin(int M, int N, int K, real_t ALPHA, char *A, int lda, real_t *B,
 		int ldb, real_t *C, int ldc) {
@@ -204,52 +204,50 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
 		unsigned char use_tensor_cores, cudaStream_t st) {
-	cublasHandle_t handle = blas_handle(use_tensor_cores);
-	cublasSetStream(handle, st);
+//    DEPRECATED
 	//Matteo project
 	// save the matrices file
 	//parse_input_conv_layer_gpu(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 
-#ifndef OPENGEMM
-
-#if REAL_TYPE == HALF
-	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
-//	int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc)
-	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
-#elif REAL_TYPE == FLOAT
-	cudaError_t status = (cudaError_t) cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
-			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
-			A_gpu, lda, &BETA, C_gpu, ldc);
-	check_error(status);
-#elif REAL_TYPE == DOUBLE
-	cudaError_t status = (cudaError_t) cublasDgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
-			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
-			A_gpu, lda, &BETA, C_gpu, ldc);
-	check_error(status);
-#endif
-
-#else
-
-#if REAL_TYPE == HALF
-	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
-#elif REAL_TYPE == FLOAT
-	sgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
-			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
-			A_gpu, lda, &BETA, C_gpu, ldc);
-
-#elif REAL_TYPE == DOUBLE
-	dgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
-			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
-			A_gpu, lda, &BETA, C_gpu, ldc);
-
-#endif
-
-#endif
-
-//	cublasHandle_t handle = blas_handle();
-//	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+//#ifndef OPENGEMM
+//
+//#if REAL_TYPE == HALF
+//	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
+////	int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc)
+//	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
+//#elif REAL_TYPE == FLOAT
+//	cudaError_t status = (cudaError_t) cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 //			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 //			A_gpu, lda, &BETA, C_gpu, ldc);
+//	check_error(status);
+//#elif REAL_TYPE == DOUBLE
+//	cudaError_t status = (cudaError_t) cublasDgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+//			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
+//			A_gpu, lda, &BETA, C_gpu, ldc);
+//	check_error(status);
+//#endif
+//
+//#else
+
+//#if REAL_TYPE == HALF
+//	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
+//#elif REAL_TYPE == FLOAT
+//	sgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+//			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
+//
+//#elif REAL_TYPE == DOUBLE
+//	dgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+//			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
+//			A_gpu, lda, &BETA, C_gpu, ldc);
+//
+//#endif
+
+//#endif
+	cublasHandle_t handle = blas_handle(use_tensor_cores);
+	cublasSetStream(handle, st);
+    cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+            (TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
+    //check_error(status);
 
 //	parse_output_conv_layer_gpu(TA, TB, M, N, K, C_gpu);
 }

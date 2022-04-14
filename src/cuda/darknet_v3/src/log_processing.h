@@ -77,7 +77,8 @@ struct Log {
 
     static std::string get_log_path() {
 #ifdef LOGS
-        std::string ret(get_log_file_name());
+        char tmp[2048] = "";
+        std::string ret(get_log_file_name(tmp));
 #else
         std::string ret = "";
 #endif

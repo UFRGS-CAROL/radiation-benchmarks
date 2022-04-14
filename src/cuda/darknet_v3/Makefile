@@ -19,9 +19,9 @@ RADIATIONDIR=$(HOME)/radiation-benchmarks/
 CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
-#ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
-#ARCH+=-gencode arch=compute_60,code=[sm_60,compute_60] 
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] 
+# Kepler, Volta
+SMS= 35 62
+$(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/:./examples
 SLIB=libdarknet.so
@@ -38,12 +38,12 @@ ARFLAGS=rcs
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
 LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
-COMMON= -Iinclude/ -Isrc/ -I../../include
+COMMON= -Iinclude/ -Isrc/ -I../common/include
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings  -fPIC
 CFLAGS+= -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 CXXFLAGS=  -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 
-NVCCFLAGS= -std=c++11
+NVCCFLAGS= -std=c++11 -ccbin=$(CC)
 #-disable-warnings 
 
 ifeq ($(OPENMP), 1) 
