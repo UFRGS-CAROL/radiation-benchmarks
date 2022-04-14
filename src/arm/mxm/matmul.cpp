@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
 
 		log_helper::start_iteration();
 
-		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
+		sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 
 		log_helper::end_iteration();
 		
