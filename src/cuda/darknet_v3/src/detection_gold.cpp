@@ -69,7 +69,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 //	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 1);
 //  this->compare_layers = find_arg(argc, argv, "-cmp_layer");
     this->compare_layers = false;
-    this->stream_mr = 1;
+//    this->stream_mr = 1;
 
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
@@ -78,7 +78,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	std::cout << "Radiation test specific info\n";
 	std::cout << "Norm. Coord.: " << this->normalized_coordinates << std::endl;
 	std::cout << "Tensor cores: " << int(this->tensor_core_mode) << std::endl;
-	std::cout << "SMX redundancy: " << this->stream_mr << std::endl;
+//	std::cout << "SMX redundancy: " << this->stream_mr << std::endl;
 	std::cout << "Radiation test mode: " << this->generate << std::endl;
 	std::cout << "Gold path: " << this->gold_inout << std::endl;
 
@@ -86,8 +86,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	if (!this->generate) {
 	//	current_op = SIMULATE_SCHEDULER_FAULT;
 
-		Log::start_log(this->gold_inout, 0, 0, this->iterations,
-				this->network_name, this->tensor_core_mode, this->stream_mr);
+		Log::start_log(this->gold_inout, 0, 0, this->iterations, this->network_name, this->tensor_core_mode); //, this->stream_mr);
 
 		//  detection gold;
 		std::string line;
@@ -173,7 +172,7 @@ bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 
 int DetectionGold::compare_detection(const Detection& g_det,
 		const detection& f_det, const std::string& img, int nb, int classes,
-		int img_w, int img_h, int inet) const {
+		int img_w, int img_h) const {
 
 	box g_box = g_det.bbox;
 	box f_box = f_det.bbox;
@@ -197,7 +196,7 @@ int DetectionGold::compare_detection(const Detection& g_det,
 		std::stringstream error_info("");
 		error_info << std::setprecision(STORE_PRECISION);
 
-		error_info << "inet: " << inet << " img: " << img << " detection: "
+		error_info << " img: " << img << " detection: "
 				<< nb << " x_e: " << g_box.x << " x_r: " << f_box.x << " y_e: "
 				<< g_box.y << " y_r: " << f_box.y << " h_e: " << g_box.h
 				<< " h_r: " << f_box.h << " w_e: " << g_box.w << " w_r: "
@@ -221,7 +220,7 @@ int DetectionGold::compare_detection(const Detection& g_det,
 				&& prob_diff > THRESHOLD_ERROR) {
 			std::stringstream error_info("");
 			error_info << std::setprecision(STORE_PRECISION);
-			error_info << "inet: " << inet << " img: " << img << " detection: "
+			error_info << " img: " << img << " detection: "
 					<< nb << " class: " << cl << " prob_e: " << g_prob
 					<< " prob_r: " << f_prob;
 
@@ -239,7 +238,7 @@ int DetectionGold::compare_detection(const Detection& g_det,
 }
 
 int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
-		int classes, int img_w, int img_h, int inet) {
+		int classes, int img_w, int img_h) {
 	std::string img = this->gold_img_names[img_index];
 	int error_count = 0;
 	auto gold_boxes = this->gold_hash_var[img].size();
@@ -270,7 +269,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 
 			//Only basic types are passed to this functions
 			error_count += this->compare_detection(g_det, f_det, img, nb,
-					classes, img_w, img_h, inet);
+					classes, img_w, img_h);
 		}
 
 	} else {
@@ -290,8 +289,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	return error_count;
 }
 
-int DetectionGold::run(detection **dets, int* nboxes, int img_index,
-		int classes, int img_w, int img_h) {
+int DetectionGold::run(detection *dets, int nboxes, int img_index, int classes, int img_w, int img_h) {
 	int ret = 0;
 	// To generate function
 	//std::string img, detection* dets, int nboxes, int classes, int l_coord
@@ -304,15 +302,14 @@ int DetectionGold::run(detection **dets, int* nboxes, int img_index,
 		}
 
 		//assuming at least one execution is completed
-		this->gen(dets[0], nboxes[0], img_index, gold_file, classes);
+		this->gen(dets, nboxes, img_index, gold_file, classes);
 		gold_file.close();
 	} else {
 		// To compare function
 		//detection is always nboxes size
-		for (int inet = 0; inet < this->stream_mr; inet++) {
-			ret += this->cmp(dets[inet], nboxes[inet], img_index, classes,
-					img_w, img_h, inet);
-		}
+//		for (int inet = 0; inet < this->stream_mr; inet++) {
+        ret += this->cmp(dets, nboxes, img_index, classes, img_w, img_h);
+//		}
 
 		//reset_counters();
 	}

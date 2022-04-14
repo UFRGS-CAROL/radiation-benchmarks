@@ -678,8 +678,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-void load_all_images(image* imgs, image* sized_images, char** img_names,
-		int plist_size, int net_w, int net_h) {
+void load_all_images(image* imgs, image* sized_images, char** img_names, int plist_size, int net_w, int net_h) {
 	int i;
 	for (i = 0; i < plist_size; i++) {
 		imgs[i] = load_image_color(img_names[i], 0, 0);
@@ -687,45 +686,42 @@ void load_all_images(image* imgs, image* sized_images, char** img_names,
 	}
 }
 
-void free_all_images(image **imgs, image** sized_images, int list_size,
-		int smx_red) {
+void free_all_images(image *imgs, image* sized_images, int list_size) {
 	//          free_image(im);
-	int i, s;
-	for (s = 0; s < smx_red; s++) {
-
-		for (i = 0; i < list_size; i++) {
-			free_image(imgs[s][i]);
-			free_image(sized_images[s][i]);
-		}
-		free(imgs[s]);
-		free(sized_images[s]);
-	}
-
-	free(imgs);
-	free(sized_images);
+//	int i, s;
+//	for (s = 0; s < smx_red; s++) {
+    for (int i = 0; i < list_size; i++) {
+        free_image(imgs[i]);
+        free_image(sized_images[i]);
+    }
+    free(imgs);
+    free(sized_images);
+//	}
+//	free(imgs);
+//	free(sized_images);
 }
-
-#ifdef GPU
-cudaStream_t* init_multi_streams(int smx_size) {
-	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
-	int smx;
-	for (smx = 0; smx < smx_size; smx++) {
-		stream_array[smx] = NULL;
-//		cudaError_t status = cudaStreamCreate(&stream_array[smx]);
-//		check_error(status);
-	}
-	return stream_array;
-}
-
-void del_multi_streams(cudaStream_t* stream_array, int smx_size) {
-	int smx;
-	for (smx = 0; smx < smx_size; smx++) {
-//		cudaError_t status = cudaStreamDestroy(stream_array[smx]);
-//		check_error(status);
-	}
-	free(stream_array);
-}
-#endif
+// DOES NOT WORK
+//#ifdef GPU
+//cudaStream_t* init_multi_streams(int smx_size) {
+//	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
+//	int smx;
+//	for (smx = 0; smx < smx_size; smx++) {
+//		stream_array[smx] = NULL;
+////		cudaError_t status = cudaStreamCreate(&stream_array[smx]);
+////		check_error(status);
+//	}
+//	return stream_array;
+//}
+//
+//void del_multi_streams(cudaStream_t* stream_array, int smx_size) {
+//	int smx;
+//	for (smx = 0; smx < smx_size; smx++) {
+////		cudaError_t status = cudaStreamDestroy(stream_array[smx]);
+////		check_error(status);
+//	}
+//	free(stream_array);
+//}
+//#endif
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
@@ -735,45 +731,50 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	 */
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
-	int smx_redundancy = get_smx_redundancy(gold);
+//	int smx_redundancy = get_smx_redundancy(gold);
 
 #ifdef GPU
-	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
-	//--------------------------
+//	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
+//	//--------------------------
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
 #endif
-	network** net_array = malloc(sizeof(network*) * smx_redundancy);
+//	network** net_array = malloc(sizeof(network*) * smx_redundancy);
 
 	printf(
 			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
 			cfgfile, datacfg, weightfile, filename, thresh);
 
 	//load images
-	image** image_array = malloc(sizeof(image*) * smx_redundancy);
-	image** sized_array = malloc(sizeof(image*) * smx_redundancy);
+//	image** image_array = malloc(sizeof(image*) * smx_redundancy);
+//	image** sized_array = malloc(sizeof(image*) * smx_redundancy);
 
 	char **img_names = get_labels(filename);
 	int max_it = get_iterations(gold);
 	int plist_size = get_img_num(gold);
 
-	int inet;
-	for (inet = 0; inet < smx_redundancy; inet++) {
-		network *net = load_network(cfgfile, weightfile, 0);
-		set_batch_network(net, 1);
-		//Set tensor cores on the net
-		net->smx_redundancy = smx_redundancy;
+//	int inet;
+//	for (inet = 0; inet < smx_redundancy; inet++) {
+    network *net = load_network(cfgfile, weightfile, 0);
+    set_batch_network(net, 1);
+    //Set tensor cores on the net
+//    net->smx_redundancy = smx_redundancy;
 #ifdef GPU
-		net->use_tensor_cores = get_use_tensor_cores(gold);
-		net->st = stream_array[inet];
+    net->use_tensor_cores = get_use_tensor_cores(gold);
+    net->st = stream; //stream_array[inet];
 #endif
-		net_array[inet] = net;
+//    net_array[inet] = net;
 
-		//load images
-		printf("Loading images for network %d\n", inet);
-		image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
-		sized_array[inet] = (image*) malloc(sizeof(image) * plist_size);
-		load_all_images(image_array[inet], sized_array[inet], img_names,
-				plist_size, net_array[inet]->w, net_array[inet]->h);
-	}
+    //load images
+    printf("Loading images for network\n");
+//    image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
+//    sized_array[inet] = (image*) malloc(sizeof(image) * plist_size);
+    image* image_array = (image*) malloc(sizeof(image) * plist_size);
+    image* sized_array = (image*) malloc(sizeof(image) * plist_size);
+    load_all_images(image_array, sized_array, img_names, plist_size, net->w, net->h);
+    printf("Images loaded\n");
+
+//	}
 	srand(2222222);
 	double time;
 	real_t nms = .45;
@@ -784,45 +785,44 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 //	image* sized_images = (image*) malloc(sizeof(image) * plist_size);
 //	load_all_images(images, sized_images, img_names, plist_size,
 //			net_array[0]->w, net_array[0]->h);
-	real_t** X_arr = malloc(sizeof(real_t*) * smx_redundancy);
-	detection** dets_array = malloc(sizeof(detection*) * smx_redundancy);
-	int* nboxes_array = malloc(sizeof(int) * smx_redundancy);
+//	real_t** X_arr = malloc(sizeof(real_t*) * smx_redundancy);
+//	detection** dets_array = malloc(sizeof(detection*) * smx_redundancy);
+//	int* nboxes_array = malloc(sizeof(int) * smx_redundancy);
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
 //		int last_errors = 0;
 		for (img = 0; img < plist_size; img++) {
 
-			layer l = net_array[0]->layers[net_array[0]->n - 1];
+			layer l = net->layers[net->n - 1];
 
 //			real_t *X = sized.data;
-			image im = image_array[0][img];
-			for (inet = 0; inet < smx_redundancy; inet++) {
+			image im = image_array[img];
+//			for (inet = 0; inet < smx_redundancy; inet++) {
 //				image sized = sized_array[inet][img];
-				X_arr[inet] = sized_array[inet][img].data;
-			}
+//				X_arr[inet] = sized_array[inet][img].data;
+//			}
+            real_t* X = sized_array[img].data;
 			time = what_time_is_it_now();
 
 			//Run one iteration
 			start_iteration_wrapper(gold);
-//			network_predict(net, X);
-			network_predict_smx_red(net_array, X_arr);
+			network_predict(net, X);
+//			network_predict_smx_red(net_array, X_arr);
 			end_iteration_wrapper(gold);
 
 //			int nboxes = 0;
 //			printf("aui antes do dets\n");
-			for (inet = 0; inet < smx_redundancy; inet++) {
-				dets_array[inet] = get_network_boxes(net_array[inet], im.w,
-						im.h, thresh, hier_thresh, 0, 1, &nboxes_array[inet]);
+//			for (inet = 0; inet < smx_redundancy; inet++) {
+            int nboxes = 0;
+            detection* dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes);
 
-				if (nms)
-					do_nms_sort(dets_array[inet], nboxes_array[inet], l.classes,
-							nms);
-			}
+            if (nms)
+                do_nms_sort(dets, nboxes, l.classes, nms);
+//			}
 //			printf("aui antes do run\n");
 			//Save or compare
 			double start = what_time_is_it_now();
-			int curr_err = run(gold, dets_array, nboxes_array, img, l.classes,
-					im.w, im.h);
+			int curr_err = run(gold, dets, nboxes, img, l.classes, im.w, im.h);
 			double end = what_time_is_it_now();
 
 			/*
@@ -831,32 +831,33 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 						"IT IS LESS PROBLABLE THAT DARKNET GIVE US TWO ERRORS SEQUENTIALY, ABORTING\n");
 				exit(-1);
 			}*/
-			for (inet = 0; inet < smx_redundancy; inet++) {
-				//			if ((iteration * img) % PRINT_INTERVAL == 0) {
-				printf(
-						"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
-						iteration, img, nboxes_array[inet],
-						what_time_is_it_now() - time, curr_err, end - start);
-				//			}
+//			for (inet = 0; inet < smx_redundancy; inet++) {
+            //			if ((iteration * img) % PRINT_INTERVAL == 0) {
+            printf(
+                    "Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
+                    iteration, img, nboxes,
+                    what_time_is_it_now() - time, curr_err, end - start);
+            //			}
 
-				free_detections(dets_array[inet], nboxes_array[inet]);
-			}
+            free_detections(dets, nboxes);
+//			}
 //			last_errors = curr_err;
 		}
 	}
 
-	free(dets_array);
-	free(nboxes_array);
-	for (inet = 0; inet < smx_redundancy; inet++) {
-		free_network(net_array[inet]);
-	}
-	free(net_array);
+//	free(dets_array);
+//	free(nboxes_array);
+//	for (inet = 0; inet < smx_redundancy; inet++) {
+	free_network(net);
+//	}
+//	free(net_array);
 #ifdef GPU
-	del_multi_streams(stream_array, smx_redundancy);
+//	del_multi_streams(stream_array, smx_redundancy);
+    cudaStreamDestroy(stream);
 #endif
 	destroy_detection_gold(gold);
-	free_all_images(image_array, sized_array, plist_size, smx_redundancy);
-	free(X_arr);
+	free_all_images(image_array, sized_array, plist_size);
+//	free(X_arr);
 }
 
 void run_detector(int argc, char **argv) {

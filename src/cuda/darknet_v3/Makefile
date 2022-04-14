@@ -92,8 +92,8 @@ LDFLAGS+= -lcudnn
 endif
 
 ifeq ($(LOGS), 1)
-COMMON += -DLOGS -I$(RADIATIONDIR)/src/include
-COMMON += -L$(RADIATIONDIR)/src/include 
+COMMON += -DLOGS -I../../../libLogHelper/include
+COMMON += -L../../../libLogHelper/build
 LDFLAGS += -lLogHelper
 
 ifeq ($(BUILDPROFILER), 1)

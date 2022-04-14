@@ -512,8 +512,8 @@ typedef struct network {
 	unsigned char use_tensor_cores;
 	cudaStream_t st;
 #endif
-
-	int smx_redundancy;
+    //Does not work
+//	int smx_redundancy;
 
 
 } network;
