@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
 		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 
 		log_helper::end_iteration();
-				auto start = std::chrono::system_clock::now();
+		start = std::chrono::system_clock::now();
 		now_time = std::chrono::system_clock::to_time_t(start);
 		std::cout<<now_time<<" -- ended iteration: "<< iter << std::endl;
 		status_app = compare(iter++, matrix_dim);
