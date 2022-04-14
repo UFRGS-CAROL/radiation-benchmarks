@@ -732,17 +732,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
 //	int smx_redundancy = get_smx_redundancy(gold);
-
-#ifdef GPU
-//	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
-//	//--------------------------
-    cudaStream_t stream;
-    cudaStreamCreate(&stream);
-#endif
 //	network** net_array = malloc(sizeof(network*) * smx_redundancy);
 
-	printf(
-			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
+	printf("CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
 			cfgfile, datacfg, weightfile, filename, thresh);
 
 	//load images
@@ -760,6 +752,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
     //Set tensor cores on the net
 //    net->smx_redundancy = smx_redundancy;
 #ifdef GPU
+    //	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
+	//--------------------------
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
     net->use_tensor_cores = get_use_tensor_cores(gold);
     net->st = stream; //stream_array[inet];
 #endif
