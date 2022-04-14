@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
 	while (iter < iteractions) {
 		auto start = std::chrono::system_clock::now();
 		std::time_t now_time = std::chrono::system_clock::to_time_t(start);
-		std::cout<< strlok(std::ctime(&now_time),'\n')<<" -- started iteration: "<< iter << std::endl;
+		std::cout<< strtok(std::ctime(&now_time),"\n")<<" -- started iteration: "<< iter << std::endl;
 
 		log_helper::start_iteration();
 
@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
 		log_helper::end_iteration();
 		start = std::chrono::system_clock::now();
 		now_time = std::chrono::system_clock::to_time_t(start);
-		std::cout<<strlok(std::ctime(&now_time),'\n')<<" -- ended iteration: "<< iter << std::endl;
+		std::cout<<strtok(std::ctime(&now_time),"\n")<<" -- ended iteration: "<< iter << std::endl;
 		status_app = compare(iter++, matrix_dim);
 	}
 
