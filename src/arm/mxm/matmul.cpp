@@ -91,15 +91,7 @@ void generate_gold_input(char *gold,char *input,int matrix_dim) {
 		fclose(fa);
 		
 		//printf("PAssou doois\n");
-		for (i = 0; i < matrix_dim; i++) {
-			for (j = 0; j < matrix_dim; j++) {
-				mCS0[i * matrix_dim + j] = 0.0;
-				for (k = 0; k < matrix_dim; k++){
-					mCS0[i * matrix_dim + j] += mA[i * matrix_dim +k] * mB[k* matrix_dim + j];
-				}
-			}
-
-		}
+		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 		fwrite( mCS0, sizeof(float), matrix_dim * matrix_dim,f_golden);
 		fclose(f_golden);
 	}
@@ -180,9 +172,9 @@ int main(int argc, char **argv) {
 	if(generate) {
 		std::cout << "Generating for " <<  argv[0] << " with size " << matrix_dim << std::endl;
 	}else{
-		char *benchmark_name = "sequential_mxm";
+		char *benchmark_name = "mxm";
 		char test_info[100];
-		snprintf(test_info, 100, "MxM size:%d type:sequential_float", matrix_dim);
+		snprintf(test_info, 100, "MxM size:%d type:float", matrix_dim);
 		log_helper::start_log_file(benchmark_name, test_info);
 	}
 
@@ -240,7 +232,7 @@ int main(int argc, char **argv) {
 
 		log_helper::start_iteration();
 
-		sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
+		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 
 		log_helper::end_iteration();
 		
