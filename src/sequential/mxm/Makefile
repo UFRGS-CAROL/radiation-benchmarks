@@ -1,21 +1,20 @@
-LOGS?=0
+
 ARCH?=arm
-CC=arm-linux-gnueabihf-gcc
+CC=arm-linux-gnueabihf-g++
 EXEC=matmul
 MATRIXSIZE?=500
 
 CCFLAGS= -O3 -Wno-unused-result
-LDFLAGS= -static -lm
+LDFLAGS= -lm
 
 
-ifeq ($(LOGS), 1)
-INCLUDE= -I../../include
-LIBRARY= -L../../include -lLogHelper
+
+INCLUDE= -I/usr/local/include
+LIBRARY= -L/usr/local/lib/aarch64-linux-gnu  -L/usr/local/lib -lLogHelper
 CCFLAGS+= -DLOGS
-endif
 
 ifeq ($(ARCH), arm64)
-CC=aarch64-linux-gnu-gcc
+CC=aarch64-linux-gnu-g++
 AS=aarch64-linux-gnu-as
 LD=aarch64-linux-gnu-ld
 AR=aarch64-linux-gnu-ar
@@ -29,17 +28,12 @@ CCFLAGS+= -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
 endif
 
 ifeq ($(ARCH), x86)
-CC=gcc
+CC=g++
 endif
 
-RADIATIONPATH=/home/carol/radiation-benchmarks
-DEFAULTGOLD=$(RADIATIONPATH)/data/mxm/matmul_gold_$(MATRIXSIZE).bin
-DEFAULTINPUTA=$(RADIATIONPATH)/data/mxm/matmul_inputa_$(MATRIXSIZE).bin
-DEFAULTINPUTB=$(RADIATIONPATH)/data/mxm/matmul_inputb_$(MATRIXSIZE).bin
-BINARYDEFAULT=$(RADIATIONPATH)/bin/$(EXEC)
-
-DEFAULTIP=127.0.0.1
-DEFAULTPORT=9999
+DEFAULTGOLD=./matmul_gold_$(MATRIXSIZE).bin
+DEFAULTINPUTA=./matmul_input_$(MATRIXSIZE).bin
+BINARYDEFAULT=./$(EXEC)
 
 all: clean $(EXEC)
 
@@ -52,10 +46,10 @@ clean:
 
 
 generate: $(EXEC)
-	$(BINARYDEFAULT) $(DEFAULTIP) $(DEFAULTPORT) $(DEFAULTINPUTA)  $(DEFAULTINPUTB) $(DEFAULTGOLD) 1 $(MATRIXSIZE)
+	$(BINARYDEFAULT) -i $(DEFAULTINPUTA) -g $(DEFAULTGOLD) -s $(MATRIXSIZE) -c
 
 test: $(EXEC) generate
-	$(BINARYDEFAULT) $(DEFAULTIP) $(DEFAULTPORT) $(DEFAULTINPUTA)  $(DEFAULTINPUTB) $(DEFAULTGOLD) 0 $(MATRIXSIZE)
+	$(BINARYDEFAULT) -i $(DEFAULTINPUTA) -g $(DEFAULTGOLD) -s $(MATRIXSIZE) -l 10
 
 mkdir:
 	mkdir -p $(RADIATIONPATH)/data/mxm
