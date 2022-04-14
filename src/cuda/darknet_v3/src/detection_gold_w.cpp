@@ -35,7 +35,7 @@ void destroy_detection_gold(detection_gold_t *m) {
     free(m);
 }
 
-int run(detection_gold_t *m, detection **dets, int *nboxes, int img_index,
+int run(detection_gold_t *m, detection *dets, int nboxes, int img_index,
         int classes, int img_w, int img_h) {
     DetectionGold *obj;
     if (m == nullptr)
@@ -93,12 +93,13 @@ unsigned char get_use_tensor_cores(detection_gold_t *m) {
     return it;
 }
 
-int get_smx_redundancy(detection_gold_t *m) {
-    DetectionGold *obj;
-    if (m == nullptr)
-        return 0;
-
-    obj = static_cast<DetectionGold *>(m->obj);
-    int it = obj->stream_mr;
-    return it;
-}
+//int get_smx_redundancy(detection_gold_t *m) {
+//    DetectionGold *obj;
+//    if (m == nullptr)
+//        return 0;
+//
+//    obj = static_cast<DetectionGold *>(m->obj);
+////    int it = obj->stream_mr;
+////    return it;
+//    return 0;
+//}
