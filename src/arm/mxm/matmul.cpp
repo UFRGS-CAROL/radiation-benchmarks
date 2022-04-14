@@ -12,6 +12,9 @@
 #include <getopt.h>
 #include <cblas.h>
 #include "log_helper.hpp"
+#include <chrono>
+#include <ctime>  
+
 #define MOD 1000
 
 #define NUM_EXEC 1
@@ -229,13 +232,18 @@ int main(int argc, char **argv) {
 	read_input(input_file, gold_file, matrix_dim);
 	int iter = 0;
 	while (iter < iteractions) {
+		auto start = std::chrono::system_clock::now();
+		std::time_t now_time = std::chrono::system_clock::to_time_t(start);
+		std::cout<<now_time<<" -- started iteration: "<< iter << std::endl;
 
 		log_helper::start_iteration();
 
 		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 
 		log_helper::end_iteration();
-		
+				auto start = std::chrono::system_clock::now();
+		std::time_t now_time = std::chrono::system_clock::to_time_t(start);
+		std::cout<<now_time<<" -- ended iteration: "<< iter << std::endl;
 		status_app = compare(iter++, matrix_dim);
 	}
 
