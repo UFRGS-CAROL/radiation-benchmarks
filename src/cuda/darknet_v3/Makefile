@@ -9,7 +9,7 @@ OPENGEMM?=0
 EXTRACT_GEMM_DATA=0
 BUILDPROFILER=0
 FLEX_GRIP_ANALYSIS=0
-
+THRESH=0
 IMG_LIST_FILE = /home/carol/dnnradsetup/data/coco2017_img_list.txt
 
 OPENBLAS=0
@@ -179,9 +179,10 @@ demo:
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			$(IMG_LIST_FILE) \
-			-generate 1 -gold ./test_$(REAL_TYPE).csv -tensor_cores 0
+			-generate 1 -gold ./test_$(REAL_TYPE).csv -tensor_cores 0 -thresh $(THRESH)
 
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			$(IMG_LIST_FILE) \
-			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) -norm_coord 0 -tensor_cores 0 -smx_redundancy 1
+			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) \
+			-norm_coord 0 -tensor_cores 0 -smx_redundancy 1 -thresh $(THRESH)

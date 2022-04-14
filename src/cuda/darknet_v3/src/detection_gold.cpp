@@ -238,7 +238,7 @@ int DetectionGold::cmp(detection *found_dets, int nboxes, int img_index, int cla
     int error_count = 0;
     auto gold_boxes = this->gold_hash_var[img].size();
 
-    if (nboxes > 0) {
+    if (nboxes >= 0) {
         //Check if detection is more boxes than the gold has
         int boxes_diff = nboxes - gold_boxes;
 
@@ -250,8 +250,7 @@ int DetectionGold::cmp(detection *found_dets, int nboxes, int img_index, int cla
                 gold_dets.push_back(gold_dets.back());
             }
         } else if (boxes_diff < 0) { //when there are less boxes than expected
-            std::string err_str = "Smaller number of boxes detected:"
-                                  + std::to_string(nboxes) + " while gold is:"
+            std::string err_str = "Smaller number of boxes detected:" + std::to_string(nboxes) + " while gold is:"
                                   + std::to_string(gold_boxes);
 
             Log::log_error_info(err_str);
@@ -318,8 +317,7 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, std::ofstrea
         detection det = dets[bb];
         box b = det.bbox;
 
-        std::string box_str = DetectionGold::generate_gold_line(bb, det, b,
-                                                                dets);
+        std::string box_str = DetectionGold::generate_gold_line(bb, det, b, dets);
         gold_file << box_str << std::endl;
     }
 
