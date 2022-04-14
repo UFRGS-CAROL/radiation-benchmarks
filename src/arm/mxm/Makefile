@@ -5,7 +5,7 @@ EXEC=matmul
 MATRIXSIZE?=500
 
 CCFLAGS= -O3 -Wno-unused-result
-LDFLAGS= -lm
+LDFLAGS= -lm -lcblas
 
 
 
