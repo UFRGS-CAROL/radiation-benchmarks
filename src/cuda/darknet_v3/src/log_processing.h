@@ -20,7 +20,7 @@ static const char *ABFT_TYPES[] = {"none", "abft"};
 struct Log {
     static void start_log(const std::string &gold, int save_layer, int abft,
                           int iterations, const std::string &app,
-                          unsigned char use_tensor_core_mode, int smx_red) {
+                          unsigned char use_tensor_core_mode) {
 #ifdef LOGS
         std::string test_info = std::string("gold_file: ") + gold;
 
@@ -32,8 +32,8 @@ struct Log {
         test_info += " tensor_core_mode: "
                      + std::to_string(int(use_tensor_core_mode));
 
-        test_info += " stream_redundancy: "
-                     + std::to_string(smx_red);
+//        test_info += " stream_redundancy: "
+//                     + std::to_string(smx_red);
 
 
         set_iter_interval_print(10);
