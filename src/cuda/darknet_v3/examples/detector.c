@@ -678,8 +678,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-void load_all_images(image* imgs, image* sized_images, char** img_names,
-		int plist_size, int net_w, int net_h) {
+void load_all_images(image* imgs, image* sized_images, char** img_names, int plist_size, int net_w, int net_h) {
 	int i;
 	for (i = 0; i < plist_size; i++) {
 		imgs[i] = load_image_color(img_names[i], 0, 0);
@@ -767,12 +766,14 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 //    net_array[inet] = net;
 
     //load images
-//    printf("Loading images for network %d\n", inet);
+    printf("Loading images for network\n");
 //    image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
 //    sized_array[inet] = (image*) malloc(sizeof(image) * plist_size);
     image* image_array = (image*) malloc(sizeof(image) * plist_size);
     image* sized_array = (image*) malloc(sizeof(image) * plist_size);
     load_all_images(image_array, sized_array, img_names, plist_size, net->w, net->h);
+    printf("Images loaded\n");
+
 //	}
 	srand(2222222);
 	double time;
