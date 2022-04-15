@@ -87,7 +87,7 @@ struct DetectionGold {
 	int plist_size;
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
-	int iterations, stream_mr;
+	int iterations; //, stream_mr;
 	unsigned char tensor_core_mode;
 	int total_errors;
 	bool normalized_coordinates;
@@ -108,8 +108,7 @@ struct DetectionGold {
 
 	virtual ~DetectionGold();
 
-	int run(detection** dets, int* nboxes, int img_index, int classes,
-			int img_w, int img_h);
+	int run(detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
 
 	void load_gold_hash(std::ifstream& gold_file);
 
@@ -118,10 +117,10 @@ struct DetectionGold {
 	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
 	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
-			int img_h, int inet);
+			int img_h);
 
 	int compare_detection(const Detection& g_det, const detection& f_det, const std::string& img,
-			int nb, int classes, int img_w, int img_h, int inet) const;
+			int nb, int classes, int img_w, int img_h) const;
 
 private:
 	static std::string generate_gold_line(int bb, detection det, const box& b,

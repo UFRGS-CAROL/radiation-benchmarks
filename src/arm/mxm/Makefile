@@ -3,9 +3,9 @@ ARCH?=arm
 CC=arm-linux-gnueabihf-g++
 EXEC=matmul
 MATRIXSIZE?=500
-
+ITER=100
 CCFLAGS= -O3 -Wno-unused-result
-LDFLAGS= -lm
+LDFLAGS= -lm -lcblas
 
 
 
@@ -37,8 +37,8 @@ BINARYDEFAULT=./$(EXEC)
 
 all: clean $(EXEC)
 
-$(EXEC): matmul.c
-	$(CC) $(CCFLAGS) -o $(EXEC) matmul.c $(LDFLAGS) $(INCLUDE) $(LIBRARY)
+$(EXEC): matmul.cpp
+	$(CC) $(CCFLAGS) -o $(EXEC) matmul.cpp $(LDFLAGS) $(INCLUDE) $(LIBRARY)
 
 clean:
 	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT)
@@ -49,7 +49,7 @@ generate: $(EXEC)
 	$(BINARYDEFAULT) -i $(DEFAULTINPUTA) -g $(DEFAULTGOLD) -s $(MATRIXSIZE) -c
 
 test: $(EXEC) generate
-	$(BINARYDEFAULT) -i $(DEFAULTINPUTA) -g $(DEFAULTGOLD) -s $(MATRIXSIZE) -l 10
+	$(BINARYDEFAULT) -i $(DEFAULTINPUTA) -g $(DEFAULTGOLD) -s $(MATRIXSIZE) -l $(ITER)
 
 mkdir:
 	mkdir -p $(RADIATIONPATH)/data/mxm

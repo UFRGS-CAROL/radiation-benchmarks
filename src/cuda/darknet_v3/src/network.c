@@ -495,41 +495,41 @@ real_t *network_predict(network *net, real_t *input) {
 	return out;
 }
 
-
-void network_predict_smx_red(network **net, real_t **input) {
-	int i;
-	int smx_red = net[0]->smx_redundancy;
-
-	network *orig_array = malloc(sizeof(network) * smx_red);
-	if(orig_array == NULL){
-		printf("Error while creating redundancy on network predict %d %s\n", __LINE__, __FILE__);
-		exit(1);
-	}
-
-	for (i = 0; i < smx_red; i++) {
-		orig_array[i] = *net[i];
-		net[i]->input = input[i];
-		net[i]->truth = 0;
-		net[i]->train = 0;
-		net[i]->delta = 0;
-	}
-
-#ifdef GPU
-	forward_network_gpu_parallel(net);
-#else
-#pragma omp parallel for
-	for(int i = 0; i < smx_red; i++){
-		forward_network(net[i]);
-	}
-#endif
-	for (i = 0; i < smx_red; i++) {
-//		out[i] = net[i]->output;
-		*(net[i]) = orig_array[i];
-	}
-
-	free(orig_array);
-//	return out;
-}
+//DOES NOT WORK
+//void network_predict_smx_red(network **net, real_t **input) {
+//	int i;
+//	int smx_red = net[0]->smx_redundancy;
+//
+//	network *orig_array = malloc(sizeof(network) * smx_red);
+//	if(orig_array == NULL){
+//		printf("Error while creating redundancy on network predict %d %s\n", __LINE__, __FILE__);
+//		exit(1);
+//	}
+//
+//	for (i = 0; i < smx_red; i++) {
+//		orig_array[i] = *net[i];
+//		net[i]->input = input[i];
+//		net[i]->truth = 0;
+//		net[i]->train = 0;
+//		net[i]->delta = 0;
+//	}
+//
+//#ifdef GPU
+//	forward_network_gpu_parallel(net);
+//#else
+//#pragma omp parallel for
+//	for(int i = 0; i < smx_red; i++){
+//		forward_network(net[i]);
+//	}
+//#endif
+//	for (i = 0; i < smx_red; i++) {
+////		out[i] = net[i]->output;
+//		*(net[i]) = orig_array[i];
+//	}
+//
+//	free(orig_array);
+////	return out;
+//}
 
 int num_detections(network *net, real_t thresh) {
 	int i;
@@ -825,30 +825,30 @@ void* forward_network_gpu_caller(void *netp) {
 	return NULL;
 }
 
-void forward_network_gpu_parallel(network **netp_array) {
-	int mr = netp_array[0]->smx_redundancy;
-
-	pthread_t *threads = (pthread_t*) malloc(sizeof(pthread_t) * mr);
-	int i;
-	for (i = 0; i < mr; i++) {
-		if (pthread_create(&threads[i], NULL, forward_network_gpu_caller,
-						netp_array[i])) {
-			error("ERROR ON CREATING THREADs\n");
-		}
-	}
-	cudaDeviceSynchronize();
-
-	for (i = 0; i < mr; i++) {
-		if (pthread_join(threads[i], NULL)) {
-			error("ERROR ON FINISHING THREADs\n");
-		}
-	}
-//	printf("APSSKKKKKdddd %d\n", mr);
-
-	free(threads);
-//	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
-
-}
+//void forward_network_gpu_parallel(network **netp_array) {
+//	int mr = netp_array[0]->smx_redundancy;
+//
+//	pthread_t *threads = (pthread_t*) malloc(sizeof(pthread_t) * mr);
+//	int i;
+//	for (i = 0; i < mr; i++) {
+//		if (pthread_create(&threads[i], NULL, forward_network_gpu_caller,
+//						netp_array[i])) {
+//			error("ERROR ON CREATING THREADs\n");
+//		}
+//	}
+//	cudaDeviceSynchronize();
+//
+//	for (i = 0; i < mr; i++) {
+//		if (pthread_join(threads[i], NULL)) {
+//			error("ERROR ON FINISHING THREADs\n");
+//		}
+//	}
+////	printf("APSSKKKKKdddd %d\n", mr);
+//
+//	free(threads);
+////	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
+//
+//}
 
 void backward_network_gpu(network *netp) {
 	int i;
