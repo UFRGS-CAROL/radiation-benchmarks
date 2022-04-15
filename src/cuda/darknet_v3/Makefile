@@ -11,6 +11,7 @@ BUILDPROFILER=0
 FLEX_GRIP_ANALYSIS=0
 THRESH=0.5
 IMG_LIST_FILE = /home/carol/dnnradsetup/data/coco2017_img_list.txt
+TINY=0
 
 OPENBLAS=0
 ITERATIONS=5
@@ -22,7 +23,7 @@ CUTLASSDIR=$(HOME)/cutlass/include
 
 # This is what I use, uncomment if you know your arch and want to specify
 # Kepler, Volta
-SMS= 35 62 70
+SMS= 35 53 62 70
 $(foreach sm,$(SMS), $(eval ARCH += -gencode arch=compute_$(sm),code=sm_$(sm)))
 
 VPATH=./src/:./examples
@@ -46,7 +47,17 @@ CFLAGS+= -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 CXXFLAGS=  -DFLEX_GRIP_ANALYSIS=$(FLEX_GRIP_ANALYSIS)
 
 NVCCFLAGS= -std=c++11 -ccbin=$(CC)
-#-disable-warnings 
+#-disable-warnings
+GOLD_FILE=./test_$(REAL_TYPE)_tiny_$(TINY).csv
+
+ifeq ($(TINY), 1)
+CFG_FILE=cfg/yolov3-tiny.cfg
+WEIGHTS=../../../data/darknet/yolov3-tiny.weights
+else
+CFG_FILE=../../../data/darknet/yolov3-spp.cfg
+WEIGHTS=../../../data/darknet/yolov3-spp.weights
+endif
+
 
 ifeq ($(OPENMP), 1) 
 CFLAGS+= -fopenmp
@@ -177,12 +188,10 @@ demo:
 	./$(EXEC) detector test cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights data/dog.jpg
 
 generate:
-	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			$(IMG_LIST_FILE) \
-			-generate 1 -gold ./test_$(REAL_TYPE).csv -tensor_cores 0 -thresh $(THRESH)
+	./$(EXEC) detector test_radiation cfg/coco.data $(CFG_FILE) $(WEIGHTS) \
+			$(IMG_LIST_FILE) -generate 1 -gold $(GOLD_FILE) -tensor_cores 0 -thresh $(THRESH)
 
 test:
-	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
-			$(IMG_LIST_FILE) \
-			-generate 0 -gold ./test_$(REAL_TYPE).csv -iterations $(ITERATIONS) \
+	./$(EXEC) detector test_radiation cfg/coco.data $(CFG_FILE) $(WEIGHTS) \
+			$(IMG_LIST_FILE) -generate 0 -gold $(GOLD_FILE) -iterations $(ITERATIONS) \
 			-norm_coord 0 -tensor_cores 0 -smx_redundancy 1 -thresh $(THRESH)
