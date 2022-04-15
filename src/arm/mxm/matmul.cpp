@@ -55,6 +55,7 @@ int compare(long iteration,int matrix_dim) {
 						"p: [%d, %d], r: %1.20e, e: %1.20e",
 						i, j, mCS0[i * matrix_dim + j], golden[i * matrix_dim + j]);
 				//printf("%s\n", error_detail);
+				std::cout<<error_detail<<std::endl;
 				log_helper::log_error_detail(error_detail);
 				errors++;
 
@@ -241,10 +242,11 @@ int main(int argc, char **argv) {
 		cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,matrix_dim,matrix_dim,matrix_dim,1,mA,matrix_dim,mB,matrix_dim,0,mCS0,matrix_dim);
 
 		log_helper::end_iteration();
+		status_app = compare(iter++, matrix_dim);
 		start = std::chrono::system_clock::now();
 		now_time = std::chrono::system_clock::to_time_t(start);
 		std::cout<<strtok(std::ctime(&now_time),"\n")<<" -- ended iteration: "<< iter << std::endl;
-		status_app = compare(iter++, matrix_dim);
+		
 	}
 
 	log_helper::end_log_file();
