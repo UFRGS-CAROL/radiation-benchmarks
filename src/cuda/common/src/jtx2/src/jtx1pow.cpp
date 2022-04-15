@@ -133,11 +133,11 @@ static void jtx1_get_ina3221_sysf(jtx2_rail rail, jtx2_rail_type measure,
 	}
 
 	snprintf(buff, sizeof(buff),
-	SYSFS_INA3321_PATH "/0-004%d/iio_device/in_%s" "%d" "_input", addr, mea,
+	SYSFS_INA3321_PATH "/0-004%d/iio:device%d/in_%s" "%d" "_input", addr,addr, mea,
 			rail % 3);
 
 	fp = fopen(buff, "r");
-
+	printf("%s\n",buff);
 	if (fp == NULL) {
 		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
@@ -175,6 +175,7 @@ static int jtx1_get_ina3221_userspace_i2c(int rail, unsigned int *val) {
 	int power;
 
 	snprintf(filename, 19, "/dev/i2c-%d", adapter_nr);
+	printf("%s\n",filename);
 	file = open(filename, O_RDWR);
 	if (file < 0) {
 		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
