@@ -4,11 +4,11 @@
 
 int main(int argc, char *argv[]) {
 	std::string name="test.log";
-	rad::JTX2Inst measure(0,name);
+	rad::JTX2Inst measure(atoi(argv[2]),name);
 	
 	measure.start_profile();
 
-	std::cout << "SLEEPING FOR "<<argv[0] <<" seconds" << std::endl;
+	std::cout << "SLEEPING FOR "<<argv[1] <<" seconds" << std::endl;
 	sleep(atoi(argv[1]));
 	measure.end_profile();
 
