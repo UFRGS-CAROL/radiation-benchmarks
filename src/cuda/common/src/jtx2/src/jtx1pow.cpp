@@ -131,18 +131,23 @@ static void jtx1_get_ina3221_sysf(jtx2_rail rail, jtx2_rail_type measure,
 	default:
 		break;
 	}
-
+#ifdef NANO
 	snprintf(buff, sizeof(buff),
-	SYSFS_INA3321_PATH "/0-004%d/iio:device%d/in_%s" "%d" "_input", addr,addr, mea,
-			rail % 3);
+	"/sys/bus/i2c/drivers/ina3221x/6-0040/iio:device0/in_%s" "%d" "_input",  mea, rail % 3);
+
+#else
+	snprintf(buff, sizeof(buff),
+        SYSFS_INA3321_PATH "/0-004%d/iio:device%d/in_%s" "%d" "_input", addr,addr, mea, rail % 3);
+
+#endif
 
 	fp = fopen(buff, "r");
-	printf("%s\n",buff);
+	//printf("%s\n",buff);
 	if (fp == NULL) {
-		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+		fprintf(stderr, "Error opening file %s: %s\n", buff, strerror(errno));
 		exit(EXIT_FAILURE);
 	} else if (!fscanf(fp, "%d", &ans)) {
-		fprintf(stderr, "Error scanning the file: %s\n", strerror(errno));
+		fprintf(stderr, "Error scanning the file %s: %s\n", buff, strerror(errno));
 		exit(EXIT_FAILURE);
 	} else {
 		fclose(fp);

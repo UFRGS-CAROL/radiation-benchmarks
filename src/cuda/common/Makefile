@@ -10,6 +10,9 @@ JTX2SRC=$(SRC)/jtx2/src
 LIB=./lib
 CXXFLAGS+=-fPIC -Wall -Wextra -Wno-unknown-pragmas -std=c++11 -o3  -pthread -li2c
 
+ifdef NANO
+	CXXFLAGS+= -DNANO
+endif
 ifneq ($(SLEEP_TIME), 0)
 CXXFLAGS+= -DSLEEP_TIME=$(SLEEP_TIME)
 endif

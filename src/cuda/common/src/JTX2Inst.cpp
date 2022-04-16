@@ -320,6 +320,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 
 			voltage_out = convFromMilli * val;
 			out_stream << voltage_out << ";";
+#ifndef NANO
 //			printf("\n");
 			//************************************************************************************************
 			jtx1_get_temp(A0, &val);
@@ -354,6 +355,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 //			printf("[TEMPERATURE] FAN: %dmC\n", val);
 //			printf("\n");
 			out_stream << val << std::endl;
+#endif
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
 	}

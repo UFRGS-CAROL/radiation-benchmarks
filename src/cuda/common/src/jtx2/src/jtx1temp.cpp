@@ -23,16 +23,18 @@ void jtx1_get_temp(jtx1_tzone zone, unsigned int *temp) {
 	FILE *fp;
 	char buff[MAX_BUFF];
 	unsigned long ans;
-
+#ifdef NANO
+	snprintf(buff, sizeof(buff), "/sys/class/thermal/thermal_zone%d/temp", zone);
+#else
 	snprintf(buff, sizeof(buff), SYSFS_TEMP_PATH "/thermal_zone%d/temp", zone);
-
+#endif
 	fp = fopen(buff, "r");
 
 	if (fp == NULL) {
-		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+		fprintf(stderr, "Error opening file %s: %s\n",buff, strerror(errno));
 		exit(EXIT_FAILURE);
 	} else if (!fscanf(fp, "%lu", &ans)) {
-		fprintf(stderr, "Error scanning the file: %s\n", strerror(errno));
+		fprintf(stderr, "Error scanning the file %s: %s\n", buff, strerror(errno));
 		exit(EXIT_FAILURE);
 	} else {
 		fclose(fp);
