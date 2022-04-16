@@ -2,19 +2,20 @@
 #include <unistd.h>
 #include <iostream>
 
-int main() {
-	rad::JTX2Inst measure;
+int main(int argc, char *argv[]) {
+	std::string name="test.log";
+	rad::JTX2Inst measure(0,name);
+	
+	measure.start_profile();
 
-	measure.start_collecting_data();
+	std::cout << "SLEEPING FOR "<<argv[0] <<" seconds" << std::endl;
+	sleep(atoi(argv[0]));
+	measure.end_profile();
 
-	std::cout << "SLEEPING FOR 5 seconds" << std::endl;
-	sleep(5);
-	measure.end_collecting_data();
-
-	auto test = measure.get_data_from_iteration();
-	for (auto t : test) {
-		std::cout << t << std::endl;
-	}
+	//auto test = measure.get_data_from_iteration();
+	//for (auto t : test) {
+	//	std::cout << t << std::endl;
+	//}
 
 	return 0;
 }
