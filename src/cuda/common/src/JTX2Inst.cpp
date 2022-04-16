@@ -87,7 +87,8 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 //			printf("[POWER] module power input: %.3f%s\n", convFromMilli * val,
 //							wunit);
 			float power_out = convFromMilli * val;
-			out_stream << power_out << ";";
+			out_stream << power_out <<  ";";
+
 
 			jtx1_get_ina3221(VDD_SYS_SOC, POWER, &val);
 //			printf("[POWER] SoC power: %.3f%s\n", convFromMilli * val, wunit);
@@ -354,8 +355,9 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 			jtx1_get_temp(FAN, &val);
 //			printf("[TEMPERATURE] FAN: %dmC\n", val);
 //			printf("\n");
-			out_stream << val << std::endl;
+			out_stream << val ;
 #endif
+			out_stream << std::endl;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
 	}
