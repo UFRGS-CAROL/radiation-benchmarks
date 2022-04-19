@@ -132,7 +132,7 @@ static void jtx1_get_ina3221_sysf(jtx2_rail rail, jtx2_rail_type measure,
 		break;
 	}
 #ifdef NANO
-	cout<<"kek"<<std::endl;
+	//cout<<"kek"<<std::endl;
 	snprintf(buff, sizeof(buff),
 	"/sys/bus/i2c/drivers/ina3221x/6-0040/iio:device0/in_%s" "%d" "_input",  mea, rail % 3);
 
