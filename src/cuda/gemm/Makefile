@@ -1,5 +1,5 @@
 DEBUG=0
-BLOCK_SIZE=32
+BLOCK_SIZE=33
 #for radiation setup
 LOGS=1
 OMP=1
