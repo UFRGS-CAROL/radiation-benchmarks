@@ -1,4 +1,4 @@
-CXXFLAGS=-L../../../lib -lJTX2Inst -li2c -pthread 
+CXXFLAGS=-L../../../lib -lJTX2Inst -li2c -pthread -lLogHelper
 
 ifdef NANO
 CXXFLAGS+=-DNANO
