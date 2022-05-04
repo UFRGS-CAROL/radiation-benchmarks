@@ -320,7 +320,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 
 			voltage_out = convFromMilli * val;
 			str+=  voltage_out ; str+=  ";";
-#ifndef NANO
+
 //			printf("\n");
 			//************************************************************************************************
 			jtx1_get_temp(A0, &val);
@@ -342,7 +342,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 			jtx1_get_temp(PMIC, &val);
 //			printf("[TEMPERATURE] PMIC: %dmC\n", val);
 			str+=  val ; str+=  ";";
-
+#ifndef NANO
 			jtx1_get_temp(TDIODE, &val);
 //			printf("[TEMPERATURE] TDIODE: %dmC\n", val);
 			str+=  val ; str+=  ";";
