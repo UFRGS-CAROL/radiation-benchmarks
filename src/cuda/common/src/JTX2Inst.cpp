@@ -362,7 +362,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
 	}
 
-	str.close();
+	log_helper::end_log_file();
 }
 
 void JTX2Inst::start_profile() {
