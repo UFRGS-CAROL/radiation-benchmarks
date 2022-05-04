@@ -1,4 +1,4 @@
-SLEEP_TIME=1000 #in miliseconds
+SLEEP_TIME=100 #in miliseconds
 
 CXX=g++
 
