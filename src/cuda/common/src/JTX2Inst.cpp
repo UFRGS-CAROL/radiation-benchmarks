@@ -60,7 +60,6 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 	str += wunit ; str+=  ";CURRENT UNIT:" ; str+=  aunit
 			; str+=  ";VOLTAGE UNIT:" ; str+=  vunit ; str+=  ";convFromMili:" ; str+=  convFromMilli
 			; str+=  "\n";
-	str
 			; str+=  "TIMESTAMP;VDD_IN_POWER;VDD_SYS_SOC_POWER;VDD_SYS_GPU_POWER;VDD_SYS_CPU_POWER;"
 					"VDD_SYS_DDR_POWER;VDD_MUX_POWER;VDD_5V0_IO_SYS_POWER;VDD_3V3_SYS_POWER;"
 					"VDD_3V3_IO_SLP_POWER;VDD_1V8_IO_POWER;VDD_3V3_SYS_M2_POWER;VDD_4V0_WIFI_POWER;"
@@ -72,6 +71,9 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 					"VDD_3V3_IO_SLP_VOLTAGE;VDD_1V8_IO_VOLTAGE;VDD_3V3_SYS_M2_VOLTAGE;VDD_4V0_WIFI_VOLTAGE;"
 					"A0_TEMPERATURE;CPU_TEMPERATURE;GPU_TEMPERATURE;PLL_TEMPERATURE;PMIC_TEMPERATURE;"
 					"TDIODE_TEMPERATURE;TBOARD_TEMPERATURE;FAN_TEMPERATURE\n";
+			log_helper::log_info_detail(str);
+			str="";
+
 	while (*_thread_running) {
 		if (*_is_locked) {
 			std::time_t result = std::time(nullptr);
@@ -357,6 +359,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 #endif
 			str+= "\n";
 			log_helper::log_info_detail(str);
+			str="";
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
 	}
