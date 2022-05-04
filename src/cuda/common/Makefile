@@ -18,7 +18,7 @@ CXXFLAGS+= -DSLEEP_TIME=$(SLEEP_TIME)
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml -lLogHelper
 INCLUDE= -I$(CUDAPATH)/include -I./include
 
 JTX2OBJ= jtx1pow.o jtx1rate.o jtx1temp.o
