@@ -59,7 +59,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 	std::string str = "POWER UNIT:";
 	str += wunit ; str+=  ";CURRENT UNIT:" ; str+=  aunit
 			; str+=  ";VOLTAGE UNIT:" ; str+=  vunit ; str+=  ";convFromMili:" ; str+=  convFromMilli
-			; str+=  std::endl;
+			; str+=  "\n";
 	str
 			; str+=  "TIMESTAMP;VDD_IN_POWER;VDD_SYS_SOC_POWER;VDD_SYS_GPU_POWER;VDD_SYS_CPU_POWER;"
 					"VDD_SYS_DDR_POWER;VDD_MUX_POWER;VDD_5V0_IO_SYS_POWER;VDD_3V3_SYS_POWER;"
