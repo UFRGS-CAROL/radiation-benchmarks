@@ -72,7 +72,6 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 					"VDD_3V3_IO_SLP_VOLTAGE;VDD_1V8_IO_VOLTAGE;VDD_3V3_SYS_M2_VOLTAGE;VDD_4V0_WIFI_VOLTAGE;"
 					"A0_TEMPERATURE;CPU_TEMPERATURE;GPU_TEMPERATURE;PLL_TEMPERATURE;PMIC_TEMPERATURE;"
 					"TDIODE_TEMPERATURE;TBOARD_TEMPERATURE;FAN_TEMPERATURE"
-			; str+=  "\n";
 	while (*_thread_running) {
 		if (*_is_locked) {
 			std::time_t result = std::time(nullptr);
@@ -356,7 +355,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 //			printf("\n");
 			str+=  val ;
 #endif
-			str+=  std::endl;
+			str+= "\n";
 			log_helper::log_info_detail(str);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
