@@ -24,7 +24,9 @@
 
 #define MAX_BUFF 128
 //#define SYSFS_INA3321_PATH "/sys/class/i2c-dev/i2c-1/device"
+
 #define SYSFS_INA3321_PATH "/sys/devices/3160000.i2c/i2c-0"
+
 /**
  * @brief Enumeration indexing each INA3221's input.
  */

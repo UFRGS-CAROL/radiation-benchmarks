@@ -1,4 +1,4 @@
-SLEEP_TIME=1000 #in miliseconds
+SLEEP_TIME=100 #in miliseconds
 
 CXX=g++
 
@@ -10,12 +10,15 @@ JTX2SRC=$(SRC)/jtx2/src
 LIB=./lib
 CXXFLAGS+=-fPIC -Wall -Wextra -Wno-unknown-pragmas -std=c++11 -o3  -pthread -li2c
 
+ifeq ($(NANO),1)
+	CXXFLAGS+= -DNANO
+endif
 ifneq ($(SLEEP_TIME), 0)
 CXXFLAGS+= -DSLEEP_TIME=$(SLEEP_TIME)
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml -lLogHelper
 INCLUDE= -I$(CUDAPATH)/include -I./include
 
 JTX2OBJ= jtx1pow.o jtx1rate.o jtx1temp.o
