@@ -121,14 +121,13 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 			GemmCaller<0, real_t, real_t>(m, n) {
 		rad::checkCublasErrors(cublasCreate(&this->blas_handle));
 
-		if (use_tensor_cores) {
+		if (!use_tensor_cores) {
 #if (__CUDACC_VER_MAJOR__ >= 10)
-			rad::checkCublasErrors(
-					cublasSetMathMode(this->blas_handle,
-							CUBLAS_TENSOR_OP_MATH));
+			rad::checkCublasErrors(cublasSetMathMode(this->blas_handle, CUBLAS_PEDANTIC_MATH));
 #endif
-
-		}
+		}else{
+            rad::checkCublasErrors(cublasSetMathMode(this->blas_handle, CUBLAS_TENSOR_OP_MATH));
+        }
 	} //default constructor
 };
 
