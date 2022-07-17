@@ -14,7 +14,7 @@
 #endif
 
 //#ifdef OPENGEMM
-#include "gemm_kernels.h"
+//#include "gemm_kernels.h"
 //#endif
 
 void gemm_bin(int M, int N, int K, real_t ALPHA, char *A, int lda, real_t *B,
